@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/constants/app_colors.dart';
+import 'planner_view_toggle.dart';
+
+class PlannerHeader extends StatelessWidget {
+  final bool cookView;
+  final VoidCallback onCook;
+  final VoidCallback onEatOut;
+
+  const PlannerHeader({
+    super.key,
+    required this.cookView,
+    required this.onCook,
+    required this.onEatOut,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Smart Planner',
+                style: GoogleFonts.dmSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.kTextMain,
+                ),
+              ),
+              const Icon(
+                Icons.calendar_month,
+                size: 20,
+                color: AppColors.kAccentBlue,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          PlannerViewToggle(
+            cookView: cookView,
+            onCook: onCook,
+            onEatOut: onEatOut,
+          ),
+        ],
+      ),
+    );
+  }
+}

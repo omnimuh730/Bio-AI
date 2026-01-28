@@ -1,0 +1,349 @@
+{
+	"description": "Canonical frontend schema + fixtures for Bio AI. Merges frontend_schema.json (components) and frontend_pages.json (page units) into one file.",
+	"version": "2026-01-28",
+	"sharedTypes": {
+		"TimeseriesPoint": {
+			"ts": "string (date-time or date)",
+			"value": "number",
+			"source": "string (optional)"
+		},
+		"MetricTimeseriesMap": "object where keys are metric names and values are arrays of TimeseriesPoint",
+		"RecipeCard": {
+			"id": "string",
+			"title": "string",
+			"imageUrl": "string (uri)",
+			"timeMinutes": "number",
+			"calories": "number",
+			"matchStatus": "string",
+			"isSelected": "boolean"
+		}
+	},
+	"components": {
+		"RecipeCard": {
+			"props": "RecipeCard",
+			"example": {
+				"id": "recipe_1001",
+				"title": "Power Chicken Bowl",
+				"imageUrl": "https://.../power-chicken.jpg",
+				"timeMinutes": 20,
+				"calories": 520,
+				"matchStatus": "Missing: Lemon",
+				"isSelected": false
+			}
+		},
+		"SmartPantry": {
+			"state": {
+				"items": "array of ingredient strings",
+				"inputText": "string"
+			},
+			"example": {
+				"items": ["Chicken Breast", "Spinach", "Rice"],
+				"inputText": "Avocado"
+			}
+		},
+		"ShoppingList": {
+			"props": { "items": "array of {name, qty, checked}" },
+			"example": {
+				"items": [
+					{ "name": "Lemons", "qty": 2, "checked": false },
+					{ "name": "Greek Yogurt", "qty": 1, "checked": true }
+				]
+			}
+		},
+		"AnalysisDashboard": {
+			"props": {
+				"score": "number",
+				"summary": "string",
+				"metrics": "object",
+				"history": "array"
+			},
+			"example": {
+				"score": 88,
+				"summary": "Excellent Energy",
+				"metrics": {
+					"calories": { "consumed": 1840, "goal": 2300 },
+					"protein_g": { "consumed": 118, "goal": 140 }
+				},
+				"history": [
+					{ "date": "2026-01-24", "score": 80 },
+					{ "date": "2026-01-25", "score": 85 },
+					{ "date": "2026-01-26", "score": 86 },
+					{ "date": "2026-01-27", "score": 88 }
+				]
+			}
+		},
+		"ProfileSettings": {
+			"props": { "userId": "string", "preferences": "object" },
+			"example": {
+				"userId": "user_001",
+				"preferences": { "units": "metric", "waterGoal_ml": 2500 }
+			}
+		}
+	},
+	"pages": {
+		"dashboard": {
+			"shape": {
+				"userSummary": "{id, displayName, photo}",
+				"energyScore": "number",
+				"quickMetrics": "array of {label, value, unit}",
+				"deviceMetrics": "MetricTimeseriesMap",
+				"todayHistory": "array of diary entries",
+				"correlations": "object describing selectable series and points"
+			},
+			"example": {
+				"userSummary": {
+					"id": "user_001",
+					"displayName": "Sanae",
+					"photo": "https://.../avatar.jpg"
+				},
+				"energyScore": 88,
+				"quickMetrics": [
+					{ "label": "Calories", "value": 1840, "unit": "kcal" },
+					{ "label": "Protein", "value": 118, "unit": "g" },
+					{ "label": "Active Burn", "value": 620, "unit": "kcal" }
+				],
+				"deviceMetrics": {
+					"heart_rate": [
+						{
+							"ts": "2026-01-28T11:50:00Z",
+							"value": 68,
+							"source": "apple_health"
+						},
+						{
+							"ts": "2026-01-28T12:00:00Z",
+							"value": 72,
+							"source": "apple_health"
+						}
+					],
+					"sleep_score": [
+						{ "ts": "2026-01-28", "value": 74, "source": "fitbit" }
+					],
+					"steps": [
+						{
+							"ts": "2026-01-28T07:00:00Z",
+							"value": 10000,
+							"source": "fitbit"
+						}
+					],
+					"stress": [
+						{
+							"ts": "2026-01-28T10:00:00Z",
+							"value": 32,
+							"source": "fitbit"
+						}
+					]
+				},
+				"todayHistory": [
+					{
+						"time": "12:00",
+						"title": "Magnesium Power Bowl",
+						"calories": 450
+					},
+					{
+						"time": "08:00",
+						"title": "Oatmeal & Berries",
+						"calories": 320
+					}
+				],
+				"correlations": {
+					"selectedX": "calorie_intake",
+					"selectedY": "sleep_quality",
+					"series": {
+						"calorie_intake": [10, 12, 8, 11],
+						"sleep_quality": [70, 72, 68, 74]
+					}
+				}
+			}
+		},
+		"planner": {
+			"shape": {
+				"mode": "cook_at_home|eat_out",
+				"pantry": "array",
+				"leftovers": "array",
+				"matchedRecipes": "array of RecipeCard + matchStatus",
+				"shoppingSuggestions": "array"
+			},
+			"example": {
+				"mode": "cook_at_home",
+				"pantry": [
+					{ "ingredient": "Chicken Breast" },
+					{ "ingredient": "Spinach" },
+					{ "ingredient": "Rice" }
+				],
+				"leftovers": [
+					{
+						"recipeId": "recipe_1001",
+						"title": "Power Chicken Bowl",
+						"servings": 3
+					}
+				],
+				"matchedRecipes": [
+					{
+						"id": "recipe_1001",
+						"title": "Power Chicken Bowl",
+						"imageUrl": "https://.../power-chicken.jpg",
+						"timeMinutes": 20,
+						"calories": 520,
+						"matchStatus": "Missing: Lemon",
+						"isSelected": false
+					},
+					{
+						"id": "recipe_1002",
+						"title": "Green Keto Salad",
+						"imageUrl": "https://.../keto-salad.jpg",
+						"timeMinutes": 10,
+						"calories": 340,
+						"matchStatus": "Pantry Ready",
+						"isSelected": false
+					}
+				],
+				"shoppingSuggestions": [
+					{
+						"name": "Lemons",
+						"reason": "missing for matched recipes"
+					}
+				]
+			}
+		},
+		"pantry_page": {
+			"shape": { "items": "array of pantry items" },
+			"example": {
+				"items": [
+					{
+						"ingredient": "Lemons",
+						"qty": 2,
+						"unit": "pcs",
+						"expiryDate": "2026-02-10",
+						"category": "fruit"
+					},
+					{
+						"ingredient": "Rice",
+						"qty": 2,
+						"unit": "kg",
+						"category": "grains"
+					}
+				]
+			}
+		},
+		"shopping_list_page": {
+			"shape": { "lists": "array" },
+			"example": {
+				"lists": [
+					{
+						"id": "shop_001",
+						"title": "Weekly Groceries",
+						"items": [
+							{ "name": "Lemons", "qty": 2, "checked": false },
+							{
+								"name": "Greek Yogurt",
+								"qty": 1,
+								"checked": true
+							}
+						]
+					}
+				]
+			}
+		},
+		"scan_page": {
+			"shape": {
+				"cameraState": "object",
+				"scanResult": "object|null",
+				"barcodeResult": "object|null"
+			},
+			"example": {
+				"cameraState": { "flash": false, "grid": true },
+				"scanResult": null,
+				"barcodeResult": {
+					"found": true,
+					"product": {
+						"name": "Blueberry Protein Bar",
+						"calories": 220,
+						"protein_g": 12
+					}
+				}
+			}
+		},
+		"search_page": {
+			"shape": { "query": "string", "results": "array" },
+			"example": {
+				"query": "oatmeal",
+				"results": [
+					{
+						"name": "Cold Brew Coffee",
+						"kcal": 5,
+						"tags": ["caffeine"]
+					},
+					{
+						"name": "Oatmeal and Berries",
+						"kcal": 320,
+						"tags": ["fiber"]
+					}
+				]
+			}
+		},
+		"profile_page": {
+			"shape": {
+				"user": "object",
+				"connectedDevices": "array",
+				"dietaryProfile": "array",
+				"preferences": "object"
+			},
+			"example": {
+				"user": {
+					"id": "user_001",
+					"name": "Dekomori Sanae",
+					"email": "sanae@Bio AI.ai"
+				},
+				"connectedDevices": [
+					{
+						"provider": "apple_health",
+						"syncedAt": "2026-01-28T11:58:00Z"
+					},
+					{ "provider": "fitbit", "syncedAt": "2026-01-28T11:45:00Z" }
+				],
+				"dietaryProfile": ["Keto", "Mediterranean"],
+				"preferences": { "units": "metric", "waterGoal_ml": 2500 }
+			}
+		},
+		"analysis_page": {
+			"shape": {
+				"reports": "array",
+				"selectedReport": "object",
+				"availableSeries": "array"
+			},
+			"example": {
+				"reports": [
+					{
+						"id": "analysis_01",
+						"score": 88,
+						"summary": "Excellent Energy",
+						"generatedAt": "2026-01-28T12:00:00Z"
+					}
+				],
+				"selectedReport": { "id": "analysis_01" },
+				"availableSeries": [
+					"calorie_intake",
+					"sleep_quality",
+					"protein_g",
+					"heart_rate",
+					"stress"
+				]
+			}
+		}
+	},
+	"apiContracts": {
+		"recipeSearchResponse": { "type": "array", "items": "RecipeCard" },
+		"scanBarcodeResponse": {
+			"example": {
+				"found": true,
+				"product": {
+					"name": "Blueberry Protein Bar",
+					"calories": 220,
+					"protein_g": 12,
+					"fat_g": 9
+				}
+			}
+		}
+	},
+	"notes": "Page fixtures are organized by page unit. Health/device metrics are scalable via MetricTimeseriesMap: new metrics simply appear as new keys."
+}

@@ -1,0 +1,121 @@
+{
+	"pages": {
+		"Dashboard": {
+			"PageElement": {
+				"UserSummary": {},
+				"EnergyScore": {},
+				"QuickMetrics": {},
+				"DeviceMetrics": {},
+				"TodayHistory": {},
+				"Correlations": {}
+			}
+		},
+		"Planner": {
+			"PageElement": {
+				"MealPlanner": {},
+				"ExercisePlanner": {},
+				"SleepPlanner": {},
+				"MoodPlanner": {}
+			}
+		},
+		"Capturing": {
+			"PageElement": {
+				"FoodLog": {},
+				"ExerciseLog": {},
+				"SleepLog": {},
+				"MoodLog": {}
+			}
+		},
+		"Analytics": {
+			"PageElement": {
+				"Trends": {},
+				"Correlations": {},
+				"Reports": {}
+			}
+		},
+		"Settings": {
+			"PageElement": {
+				"Profile": {},
+				"Devices": {},
+				"HealthPlan": {},
+				"PreferenceSetting": {},
+				"GoalSetting": {
+					"CardComponent": {
+						"UI": "Checkboxes"
+					}
+				},
+				"Account": {
+					"CardComponent": {
+						"Revisit Onboarding": {
+							"Action": "Redirect to Onboarding page to update preferences and goals"
+						},
+						"Manage Subscription": {
+							"Action": "Popup Subscription Tier selection Modal"
+						},
+						"Delete Account": {
+							"Action": "Permanently delete user account and all associated data after confirmation(Show Modal for confirmation)"
+						}
+					}
+				}
+			}
+		},
+		"Onboarding": {
+			"PageElement": {
+				"WelcomeScreen": {},
+				"DietaryPreferences": {
+					"CardComponent": {
+						"UI": "Checkboxes"
+					}
+				},
+				"HealthGoals": {
+					"CardComponent": {
+						"UI": "Checkboxes"
+					}
+				},
+				"AllergyInformation": {
+					"CardComponent": {
+						"UI": "Checkboxes"
+					}
+				},
+				"ActivityLevel": {
+					"CardComponent": {
+						"UI": "RadioButtons"
+					}
+				},
+				"FinalizeSetup": {}
+			},
+			"Schema": {
+				"DietaryPreferences": [
+					"Vegetarian",
+					"Vegan",
+					"Gluten-Free",
+					"Keto",
+					"Paleo",
+					"Mediterranean"
+				],
+				"HealthGoals": [
+					"Weight Loss",
+					"Muscle Gain",
+					"Improved Sleep",
+					"Better Mood",
+					"Increased Energy"
+				],
+				"AllergyInformation": [
+					"Nuts",
+					"Dairy",
+					"Gluten",
+					"Shellfish",
+					"Soy",
+					"Eggs"
+				],
+				"ActivityLevel": [
+					"Sedentary",
+					"Lightly Active",
+					"Moderately Active",
+					"Very Active",
+					"Extra Active"
+				]
+			}
+		}
+	}
+}

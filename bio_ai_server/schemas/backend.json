@@ -1,0 +1,106 @@
+{
+	"description": "Backend design overview for Bio AI. References canonical DB + API contracts and outlines service modules.",
+	"version": "2026-01-28",
+	"canonicalInputs": {
+		"db": "schemas/db.json",
+		"api": "schemas/api.json",
+		"frontend": "schemas/frontend.json"
+	},
+	"modules": [
+		{
+			"name": "auth",
+			"responsibilities": [
+				"login",
+				"token issuance",
+				"user session validation"
+			],
+			"apiEndpoints": ["/auth/login"],
+			"dbCollections": ["users", "audit_logs"]
+		},
+		{
+			"name": "planner",
+			"responsibilities": [
+				"pantry management",
+				"recipe matching",
+				"shopping suggestions",
+				"leftovers"
+			],
+			"apiEndpoints": ["/pantry", "/recipes/search", "/shopping-lists"],
+			"dbCollections": [
+				"pantry_items",
+				"recipes",
+				"shopping_list",
+				"leftovers"
+			]
+		},
+		{
+			"name": "scan_and_search",
+			"responsibilities": [
+				"barcode scan lookup",
+				"manual search",
+				"food detail and logging"
+			],
+			"apiEndpoints": ["/scan/barcode"],
+			"dbCollections": ["diary_entries", "audit_logs"]
+		},
+		{
+			"name": "devices",
+			"responsibilities": [
+				"device connection status",
+				"webhook ingestion",
+				"metrics query",
+				"normalization"
+			],
+			"apiEndpoints": [
+				"/device/{userId}/metrics",
+				"/webhooks/device-sync"
+			],
+			"dbCollections": ["devices", "device_data", "audit_logs"],
+			"scalableMetrics": {
+				"current": ["heart_rate", "stress", "activity", "sleep_score"],
+				"futureExamples": [
+					"hrv",
+					"blood_oxygen",
+					"respiratory_rate",
+					"body_temperature",
+					"weight",
+					"glucose"
+				]
+			}
+		},
+		{
+			"name": "analysis",
+			"responsibilities": [
+				"generate reports",
+				"compute correlations",
+				"AI insights"
+			],
+			"apiEndpoints": ["/analysis/generate", "/users/{id}/analysis"],
+			"dbCollections": [
+				"analysis_reports",
+				"device_data",
+				"diary_entries"
+			]
+		}
+	],
+	"crossCutting": {
+		"observability": {
+			"logs": "structured",
+			"metrics": "latency, error rate",
+			"tracing": "optional"
+		},
+		"security": {
+			"auth": "JWT",
+			"webhooks": "signature validation",
+			"pii": "encrypt at rest if required"
+		},
+		"realtime": {
+			"transport": "ws or sse",
+			"messageTypes": [
+				"device_event",
+				"analysis_progress",
+				"notification"
+			]
+		}
+	}
+}

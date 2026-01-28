@@ -1,0 +1,511 @@
+{
+	"description": "Canonical DB schema + mock data for Bio AI. This merges earlier db_schema.json and db_schema_expanded.json into a single, scalable model.",
+	"version": "2026-01-28",
+	"conventions": {
+		"idFormat": "string",
+		"timestamps": "ISO-8601 UTC date-time",
+		"units": "Prefer explicit units (kcal, g, ml, bpm, count).",
+		"scalability": "New wearable metrics are stored via device_data.metric + dataPoints; no schema migration required for new metrics."
+	},
+	"collections": {
+		"users": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"email": { "type": "string", "format": "email" },
+					"name": { "type": "string" },
+					"displayName": { "type": "string" },
+					"profilePhoto": {
+						"type": ["string", "null"],
+						"format": "uri"
+					},
+					"role": {
+						"type": "string",
+						"enum": ["user", "admin", "pro"]
+					},
+					"createdAt": { "type": "string", "format": "date-time" },
+					"preferences": { "type": "object" },
+					"connectedAccounts": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"provider": { "type": "string" },
+								"connected": { "type": "boolean" },
+								"lastSynced": {
+									"type": "string",
+									"format": "date-time"
+								}
+							},
+							"required": ["provider", "connected"]
+						}
+					},
+					"meta": { "type": "object" }
+				},
+				"required": ["_id", "email", "name", "createdAt"]
+			},
+			"examples": [
+				{
+					"_id": "user_001",
+					"email": "sanae@Bio AI.ai",
+					"name": "Dekomori Sanae",
+					"displayName": "Sanae",
+					"profilePhoto": "https://.../avatar.jpg",
+					"role": "pro",
+					"createdAt": "2024-05-01T09:12:00Z",
+					"preferences": {
+						"units": "metric",
+						"dietaryProfile": ["Keto", "Mediterranean"],
+						"allergies": ["Peanuts", "Gluten", "Dairy"],
+						"dislikes": ["Mushrooms"],
+						"notifications": { "push": true, "email": false },
+						"goals": { "waterGoal_ml": 2500, "proteinDaily_g": 140 }
+					},
+					"connectedAccounts": [
+						{
+							"provider": "apple_health",
+							"connected": true,
+							"lastSynced": "2026-01-28T11:58:00Z"
+						},
+						{
+							"provider": "fitbit",
+							"connected": true,
+							"lastSynced": "2026-01-28T11:45:00Z"
+						}
+					],
+					"meta": { "signupSource": "ios_app", "tags": ["beta_user"] }
+				}
+			]
+		},
+		"recipes": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"title": { "type": "string" },
+					"description": { "type": "string" },
+					"imageUrl": { "type": "string", "format": "uri" },
+					"ingredients": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"name": { "type": "string" },
+								"qty": { "type": "number" },
+								"unit": { "type": "string" }
+							},
+							"required": ["name"]
+						}
+					},
+					"servings": { "type": "number" },
+					"cookTimeMin": { "type": "number" },
+					"steps": { "type": "array" },
+					"nutrition": { "type": "object" },
+					"nutritionPerServing": { "type": "object" },
+					"tags": { "type": "array" },
+					"createdBy": { "type": "string" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "title", "ingredients"]
+			},
+			"examples": [
+				{
+					"_id": "recipe_1001",
+					"title": "Power Chicken Bowl",
+					"description": "High-protein bowl with seasoned chicken, rice and spinach.",
+					"imageUrl": "https://.../power-chicken.jpg",
+					"ingredients": [
+						{ "name": "Chicken Breast", "qty": 400, "unit": "g" },
+						{ "name": "Spinach", "qty": 100, "unit": "g" },
+						{ "name": "Rice", "qty": 200, "unit": "g" }
+					],
+					"servings": 2,
+					"cookTimeMin": 20,
+					"steps": ["Season chicken", "Cook rice", "Assemble bowl"],
+					"nutrition": {
+						"calories": 520,
+						"protein_g": 45,
+						"fat_g": 14,
+						"carbs_g": 40
+					},
+					"nutritionPerServing": {
+						"calories": 260,
+						"protein_g": 22.5,
+						"fat_g": 7,
+						"carbs_g": 20
+					},
+					"tags": ["high-protein", "easy"],
+					"createdBy": "user_001",
+					"updatedAt": "2026-01-20T12:00:00Z"
+				}
+			]
+		},
+		"pantry_items": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"ingredient": { "type": "string" },
+					"qty": { "type": "number" },
+					"unit": { "type": "string" },
+					"category": { "type": "string" },
+					"location": { "type": "string" },
+					"expiryDate": { "type": "string", "format": "date" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "ingredient"]
+			},
+			"examples": [
+				{
+					"_id": "pantry_9001",
+					"userId": "user_001",
+					"ingredient": "Lemons",
+					"qty": 2,
+					"unit": "pcs",
+					"category": "fruit",
+					"location": "fridge",
+					"expiryDate": "2026-02-10",
+					"updatedAt": "2026-01-28T10:00:00Z"
+				},
+				{
+					"_id": "pantry_9002",
+					"userId": "user_001",
+					"ingredient": "Rice",
+					"qty": 2,
+					"unit": "kg",
+					"category": "grains",
+					"location": "cupboard",
+					"updatedAt": "2025-11-01T12:00:00Z"
+				}
+			]
+		},
+		"shopping_list": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"title": { "type": "string" },
+					"items": { "type": "array" },
+					"store": { "type": "string" },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "items"]
+			},
+			"examples": [
+				{
+					"_id": "shop_001",
+					"userId": "user_001",
+					"title": "Weekly Groceries",
+					"items": [
+						{ "name": "Lemons", "qty": 2, "checked": false },
+						{ "name": "Greek Yogurt", "qty": 1, "checked": true },
+						{
+							"name": "Almonds",
+							"qty": 1,
+							"unit": "bag",
+							"checked": false
+						}
+					],
+					"store": "Local Market",
+					"createdAt": "2026-01-27T08:00:00Z",
+					"updatedAt": "2026-01-27T08:05:00Z"
+				}
+			]
+		},
+		"leftovers": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"recipeId": { "type": "string" },
+					"servings": { "type": "number" },
+					"preparedAt": { "type": "string", "format": "date-time" },
+					"notes": { "type": "string" }
+				},
+				"required": ["_id", "userId", "recipeId"]
+			},
+			"examples": [
+				{
+					"_id": "left_200",
+					"userId": "user_001",
+					"recipeId": "recipe_1001",
+					"servings": 3,
+					"preparedAt": "2026-01-28T18:00:00Z",
+					"notes": "Cooked today"
+				},
+				{
+					"_id": "left_201",
+					"userId": "user_001",
+					"recipeId": "recipe_1002",
+					"servings": 1,
+					"preparedAt": "2026-01-27T18:00:00Z",
+					"notes": "Eat within 2 days"
+				}
+			]
+		},
+		"diary_entries": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"type": {
+						"type": "string",
+						"enum": ["food", "activity", "sleep", "water", "note"]
+					},
+					"data": { "type": "object" },
+					"timestamp": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "type", "timestamp"]
+			},
+			"examples": [
+				{
+					"_id": "d_100",
+					"userId": "user_001",
+					"type": "food",
+					"data": {
+						"name": "Magnesium Power Bowl",
+						"calories": 450,
+						"details": "Quinoa, Avocado, Kale"
+					},
+					"timestamp": "2026-01-28T12:00:00Z"
+				},
+				{
+					"_id": "d_101",
+					"userId": "user_001",
+					"type": "activity",
+					"data": { "name": "Morning Run", "calories_burned": 240 },
+					"timestamp": "2026-01-28T07:00:00Z"
+				}
+			]
+		},
+		"activities": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"type": { "type": "string" },
+					"value": { "type": "number" },
+					"unit": { "type": "string" },
+					"timestamp": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "type", "timestamp"]
+			},
+			"examples": [
+				{
+					"_id": "act_101",
+					"userId": "user_001",
+					"type": "active_burn",
+					"value": 620,
+					"unit": "kcal",
+					"timestamp": "2026-01-28T07:00:00Z"
+				}
+			]
+		},
+		"devices": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"provider": { "type": "string" },
+					"connected": { "type": "boolean" },
+					"lastSynced": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "provider"]
+			},
+			"examples": [
+				{
+					"_id": "dev_01",
+					"userId": "user_001",
+					"provider": "apple_health",
+					"connected": true,
+					"lastSynced": "2026-01-28T11:58:00Z"
+				},
+				{
+					"_id": "dev_02",
+					"userId": "user_001",
+					"provider": "fitbit",
+					"connected": true,
+					"lastSynced": "2026-01-28T11:45:00Z"
+				}
+			]
+		},
+		"device_data": {
+			"notes": "Scalable metric storage. metric is free-form (e.g., heart_rate, stress, sleep_score). New metrics appear as new metric keys.",
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"deviceId": { "type": "string" },
+					"metric": { "type": "string" },
+					"unit": { "type": "string" },
+					"dataPoints": { "type": "array" },
+					"source": { "type": "string" },
+					"receivedAt": { "type": "string", "format": "date-time" }
+				},
+				"required": [
+					"_id",
+					"userId",
+					"deviceId",
+					"metric",
+					"dataPoints"
+				]
+			},
+			"examples": [
+				{
+					"_id": "devdata_hr_20260128_1",
+					"userId": "user_001",
+					"deviceId": "dev_01",
+					"metric": "heart_rate",
+					"unit": "bpm",
+					"dataPoints": [
+						{ "ts": "2026-01-28T11:50:00Z", "value": 68 },
+						{ "ts": "2026-01-28T11:51:00Z", "value": 70 }
+					],
+					"source": "apple_health",
+					"receivedAt": "2026-01-28T11:58:00Z"
+				},
+				{
+					"_id": "devdata_sleep_20260128_1",
+					"userId": "user_001",
+					"deviceId": "dev_02",
+					"metric": "sleep_score",
+					"unit": "score",
+					"dataPoints": [{ "ts": "2026-01-28", "value": 74 }],
+					"source": "fitbit",
+					"receivedAt": "2026-01-28T11:45:00Z"
+				}
+			]
+		},
+		"analysis_reports": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"period": { "type": "string" },
+					"score": { "type": "number" },
+					"summary": { "type": "string" },
+					"insights": { "type": "array" },
+					"metrics": { "type": "object" },
+					"generatedAt": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "score", "generatedAt"]
+			},
+			"examples": [
+				{
+					"_id": "analysis_01",
+					"userId": "user_001",
+					"period": "2026-W04",
+					"score": 88,
+					"summary": "Excellent Energy",
+					"insights": ["Your protein intake improved this week."],
+					"metrics": {
+						"calories": { "consumed": 1840, "goal": 2300 },
+						"protein_g": { "consumed": 118, "goal": 140 },
+						"sleep_score": { "value": 74 }
+					},
+					"generatedAt": "2026-01-28T12:00:00Z"
+				}
+			]
+		},
+		"goals": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"type": { "type": "string" },
+					"target": { "type": "number" },
+					"unit": { "type": "string" },
+					"startDate": { "type": "string", "format": "date" },
+					"endDate": { "type": ["string", "null"], "format": "date" }
+				},
+				"required": ["_id", "userId", "type", "target"]
+			},
+			"examples": [
+				{
+					"_id": "goal_01",
+					"userId": "user_001",
+					"type": "protein_daily",
+					"target": 140,
+					"unit": "g",
+					"startDate": "2026-01-01",
+					"endDate": null
+				},
+				{
+					"_id": "goal_02",
+					"userId": "user_001",
+					"type": "water_daily",
+					"target": 2500,
+					"unit": "ml",
+					"startDate": "2026-01-01",
+					"endDate": null
+				}
+			]
+		},
+		"notifications": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"userId": { "type": "string" },
+					"type": { "type": "string" },
+					"payload": { "type": "object" },
+					"read": { "type": "boolean" },
+					"createdAt": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "userId", "type", "createdAt"]
+			},
+			"examples": [
+				{
+					"_id": "n_001",
+					"userId": "user_001",
+					"type": "reminder",
+					"payload": {
+						"title": "Hydration",
+						"body": "Drink water to hit your goal."
+					},
+					"read": false,
+					"createdAt": "2026-01-28T06:00:00Z"
+				}
+			]
+		},
+		"audit_logs": {
+			"schema": {
+				"type": "object",
+				"properties": {
+					"_id": { "type": "string" },
+					"action": { "type": "string" },
+					"userId": { "type": "string" },
+					"meta": { "type": "object" },
+					"createdAt": { "type": "string", "format": "date-time" }
+				},
+				"required": ["_id", "action", "createdAt"]
+			},
+			"examples": [
+				{
+					"_id": "a_001",
+					"action": "pantry.add",
+					"userId": "user_001",
+					"meta": { "ingredient": "Lemons" },
+					"createdAt": "2026-01-28T10:00:01Z"
+				}
+			]
+		}
+	},
+	"relationships": [
+		{ "from": "pantry_items.userId", "to": "users._id" },
+		{ "from": "shopping_list.userId", "to": "users._id" },
+		{ "from": "leftovers.recipeId", "to": "recipes._id" },
+		{ "from": "device_data.userId", "to": "users._id" }
+	]
+}

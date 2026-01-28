@@ -1,0 +1,210 @@
+{
+	"description": "Canonical API contract for Bio AI. Merges backend_api_schema.json and backend_api_expanded.json into a single, consistent contract.",
+	"meta": { "version": "1.0.0", "basePath": "/api/v1" },
+	"auth": {
+		"scheme": "Bearer JWT",
+		"header": "Authorization: Bearer <token>"
+	},
+	"pagination": {
+		"style": "page & limit",
+		"meta": { "page": "int", "limit": "int", "total": "int" }
+	},
+	"error": {
+		"shape": {
+			"code": "string",
+			"message": "string",
+			"details": "object|null"
+		},
+		"examples": [
+			{
+				"code": "invalid_request",
+				"message": "Missing required field: ingredient",
+				"details": null
+			},
+			{
+				"code": "unauthorized",
+				"message": "Invalid or expired token",
+				"details": null
+			}
+		]
+	},
+	"endpoints": {
+		"/auth/login": {
+			"method": "POST",
+			"request": { "email": "string", "password": "string" },
+			"response": {
+				"token": "string",
+				"user": { "id": "string", "email": "string", "name": "string" }
+			},
+			"example_request": {
+				"email": "sanae@Bio AI.ai",
+				"password": "••••••"
+			},
+			"example_response": {
+				"token": "eyJ...",
+				"user": {
+					"id": "user_001",
+					"email": "sanae@Bio AI.ai",
+					"name": "Dekomori Sanae"
+				}
+			}
+		},
+		"/users/{id}": {
+			"method": "GET, PUT, PATCH",
+			"pathParams": { "id": "string" },
+			"GET_response": { "user": "object" },
+			"PUT_request": { "user": "object" },
+			"example_GET_response": {
+				"user": {
+					"_id": "user_001",
+					"email": "sanae@Bio AI.ai",
+					"name": "Dekomori Sanae",
+					"preferences": { "units": "metric" }
+				}
+			}
+		},
+		"/recipes/search": {
+			"method": "GET",
+			"queryParams": {
+				"ingredients": "string (csv)",
+				"diet": "string|optional",
+				"page": "int",
+				"limit": "int"
+			},
+			"response": { "recipes": "array", "meta": "pagination.meta" },
+			"example_request": "GET /api/v1/recipes/search?ingredients=chicken,spinach,rice&page=1&limit=20",
+			"example_response": {
+				"recipes": [
+					{
+						"_id": "recipe_1001",
+						"title": "Power Chicken Bowl",
+						"nutrition": { "calories": 520 }
+					}
+				],
+				"meta": { "page": 1, "limit": 20, "total": 1 }
+			}
+		},
+		"/pantry": {
+			"method": "GET, POST, PUT, DELETE",
+			"GET_response": { "items": "array" },
+			"POST_request": {
+				"ingredient": "string",
+				"qty": "number",
+				"unit": "string",
+				"expiryDate": "string|null"
+			},
+			"example_POST_request": {
+				"ingredient": "Lemons",
+				"qty": 2,
+				"unit": "pcs",
+				"expiryDate": "2026-02-10"
+			},
+			"example_GET_response": {
+				"items": [{ "ingredient": "Lemons", "qty": 2, "unit": "pcs" }]
+			}
+		},
+		"/shopping-lists": {
+			"method": "GET, POST, PUT, DELETE",
+			"example_POST_request": {
+				"title": "Weekly Groceries",
+				"items": [{ "name": "Lemons", "qty": 2 }]
+			},
+			"example_GET_response": {
+				"lists": [
+					{
+						"id": "shop_001",
+						"title": "Weekly Groceries",
+						"items": [
+							{ "name": "Lemons", "qty": 2, "checked": false }
+						]
+					}
+				]
+			}
+		},
+		"/scan/barcode": {
+			"method": "POST",
+			"request": { "barcode": "string" },
+			"response": { "found": "boolean", "product": "object|null" },
+			"example_request": { "barcode": "0123456789012" },
+			"example_response": {
+				"found": true,
+				"product": {
+					"name": "Blueberry Protein Bar",
+					"calories": 220,
+					"protein_g": 12
+				}
+			}
+		},
+		"/users/{id}/analysis": {
+			"method": "GET",
+			"response": { "analysis_reports": "array" },
+			"example_response": {
+				"analysis_reports": [
+					{ "score": 88, "summary": "Excellent Energy" }
+				]
+			}
+		},
+		"/device/{userId}/metrics": {
+			"method": "GET",
+			"pathParams": { "userId": "string" },
+			"queryParams": {
+				"metric": "string (e.g. heart_rate)",
+				"start": "iso8601",
+				"end": "iso8601",
+				"limit": "int",
+				"page": "int"
+			},
+			"response": {
+				"metric": "string",
+				"dataPoints": "array of {ts, value, sourceDevice}"
+			},
+			"example_response": {
+				"metric": "heart_rate",
+				"dataPoints": [
+					{
+						"ts": "2026-01-28T11:50:00Z",
+						"value": 68,
+						"sourceDevice": "apple_health"
+					}
+				]
+			}
+		},
+		"/analysis/generate": {
+			"method": "POST",
+			"request": { "userId": "string", "period": "string" },
+			"response": { "reportId": "string", "status": "string" },
+			"example_request": { "userId": "user_001", "period": "2026-W04" },
+			"example_response": {
+				"reportId": "analysis_01",
+				"status": "completed"
+			}
+		},
+		"/webhooks/device-sync": {
+			"method": "POST",
+			"notes": "Webhook endpoint for external device providers to push events. Validate signatures per provider.",
+			"request": {
+				"deviceId": "string",
+				"userId": "string",
+				"payload": "object",
+				"ts": "string"
+			}
+		}
+	},
+	"realtime": {
+		"notes": "Use WebSocket or SSE for streaming device events, analysis progress and notifications.",
+		"channel": "/realtime/stream",
+		"messages": [
+			{
+				"type": "device_event",
+				"payload": { "metric": "heart_rate", "ts": "...", "value": 70 }
+			},
+			{
+				"type": "analysis_complete",
+				"payload": { "reportId": "analysis_01" }
+			}
+		]
+	},
+	"rateLimit": {
+		"notes": "Return 429 with Retry-After when limits exceeded."
+	}
+}
