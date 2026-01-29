@@ -2,28 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bio_ai/app/di/injectors.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
-import 'settings/models/device_state.dart';
-import 'settings/widgets/settings_account_section.dart';
-import 'settings/widgets/settings_device_section.dart';
-import 'settings/widgets/settings_dietary_section.dart';
-import 'settings/widgets/settings_goal_section.dart';
-import 'settings/widgets/settings_modal_shell.dart';
-import 'settings/widgets/settings_plan_options.dart';
-import 'settings/widgets/settings_preference_section.dart';
-import 'settings/widgets/settings_profile_header.dart';
+import 'package:bio_ai/ui/pages/settings/models/device_state.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_account_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_device_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_dietary_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_goal_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_modal_shell.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_plan_options.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_preference_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_profile_header.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final Map<String, DeviceState> _devices = {
     'apple': DeviceState('Apple Health', true, '2m ago'),
     'google': DeviceState('Google Fit', false, ''),
@@ -163,6 +166,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onExportData: _openExportModal,
                   onDeleteAccount: _openDeleteModal,
                 ),
+
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Diagnostics',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _testTorch,
+                            child: const Text('Torch'),
+                          ),
+                          ElevatedButton(
+                            onPressed: _testGps,
+                            child: const Text('GPS'),
+                          ),
+                          ElevatedButton(
+                            onPressed: _testNetwork,
+                            child: const Text('Network'),
+                          ),
+                          ElevatedButton(
+                            onPressed: _openFindDevicesModal,
+                            child: const Text('Scan BLE'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -199,17 +238,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Current plan: ${_planLabel(_selectedPlan)}',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                  const SizedBox(height: 12),
+                  const Text('Choose Plan'),
                   SettingsPlanOptions(
                     selectedPlan: _selectedPlan,
-                    onPlanSelected: (plan) {
-                      setState(() => _selectedPlan = plan);
-                      setModalState(() {});
-                    },
+                    onChanged: (plan) =>
+                        setModalState(() => _selectedPlan = plan),
                   ),
                 ],
               ),
@@ -220,101 +253,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  String _planLabel(String plan) {
-    switch (plan) {
-      case 'pro-annual':
-        return 'Pro Annual';
-      case 'free':
-        return 'Free';
-      default:
-        return 'Pro Monthly';
-    }
-  }
-
   void _openExportModal() {
     showDialog(
       context: context,
-      builder: (context) {
-        return SettingsModalShell(
-          title: 'Export Data',
-          primaryText: 'Download CSV',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Export started');
-          },
-          child: Text(
-            'CSV export ready. This is a mock download.',
-            style: AppTextStyles.bodySmall,
-          ),
-        );
-      },
+      builder: (context) => SettingsModalShell(
+        title: 'Export Data',
+        primaryText: 'Export',
+        onPrimary: () {
+          Navigator.pop(context);
+          _showToast('Export started');
+        },
+        child: const Text('We will export anonymized data...'),
+      ),
     );
   }
 
-  void _openFindDevicesModal() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SettingsModalShell(
-          title: 'Find Devices',
-          primaryText: 'Done',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Scan complete');
-          },
-          child: Text(
-            'Scanning nearby devices... (mock)',
-            style: AppTextStyles.bodySmall,
+  Future<void> _openFindDevicesModal() async {
+    _showToast('Scanning for nearby devices...');
+    try {
+      final results = await ref.read(bleServiceProvider).scanOnce();
+      if (results.isEmpty) {
+        _showToast('No devices found');
+        return;
+      }
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Nearby devices'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: results
+                  .map(
+                    (r) => ListTile(
+                      title: Text(
+                        r.device.name.isNotEmpty
+                            ? r.device.name
+                            : r.device.id.id,
+                      ),
+                      subtitle: Text(r.advertisementData.localName ?? ''),
+                      trailing: Text(r.rssi.toString()),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
-        );
-      },
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      _showToast('Scan failed: $e');
+    }
+  }
+
+  Future<void> _testTorch() async {
+    final torch = ref.read(torchServiceProvider);
+    try {
+      await torch.turnOn();
+      _showToast('Torch on');
+      await Future.delayed(const Duration(seconds: 1));
+      await torch.turnOff();
+      _showToast('Torch off');
+    } catch (e) {
+      _showToast('Torch error: $e');
+    }
+  }
+
+  Future<void> _testGps() async {
+    final pos = await ref.read(gpsServiceProvider).getCurrentPosition();
+    if (pos == null) {
+      _showToast('Location denied or unavailable');
+      return;
+    }
+    _showToast(
+      'Location: ${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}',
     );
+  }
+
+  Future<void> _testNetwork() async {
+    try {
+      final res = await ref
+          .read(networkServiceProvider)
+          .get('https://httpbin.org/get');
+      _showToast('Network OK: ${res.statusCode}');
+    } catch (e) {
+      _showToast('Network error: $e');
+    }
   }
 
   void _openDeleteModal() {
-    _deleteController.clear();
     showDialog(
       context: context,
       builder: (context) {
         return SettingsModalShell(
           title: 'Delete Account',
-          primaryText: 'Confirm Delete',
-          primaryColor: const Color(0xFFEF4444),
-          primaryEnabled:
-              _deleteController.text.trim().toUpperCase() == 'DELETE',
+          primaryText: 'Delete',
           onPrimary: () {
             Navigator.pop(context);
-            _showToast('Account deleted (mock)');
+            _showToast('Account deleted');
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'This will permanently remove your health data (mock).',
-                style: AppTextStyles.bodySmall,
-              ),
+              const Text('Type DELETE to confirm'),
               const SizedBox(height: 12),
-              Text('Type DELETE to confirm.', style: AppTextStyles.bodySmall),
-              const SizedBox(height: 8),
               TextField(
                 controller: _deleteController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Type DELETE',
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                ),
+                decoration: const InputDecoration(hintText: 'DELETE'),
               ),
             ],
           ),
         );
       },
     );
+  }
+
+  String _planLabel(String plan) {
+    return plan == 'pro-monthly' ? 'Pro Monthly' : 'Free';
   }
 }

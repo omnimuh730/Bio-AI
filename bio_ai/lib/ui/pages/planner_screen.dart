@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
-import '../organisms/floating_nav_bar.dart';
-import 'analytics_screen.dart';
-import 'capture_screen.dart';
-import 'dashboard_screen.dart';
-import 'settings_screen.dart';
+import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
+import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
+import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
 import 'planner/models/planner_leftover_item.dart';
 import 'planner/models/planner_recipe_item.dart';
 import 'planner/widgets/planner_cook_view.dart';

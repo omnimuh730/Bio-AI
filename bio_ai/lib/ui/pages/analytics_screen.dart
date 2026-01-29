@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
-import '../organisms/floating_nav_bar.dart';
-import 'dashboard_screen.dart';
-import 'settings_screen.dart';
-import 'capture_screen.dart';
-import 'planner_screen.dart';
+import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
+import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
+import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
+import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
 import 'analytics/models/analytics_history_entry.dart';
 import 'analytics/widgets/analytics_correlations_card.dart';
 import 'analytics/widgets/analytics_empty_state.dart';

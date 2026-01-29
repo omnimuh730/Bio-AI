@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'core/localization/app_localizations.dart';
-import 'core/theme/app_theme.dart';
-import 'ui/pages/dashboard_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bio_ai/core/localization/app_localizations.dart';
+import 'package:bio_ai/core/theme/app_theme.dart';
+import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
