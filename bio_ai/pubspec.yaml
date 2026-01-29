@@ -29,6 +29,7 @@ dependencies:
     permission_handler: any
     camera: any
     path_provider: any
+    path: any
     mobile_scanner: any
 
 dev_dependencies:
