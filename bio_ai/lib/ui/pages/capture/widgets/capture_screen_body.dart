@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
@@ -181,7 +182,7 @@ class CaptureScreenBody extends StatelessWidget {
 }
 
 class _PitchIndicator extends ConsumerWidget {
-  const _PitchIndicator({super.key});
+  const _PitchIndicator();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pitchAsync = ref.watch(pitchProvider);
