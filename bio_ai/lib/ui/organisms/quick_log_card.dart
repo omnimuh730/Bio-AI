@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 
 class QuickLogCard extends StatelessWidget {
   const QuickLogCard({super.key});
@@ -28,17 +29,11 @@ class QuickLogCard extends StatelessWidget {
             children: [
               Text(
                 'Copy Yesterday Breakfast',
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyles.dmSans16Bold,
               ),
               Text(
                 'Oatmeal and berries - 320 kcal',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+                style: AppTextStyles.labelSmall,
               ),
             ],
           ),
@@ -50,9 +45,7 @@ class QuickLogCard extends StatelessWidget {
             ),
             child: Text(
               'Copy',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textMain,
               ),
             ),

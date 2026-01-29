@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class SettingsSectionLabel extends StatelessWidget {
   final String label;
@@ -12,11 +13,8 @@ class SettingsSectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
       child: Text(
         label.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
+        style: AppTextStyles.labelSmall.copyWith(
           color: AppColors.textSecondary,
-          letterSpacing: 0.5,
         ),
       ),
     );

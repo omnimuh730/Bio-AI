@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 import '../../data/mock_data.dart';
 import '../atoms/section_title.dart';
 import '../molecules/header_profile.dart';

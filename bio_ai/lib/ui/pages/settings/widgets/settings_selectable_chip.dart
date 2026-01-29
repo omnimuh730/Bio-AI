@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class SettingsSelectableChip extends StatefulWidget {
   final String label;
@@ -36,9 +37,7 @@ class _SettingsSelectableChipState extends State<SettingsSelectableChip> {
         ),
         child: Text(
           widget.label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+          style: AppTextStyles.labelSmall.copyWith(
             color: _selected ? AppColors.accentBlue : AppColors.textSecondary,
           ),
         ),

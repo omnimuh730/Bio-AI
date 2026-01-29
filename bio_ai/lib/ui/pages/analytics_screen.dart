@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 import '../organisms/floating_nav_bar.dart';
 import 'dashboard_screen.dart';
 import 'settings_screen.dart';

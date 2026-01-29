@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 
 class LogMealModal extends StatelessWidget {
   final Map<String, dynamic> meal;
@@ -24,13 +25,7 @@ class LogMealModal extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Meal Logged",
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text("Meal Logged", style: AppTextStyles.dmSans16Bold),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
@@ -45,21 +40,11 @@ class LogMealModal extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Text(
-              meal['title'],
-              style: GoogleFonts.dmSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
-              ),
-            ),
+            Text(meal['title'], style: AppTextStyles.dmSans16Bold),
             const SizedBox(height: 4),
             Text(
               "Macros added to your daily totals.",
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: AppTextStyles.bodySmall,
             ),
             const SizedBox(height: 24),
             Row(
@@ -74,13 +59,7 @@ class LogMealModal extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      "View Diary",
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: Text("View Diary", style: AppTextStyles.button),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -94,13 +73,7 @@ class LogMealModal extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       alignment: Alignment.center,
-                      child: Text(
-                        "Keep Browsing",
-                        style: GoogleFonts.inter(
-                          color: AppColors.textMain,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text("Keep Browsing", style: AppTextStyles.button),
                     ),
                   ),
                 ),

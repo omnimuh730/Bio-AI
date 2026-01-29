@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import 'settings_toggle_switch.dart';
 
 class SettingsSwitchRow extends StatelessWidget {
@@ -26,22 +27,9 @@ class SettingsSwitchRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMain,
-                  ),
-                ),
+                Text(title, style: AppTextStyles.dmSans16Bold),
                 const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                Text(subtitle, style: AppTextStyles.labelSmall),
               ],
             ),
           ),

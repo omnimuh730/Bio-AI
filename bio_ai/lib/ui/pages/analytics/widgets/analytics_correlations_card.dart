@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'analytics_correlation_chart_painter.dart';
 import 'analytics_metric_selector.dart';
 import 'analytics_time_toggle.dart';

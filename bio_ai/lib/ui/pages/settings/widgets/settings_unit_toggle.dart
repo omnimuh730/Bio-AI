@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class SettingsUnitToggle extends StatelessWidget {
   final bool metricUnits;
@@ -48,14 +49,7 @@ class SettingsUnitToggle extends StatelessWidget {
                 : null,
           ),
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: selected ? AppColors.textMain : AppColors.textSecondary,
-            ),
-          ),
+          child: Text(label, style: AppTextStyles.button),
         ),
       ),
     );

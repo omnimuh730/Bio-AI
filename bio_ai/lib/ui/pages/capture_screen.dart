@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import 'analytics_screen.dart';
 import 'dashboard_screen.dart';
 import 'planner_screen.dart';
@@ -374,21 +375,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Meal Logged',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMain,
-                  ),
-                ),
+                Text('Meal Logged', style: AppTextStyles.dmSans16Bold),
                 const SizedBox(height: 12),
                 Text(
                   'Your meal was added to the diary.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTextStyles.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -412,10 +403,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
-                          'View Diary',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                        ),
+                        child: Text('View Diary', style: AppTextStyles.button),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -432,10 +420,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
-                          'Back Home',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                        ),
+                        child: Text('Back Home', style: AppTextStyles.button),
                       ),
                     ),
                   ],
@@ -478,11 +463,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                       children: [
                         Text(
                           'Create Custom Food',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textMain,
-                          ),
+                          style: AppTextStyles.dmSans16Bold,
                         ),
                         InkWell(
                           onTap: () => Navigator.pop(context),
@@ -517,7 +498,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         ),
                         Text(
                           'Add to public database',
-                          style: GoogleFonts.inter(fontSize: 12),
+                          style: AppTextStyles.labelSmall,
                         ),
                       ],
                     ),
@@ -559,12 +540,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text(
-                              'Save',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            child: Text('Save', style: AppTextStyles.button),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -578,12 +554,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text(
-                              'Cancel',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            child: Text('Cancel', style: AppTextStyles.button),
                           ),
                         ),
                       ],

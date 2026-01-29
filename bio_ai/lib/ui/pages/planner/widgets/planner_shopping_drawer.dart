@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'planner_shop_item.dart';
 
 class PlannerShoppingDrawer extends StatelessWidget {

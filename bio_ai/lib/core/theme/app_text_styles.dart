@@ -103,4 +103,10 @@ class AppTextStyles {
     color: Colors.white,
     height: 1.2,
   );
+
+  static TextStyle get dmSans16Bold => GoogleFonts.dmSans(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+  );
 }
