@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:camera/camera.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
@@ -136,12 +137,29 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     super.initState();
     _items.add(_catalog.firstWhere((item) => item.name == 'Ribeye Steak'));
     _results = List<FoodItem>.from(_catalog);
+
+    // Initialize camera asynchronously
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initCamera());
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      final camera = ref.read(cameraServiceProvider);
+      await camera.initialize();
+      if (mounted) setState(() {});
+    } catch (e) {
+      // ignore errors here; fallback to static image
+    }
   }
 
   @override
   void dispose() {
     _barcodeTimer?.cancel();
     _searchController.dispose();
+    // Dispose camera controller when leaving the screen
+    try {
+      ref.read(cameraServiceProvider).dispose();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -427,6 +445,13 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   }
 
   Widget _buildCameraView() {
+    final camera = ref.read(cameraServiceProvider);
+    if (camera.isInitialized && camera.controller != null) {
+      // Show a live camera preview when available
+      return SizedBox.expand(child: CameraPreview(camera.controller!));
+    }
+
+    // Fallback: show a static background image
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
