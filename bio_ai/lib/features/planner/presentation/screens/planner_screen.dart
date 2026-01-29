@@ -5,15 +5,15 @@ import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.
 import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
-import 'planner/models/planner_leftover_item.dart';
-import 'planner/models/planner_recipe_item.dart';
-import 'planner/widgets/planner_cook_view.dart';
-import 'planner/widgets/planner_eat_out_view.dart';
-import 'planner/widgets/planner_export_modal.dart';
-import 'planner/widgets/planner_header.dart';
-import 'planner/widgets/planner_leftover_prompt.dart';
-import 'planner/widgets/planner_recipe_modal.dart';
-import 'planner/widgets/planner_shopping_drawer.dart';
+import 'package:bio_ai/ui/pages/planner/models/planner_leftover_item.dart';
+import 'package:bio_ai/ui/pages/planner/models/planner_recipe_item.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_cook_view.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_eat_out_view.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_export_modal.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_header.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_leftover_prompt.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_recipe_modal.dart';
+import 'package:bio_ai/ui/pages/planner/widgets/planner_shopping_drawer.dart';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
@@ -58,55 +58,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
       ingredients: 'Kale, avocado, cucumber, olive oil, pumpkin seeds',
       steps:
           'Chop greens, toss with avocado and cucumber, dress with olive oil, top seeds.',
-      batchServings: 2,
+      batchServings: 1,
     ),
   ];
 
+  // Leftovers live state for planner
   final List<PlannerLeftoverItem> _leftovers = [
     PlannerLeftoverItem('Power Chicken Bowl', 3, 'Cooked today'),
     PlannerLeftoverItem('Green Keto Salad', 1, 'Cooked yesterday'),
   ];
-
-  void _onNavTapped(int index) {
-    if (index == 1) {
-      return;
-    }
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
-      return;
-    }
-    if (index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SettingsScreen()),
-      );
-    }
-  }
-
-  void _onFabTapped() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const CaptureScreen()),
-    );
-  }
-
-  void _toggleDrawer() {
-    setState(() => _drawerExpanded = !_drawerExpanded);
-  }
-
-  void _switchCookTab(String tab) {
-    setState(() => _cookTab = tab);
-  }
 
   void _openRecipe(PlannerRecipeItem recipe) {
     _activeRecipe = recipe.keyId;
@@ -180,15 +140,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
     _showToast('Added to shopping list');
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(milliseconds: 1200),
-      ),
-    );
-  }
-
   void _showExportModal() {
     showDialog(
       context: context,
@@ -204,7 +155,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 160),
+            padding: const EdgeInsets.only(bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -213,44 +164,95 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   onCook: () => setState(() => _cookView = true),
                   onEatOut: () => setState(() => _cookView = false),
                 ),
-                _cookView
-                    ? PlannerCookView(
-                        cookTab: _cookTab,
-                        onTabChanged: _switchCookTab,
-                        pantryTags: _pantryTags,
-                        recipes: _recipes,
-                        leftovers: _leftovers,
-                        addedRecipeIds: _addedRecipes,
-                        onOpenRecipe: _openRecipe,
-                        onAddToShop: _addToShoppingList,
-                        onLogLeftover: _logLeftover,
-                        onRemoveLeftover: _removeLeftover,
-                      )
-                    : const PlannerEatOutView(),
-                const SizedBox(height: 160),
+                if (_cookView)
+                  PlannerCookView(
+                    cookTab: _cookTab,
+                    onTabChanged: (tab) => setState(() => _cookTab = tab),
+                    pantryTags: _pantryTags,
+                    recipes: _recipes,
+                    leftovers: _leftovers,
+                    addedRecipeIds: _addedRecipes,
+                    onOpenRecipe: _openRecipe,
+                    onAddToShop: _addToShoppingList,
+                    onLogLeftover: _logLeftover,
+                    onRemoveLeftover: _removeLeftover,
+                  )
+                else
+                  const PlannerEatOutView(),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Quick demo action
+                      setState(() => _addedRecipes.add('Power Chicken Bowl'));
+                      _showToast('Added Power Chicken Bowl from leftovers');
+                    },
+                    child: const Text('Use Leftover (demo)'),
+                  ),
+                ),
               ],
             ),
           ),
-          PlannerShoppingDrawer(
-            expanded: _drawerExpanded,
-            onToggle: _toggleDrawer,
-            shoppingCount: _shoppingCount,
-            onExport: _showExportModal,
-          ),
+          if (_drawerExpanded)
+            PlannerShoppingDrawer(
+              expanded: _drawerExpanded,
+              onToggle: () =>
+                  setState(() => _drawerExpanded = !_drawerExpanded),
+              shoppingCount: _shoppingCount,
+              onExport: _showExportModal,
+            ),
           Positioned(
-            bottom: 0,
+            bottom: 30,
             left: 0,
             right: 0,
             child: Center(
               child: FloatingNavBar(
                 selectedIndex: 1,
-                onItemTapped: _onNavTapped,
-                onFabTapped: _onFabTapped,
+                onItemTapped: (index) {
+                  if (index == 0) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DashboardScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (index == 2) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AnalyticsScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (index == 3) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                },
+                onFabTapped: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CaptureScreen(),
+                  ),
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _showToast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }

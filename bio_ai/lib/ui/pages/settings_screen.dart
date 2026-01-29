@@ -1,46 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
-import 'package:bio_ai/core/theme/app_text_styles.dart';
-import '../organisms/floating_nav_bar.dart';
-import 'analytics_screen.dart';
-import 'capture_screen.dart';
-import 'dashboard_screen.dart';
-import 'planner_screen.dart';
-import 'settings/models/device_state.dart';
-import 'settings/widgets/settings_account_section.dart';
-import 'settings/widgets/settings_device_section.dart';
-import 'settings/widgets/settings_dietary_section.dart';
-import 'settings/widgets/settings_goal_section.dart';
-import 'settings/widgets/settings_modal_shell.dart';
-import 'settings/widgets/settings_plan_options.dart';
-import 'settings/widgets/settings_preference_section.dart';
-import 'settings/widgets/settings_profile_header.dart';
+import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bio_ai/app/di/injectors.dart';
+import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
+import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_account_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_device_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_dietary_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_goal_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_preference_section.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_profile_header.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_diagnostics_section.dart';
+import 'settings/settings_state.dart';
+import 'settings/settings_helpers.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  final Map<String, DeviceState> _devices = {
-    'apple': DeviceState('Apple Health', true, '2m ago'),
-    'google': DeviceState('Google Fit', false, ''),
-    'garmin': DeviceState('Garmin', false, ''),
-    'fitbit': DeviceState('Fitbit', true, '12m ago'),
-  };
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _s = SettingsStateHolder();
 
-  bool _metricUnits = true;
-  String _selectedPlan = 'pro-monthly';
-  String _selectedGoal = 'Lose Fat';
-  final TextEditingController _deleteController = TextEditingController();
-  bool _notificationsOn = true;
-  bool _offlineOn = false;
+  @override
+  void initState() {
+    super.initState();
+    // Check Bluetooth permission status once the widget is mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateBtPermission());
+  }
 
   @override
   void dispose() {
-    _deleteController.dispose();
+    _s.dispose();
     super.dispose();
   }
 
@@ -82,16 +78,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _toggleDevice(String key) {
-    setState(() {
-      final device = _devices[key];
-      if (device == null) {
-        return;
-      }
-      device.connected = !device.connected;
-      device.lastSync = device.connected ? 'just now' : '';
-    });
+    setState(() => _s.toggleDevice(key));
     _showToast(
-      '${_devices[key]?.label} ${_devices[key]?.connected == true ? 'connected' : 'disconnected'}',
+      '${_s.devices[key]?.label} ${_s.devices[key]?.connected == true ? 'connected' : 'disconnected'}',
     );
   }
 
@@ -117,7 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 const SettingsProfileHeader(),
                 SettingsDeviceSection(
-                  devices: _devices,
+                  devices: _s.devices,
                   onToggle: _toggleDevice,
                   onResync: () => _showToast('Resyncing devices...'),
                   onReauth: () => _showToast('Re-auth requested'),
@@ -127,33 +116,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChipTap: (chip) => _showToast('$chip selected'),
                 ),
                 SettingsPreferenceSection(
-                  metricUnits: _metricUnits,
+                  metricUnits: _s.metricUnits,
                   onMetricChanged: (value) =>
-                      setState(() => _metricUnits = value),
-                  notificationsOn: _notificationsOn,
+                      setState(() => _s.metricUnits = value),
+                  notificationsOn: _s.notificationsOn,
                   onNotificationsChanged: (value) =>
-                      setState(() => _notificationsOn = value),
-                  offlineOn: _offlineOn,
+                      setState(() => _s.notificationsOn = value),
+                  offlineOn: _s.offlineOn,
                   onOfflineChanged: (value) =>
-                      setState(() => _offlineOn = value),
+                      setState(() => _s.offlineOn = value),
                 ),
                 SettingsGoalSection(
                   goals: [
                     SettingsGoalItem(
                       title: 'Lose Fat',
-                      selected: _selectedGoal == 'Lose Fat',
+                      selected: _s.selectedGoal == 'Lose Fat',
                     ),
                     SettingsGoalItem(
                       title: 'Build Muscle',
-                      selected: _selectedGoal == 'Build Muscle',
+                      selected: _s.selectedGoal == 'Build Muscle',
                     ),
                     SettingsGoalItem(
                       title: 'Maintain & Cognitive',
-                      selected: _selectedGoal == 'Maintain & Cognitive',
+                      selected: _s.selectedGoal == 'Maintain & Cognitive',
                     ),
                   ],
                   onGoalTap: (title) {
-                    setState(() => _selectedGoal = title);
+                    setState(() => _s.selectedGoal = title);
                     _showToast('$title selected');
                   },
                 ),
@@ -162,6 +151,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onManageSubscription: _openSubscriptionModal,
                   onExportData: _openExportModal,
                   onDeleteAccount: _openDeleteModal,
+                ),
+
+                const SizedBox(height: 20),
+                SettingsDiagnosticsSection(
+                  onTestTorch: _testTorch,
+                  onTestGps: _testGps,
+                  onTestNetwork: _testNetwork,
+                  onShowDevices: _openFindDevicesModal,
+                  onRequestPermission: _requestBluetoothPermission,
+                  onTestCapture: _testCapture,
+                  btPermissionLabel: _s.btPermissionLabel(),
+                  onRefresh: () async {
+                    await _updateBtPermission();
+                    ref.invalidate(connectedDeviceSummariesProvider);
+                    _showToast('Refreshing devices...');
+                  },
                 ),
               ],
             ),
@@ -183,138 +188,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _openSubscriptionModal() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return SettingsModalShell(
-              title: 'Subscription',
-              primaryText: 'Apply Plan',
-              onPrimary: () {
-                Navigator.pop(context);
-                _showToast('Plan updated to ${_planLabel(_selectedPlan)}');
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current plan: ${_planLabel(_selectedPlan)}',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                  const SizedBox(height: 12),
-                  SettingsPlanOptions(
-                    selectedPlan: _selectedPlan,
-                    onPlanSelected: (plan) {
-                      setState(() => _selectedPlan = plan);
-                      setModalState(() {});
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  void _openSubscriptionModal() =>
+      openSubscriptionModal(context, ref, _s, _showToast, (fn) => setState(fn));
 
-  String _planLabel(String plan) {
-    switch (plan) {
-      case 'pro-annual':
-        return 'Pro Annual';
-      case 'free':
-        return 'Free';
-      default:
-        return 'Pro Monthly';
-    }
-  }
+  void _openExportModal() => openExportModal(context, _showToast);
 
-  void _openExportModal() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SettingsModalShell(
-          title: 'Export Data',
-          primaryText: 'Download CSV',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Export started');
-          },
-          child: Text(
-            'CSV export ready. This is a mock download.',
-            style: AppTextStyles.bodySmall,
-          ),
-        );
-      },
-    );
-  }
+  Future<void> _openFindDevicesModal() =>
+      openFindDevicesModal(context, ref, _s, _showToast, (fn) => setState(fn));
+  Future<void> _testTorch() async => testTorch(ref, _showToast);
+  Future<void> _testGps() async => testGps(ref, _showToast);
+  Future<void> _testNetwork() async => testNetwork(ref, _showToast);
+  Future<void> _testCapture() async => testCapture(ref, _showToast);
+  // ----- Bluetooth helpers -----
+  Future<void> _updateBtPermission() async =>
+      updateBtPermission(ref, _s, (fn) => setState(fn));
 
-  void _openFindDevicesModal() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SettingsModalShell(
-          title: 'Find Devices',
-          primaryText: 'Done',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Scan complete');
-          },
-          child: Text(
-            'Scanning nearby devices... (mock)',
-            style: AppTextStyles.bodySmall,
-          ),
-        );
-      },
-    );
-  }
-
-  void _openDeleteModal() {
-    _deleteController.clear();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SettingsModalShell(
-          title: 'Delete Account',
-          primaryText: 'Confirm Delete',
-          primaryColor: const Color(0xFFEF4444),
-          primaryEnabled:
-              _deleteController.text.trim().toUpperCase() == 'DELETE',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Account deleted (mock)');
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'This will permanently remove your health data (mock).',
-                style: AppTextStyles.bodySmall,
-              ),
-              const SizedBox(height: 12),
-              Text('Type DELETE to confirm.', style: AppTextStyles.bodySmall),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _deleteController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Type DELETE',
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  Future<void> _requestBluetoothPermission() async =>
+      requestBluetoothPermission(ref, _s, (fn) => setState(fn), _showToast);
+  void _openDeleteModal() => openDeleteModal(context, _s, _showToast);
 }

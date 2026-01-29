@@ -6,6 +6,7 @@ class FoodItem {
   final double fat;
   final String image;
   final String? impact;
+  final Map<String, dynamic>? metadata; // holds raw API data or extra info
   int portionIndex;
 
   FoodItem({
@@ -16,6 +17,7 @@ class FoodItem {
     required this.fat,
     required this.image,
     this.impact,
+    this.metadata,
     this.portionIndex = 1,
   });
 }
