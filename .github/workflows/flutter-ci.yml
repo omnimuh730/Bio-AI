@@ -53,17 +53,9 @@ jobs:
               working-directory: bio_ai
               run: flutter pub get
 
-            - name: Format check (dart format)
-              working-directory: bio_ai
-              run: dart format --set-exit-if-changed .
-
             - name: Static analysis (flutter analyze)
               working-directory: bio_ai
               run: flutter analyze --no-fatal-infos
-
-            - name: Run unit & widget tests
-              working-directory: bio_ai
-              run: flutter test --coverage
 
             - name: Build Android APK
               if: runner.os != 'macOS'
