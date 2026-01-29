@@ -74,8 +74,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 PlannerHeader(
-                  shoppingCount: _shoppingCount,
-                  onOpenDrawer: () => setState(() => _drawerExpanded = true),
+                  cookView: _cookView,
+                  onCook: () => setState(() => _cookView = true),
+                  onEatOut: () => setState(() => _cookView = false),
                 ),
                 if (_cookView)
                   PlannerCookView(
@@ -94,14 +95,18 @@ class _PlannerScreenState extends State<PlannerScreen> {
                         _showToast('Removed leftover #$idx'),
                   )
                 else
-                  PlannerEatOutView(),
-                PlannerLeftoverPrompt(
-                  onUseLeftover: (name) {
-                    setState(() {
-                      _addedRecipes.add(name);
-                      _showToast('Added $name from leftovers');
-                    });
-                  },
+                  const PlannerEatOutView(),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Quick demo action
+                      setState(() => _addedRecipes.add('Power Chicken Bowl'));
+                      _showToast('Added Power Chicken Bowl from leftovers');
+                    },
+                    child: const Text('Use Leftover (demo)'),
+                  ),
                 ),
               ],
             ),
