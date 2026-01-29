@@ -17,7 +17,7 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_quick_switch.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
-import 'package:dio/dio.dart';
+import 'package:bio_ai/ui/pages/capture/services/food_search_service.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -43,86 +43,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   Timer? _barcodeTimer;
 
-  final Dio _dio = Dio();
+  final FoodSearchService _searchService = FoodSearchService();
   Timer? _searchDebounce;
   bool _searching = false;
-
-  final List<FoodItem> _catalog = [
-    FoodItem(
-      name: 'Cold Brew Coffee',
-      desc: 'Caffeine - 5 kcal',
-      cals: 5,
-      protein: 0,
-      fat: 0,
-      impact: 'caffeine',
-      image:
-          'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Gin and Tonic',
-      desc: 'Alcohol - 200 kcal',
-      cals: 200,
-      protein: 0,
-      fat: 0,
-      impact: 'alcohol',
-      image:
-          'https://images.unsplash.com/photo-1461009683692-68a47c8a75fd?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Ribeye Steak',
-      desc: 'High Protein - Iron Rich - 850 kcal',
-      cals: 850,
-      protein: 62,
-      fat: 48,
-      image:
-          'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Protein Smoothie',
-      desc: 'Whey - Banana - 260 kcal',
-      cals: 260,
-      protein: 24,
-      fat: 4,
-      image:
-          'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Oatmeal and Berries',
-      desc: 'Fiber Boost - 320 kcal',
-      cals: 320,
-      protein: 12,
-      fat: 6,
-      image:
-          'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Avocado Toast',
-      desc: 'Healthy Fats - 280 kcal',
-      cals: 280,
-      protein: 8,
-      fat: 14,
-      image:
-          'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Greek Yogurt Bowl',
-      desc: 'Probiotic - 210 kcal',
-      cals: 210,
-      protein: 18,
-      fat: 4,
-      image:
-          'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Salmon Power Bowl',
-      desc: 'Omega 3 - 520 kcal',
-      cals: 520,
-      protein: 34,
-      fat: 18,
-      image:
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=150&q=80',
-    ),
-  ];
 
   final FoodItem _barcodeItem = FoodItem(
     name: 'Blueberry Protein Bar',
@@ -137,8 +60,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
   @override
   void initState() {
     super.initState();
-    _items.add(_catalog.firstWhere((item) => item.name == 'Ribeye Steak'));
-    _results = List<FoodItem>.from(_catalog);
+    // Seed items & results from local catalog in the service
+    _items.add(
+      _searchService.catalog.firstWhere((item) => item.name == 'Ribeye Steak'),
+    );
+    _results = List<FoodItem>.from(_searchService.catalog);
   }
 
   @override
@@ -201,7 +127,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     final q = query.trim();
     if (q.isEmpty) {
       setState(() {
-        _results = List<FoodItem>.from(_catalog);
+        _results = List<FoodItem>.from(_searchService.catalog);
         _searching = false;
       });
       return;
@@ -210,172 +136,24 @@ class _CaptureScreenState extends State<CaptureScreen> {
     // Immediate local filter for instant feedback
     final lower = q.toLowerCase();
     setState(() {
-      _results = _catalog
+      _results = _searchService.catalog
           .where((item) => item.name.toLowerCase().contains(lower))
           .toList();
       _searching = true;
     });
 
     _searchDebounce = Timer(const Duration(seconds: 1), () async {
-      await _searchMeals(q);
+      final res = await _searchService.search(q);
+      if (mounted) {
+        setState(() {
+          _results = res;
+          _searching = false;
+        });
+      }
     });
   }
 
-  int _levenshtein(String s, String t) {
-    if (s == t) return 0;
-    if (s.isEmpty) return t.length;
-    if (t.isEmpty) return s.length;
-    final v0 = List<int>.generate(t.length + 1, (i) => i);
-    final v1 = List<int>.filled(t.length + 1, 0);
-    for (var i = 0; i < s.length; i++) {
-      v1[0] = i + 1;
-      for (var j = 0; j < t.length; j++) {
-        final cost = s[i] == t[j] ? 0 : 1;
-        v1[j + 1] = [
-          v1[j] + 1,
-          v0[j + 1] + 1,
-          v0[j] + cost,
-        ].reduce((a, b) => a < b ? a : b);
-      }
-      for (var j = 0; j < v0.length; j++) v0[j] = v1[j];
-    }
-    return v1[t.length];
-  }
-
-  List<FoodItem> _fuzzyLocalMatches(String query) {
-    final q = query.toLowerCase();
-    final results = <FoodItem>[];
-    for (final item in _catalog) {
-      final nameLower = item.name.toLowerCase();
-      if (nameLower.contains(q)) {
-        results.add(item);
-        continue;
-      }
-      final words = nameLower.split(RegExp(r'\s+'));
-      for (final w in words) {
-        if (w.isEmpty) continue;
-        final dist = _levenshtein(w, q);
-        final sortedW = (w.split('')..sort()).join();
-        final sortedQ = (q.split('')..sort()).join();
-        if (dist <= 1 ||
-            dist <= (w.length * 0.2).ceil() ||
-            sortedW == sortedQ) {
-          results.add(item);
-          break;
-        }
-      }
-    }
-    return results;
-  }
-
-  Future<void> _searchMeals(String query) async {
-    try {
-      final response = await _dio.get(
-        'https://www.themealdb.com/api/json/v1/1/search.php',
-        queryParameters: {'s': query},
-      );
-      final data = response.data as Map<String, dynamic>;
-      final meals = data['meals'] as List<dynamic>?;
-      if (meals == null) {
-        // No exact remote matches — try a first-letter broad search then fuzzy-filter
-        print(
-          'No exact remote match for: "$query"; trying first-letter search',
-        );
-        final first = query.isNotEmpty ? query[0].toLowerCase() : '';
-        if (first.isNotEmpty) {
-          try {
-            final resp = await _dio.get(
-              'https://www.themealdb.com/api/json/v1/1/search.php',
-              queryParameters: {'f': first},
-            );
-            final data2 = resp.data as Map<String, dynamic>;
-            final meals2 = data2['meals'] as List<dynamic>?;
-            if (meals2 != null) {
-              final candidates = meals2
-                  .map((m) => m as Map<String, dynamic>)
-                  .where((meal) {
-                    final name = (meal['strMeal'] as String? ?? '')
-                        .toLowerCase();
-                    final words = name.split(RegExp(r'\s+'));
-                    for (final w in words) {
-                      if (w.isEmpty) continue;
-                      final dist = _levenshtein(w, query.toLowerCase());
-                      if (dist <= 1 || dist <= (w.length * 0.2).ceil())
-                        return true;
-                    }
-                    return false;
-                  })
-                  .toList();
-              if (candidates.isNotEmpty) {
-                final mapped2 = candidates.map((meal) {
-                  final name = meal['strMeal'] as String? ?? '';
-                  final thumb = meal['strMealThumb'] as String? ?? '';
-                  final category = meal['strCategory'] as String? ?? '';
-                  final area = meal['strArea'] as String? ?? '';
-                  final desc = [
-                    if (category.isNotEmpty) category,
-                    if (area.isNotEmpty) area,
-                  ].join(' • ');
-                  return FoodItem(
-                    name: name,
-                    desc: desc,
-                    cals: 0,
-                    protein: 0,
-                    fat: 0,
-                    image: thumb,
-                    metadata: {'rawMeal': meal},
-                  );
-                }).toList();
-                setState(() {
-                  _results = mapped2;
-                  _searching = false;
-                });
-                return;
-              }
-            }
-          } catch (_) {}
-        }
-
-        final fallback = _fuzzyLocalMatches(query);
-        setState(() {
-          _results = fallback;
-          _searching = false;
-        });
-        return;
-      }
-      final mapped = meals.map((m) {
-        final meal = m as Map<String, dynamic>;
-        final name = meal['strMeal'] as String? ?? '';
-        final thumb = meal['strMealThumb'] as String? ?? '';
-        final category = meal['strCategory'] as String? ?? '';
-        final area = meal['strArea'] as String? ?? '';
-        final desc = [
-          if (category.isNotEmpty) category,
-          if (area.isNotEmpty) area,
-        ].join(' • ');
-        return FoodItem(
-          name: name,
-          desc: desc,
-          cals: 0,
-          protein: 0,
-          fat: 0,
-          image: thumb,
-          metadata: {'rawMeal': meal},
-        );
-      }).toList();
-      setState(() {
-        _results = mapped;
-        _searching = false;
-      });
-    } catch (e, st) {
-      print('Error searching meals: $e\n$st');
-      final fallback = _fuzzyLocalMatches(query);
-      setState(() {
-        _results = fallback;
-        _searching = false;
-      });
-    }
-  }
+  // Deprecated: search logic moved into FoodSearchService; kept for compatibility but unused.
 
   void _openMealModal(FoodItem item) {
     final raw = item.metadata?['rawMeal'] as Map<String, dynamic>?;
@@ -535,8 +313,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
             controller: _searchController,
             onQueryChanged: _filterSearch,
             onClose: _closeSearch,
-            onAddCaffeine: () => _addItem(_catalog[0]),
-            onAddAlcohol: () => _addItem(_catalog[1]),
+            onAddCaffeine: () => _addItem(_searchService.catalog[0]),
+            onAddAlcohol: () => _addItem(_searchService.catalog[1]),
             results: _results,
             isSearching: _searching,
             onAddItem: (item) => _addItem(item),
