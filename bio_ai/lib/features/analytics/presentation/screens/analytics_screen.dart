@@ -5,15 +5,15 @@ import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
 import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
-import 'analytics/models/analytics_history_entry.dart';
-import 'analytics/widgets/analytics_correlations_card.dart';
-import 'analytics/widgets/analytics_empty_state.dart';
-import 'analytics/widgets/analytics_header.dart';
-import 'analytics/widgets/analytics_history_edit_modal.dart';
-import 'analytics/widgets/analytics_history_section.dart';
-import 'analytics/widgets/analytics_score_card.dart';
-import 'analytics/widgets/analytics_summary_grid.dart';
-import 'analytics/widgets/analytics_weekly_review.dart';
+import 'package:bio_ai/ui/pages/analytics/models/analytics_history_entry.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_correlations_card.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_empty_state.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_header.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_history_edit_modal.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_history_section.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_score_card.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_summary_grid.dart';
+import 'package:bio_ai/ui/pages/analytics/widgets/analytics_weekly_review.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -78,16 +78,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'carbs': [5900, 6040, 6210],
       'active': [15200, 16750, 17400],
       'hydration': [46800, 48200, 50100],
-      'sleep': [70, 72, 75],
-      'energy': [77, 80, 83],
-      'hrv': [30, 33, 35],
-      'steps': [210000, 224000, 236000],
-      'mood': [6.7, 7.1, 7.4],
+      'sleep': [69, 71, 70],
+      'energy': [80, 82, 79],
+      'hrv': [30, 33, 29],
+      'steps': [150000, 160000, 152000],
+      'mood': [6.8, 7.1, 6.9],
     },
   };
 
-  final List<AnalyticsHistoryEntry> _history = const [
-    AnalyticsHistoryEntry(
+  final List<AnalyticsHistoryEntry> _history = [
+    const AnalyticsHistoryEntry(
       '12',
       'PM',
       'Magnesium Power Bowl',
@@ -95,7 +95,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       '450',
       AppColors.textMain,
     ),
-    AnalyticsHistoryEntry(
+    const AnalyticsHistoryEntry(
       '08',
       'AM',
       'Oatmeal & Berries',
@@ -103,108 +103,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       '320',
       AppColors.textMain,
     ),
-    AnalyticsHistoryEntry(
-      '03',
-      'PM',
-      'Protein Smoothie',
-      'Whey, Banana, Almond Milk',
-      '260',
-      AppColors.textMain,
-    ),
-    AnalyticsHistoryEntry(
-      '07',
-      'AM',
-      'Morning Run',
-      'Active Burn',
-      '-240',
-      AppColors.accentGreen,
-    ),
-    AnalyticsHistoryEntry(
-      '06',
-      'AM',
-      'Hydration',
-      'Water intake',
-      '+500ml',
-      AppColors.textMain,
-    ),
-    AnalyticsHistoryEntry(
-      '06',
-      'AM',
-      'Sleep Summary',
-      '7h 25m, Restorative',
-      '74',
-      AppColors.textMain,
-    ),
   ];
-
-  final Map<String, List<double>> _fallbackSeries = const {
-    'W': [1800, 2000, 1900, 2100, 2050, 2200, 1950],
-    'M': [18600, 19400, 18800, 20100],
-    '3M': [76000, 78200, 79900],
-  };
-
-  void _onNavTapped(int index) {
-    if (index == 2) {
-      return;
-    }
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
-      return;
-    }
-    if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PlannerScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SettingsScreen()),
-      );
-      return;
-    }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Coming soon')));
-  }
-
-  void _onFabTapped() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const CaptureScreen()),
-    );
-  }
-
-  void _selectRange(String range) {
-    setState(() {
-      _range = range;
-    });
-  }
-
-  void _selectMetricA(String metric) {
-    setState(() {
-      _metricA = metric;
-    });
-  }
-
-  void _selectMetricB(String metric) {
-    setState(() {
-      _metricB = metric;
-    });
-  }
-
-  List<double> _seriesFor(String metric) {
-    final series = _chartData[_range]?[metric] ?? const [];
-    if (series.isNotEmpty) {
-      return series;
-    }
-    return _fallbackSeries[_range] ?? const [0, 1];
-  }
 
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -215,27 +114,27 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  void _openHistoryEdit(AnalyticsHistoryEntry entry) {
+  void _loadDemo() {
+    setState(() => _hasData = true);
+    _showToast('Demo data loaded');
+  }
+
+  void _openEditEntryModal(AnalyticsHistoryEntry entry) {
     showDialog(
       context: context,
-      builder: (context) {
-        return AnalyticsHistoryEditModal(
-          entry: entry,
-          onSave: () {
-            Navigator.pop(context);
-            _showToast('Entry updated');
-          },
-        );
-      },
+      builder: (context) => AnalyticsHistoryEditModal(
+        entry: entry,
+        onSave: () {
+          Navigator.pop(context);
+          _showToast('Entry saved');
+          // Placeholder: real implementation should update the entry in _history
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final labels = _xAxis[_range] ?? const [];
-    final primary = _seriesFor(_metricA);
-    final secondary = _seriesFor(_metricB);
-
     return Scaffold(
       backgroundColor: AppColors.bgBody,
       body: Stack(
@@ -245,32 +144,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 28),
                 const AnalyticsHeader(),
+                const SizedBox(height: 8),
                 if (!_hasData)
-                  AnalyticsEmptyState(
-                    onLoadDemo: () => setState(() => _hasData = true),
-                  ),
-                if (_hasData) ...[
+                  AnalyticsEmptyState(onLoadDemo: _loadDemo)
+                else ...[
                   const AnalyticsScoreCard(),
                   const AnalyticsSummaryGrid(),
-                  const AnalyticsWeeklyReview(),
                   AnalyticsCorrelationsCard(
                     range: _range,
-                    onRangeChanged: _selectRange,
+                    onRangeChanged: (r) => setState(() => _range = r),
                     metricA: _metricA,
                     metricB: _metricB,
                     metricLabels: _metricLabels,
-                    onMetricAChanged: _selectMetricA,
-                    onMetricBChanged: _selectMetricB,
-                    primary: primary,
-                    secondary: secondary,
-                    labels: labels,
+                    onMetricAChanged: (m) => setState(() => _metricA = m),
+                    onMetricBChanged: (m) => setState(() => _metricB = m),
+                    primary: _chartData[_range]?[_metricA] ?? [],
+                    secondary: _chartData[_range]?[_metricB] ?? [],
+                    labels: _xAxis[_range] ?? [],
                   ),
                   AnalyticsHistorySection(
                     history: _history,
-                    onEdit: _openHistoryEdit,
+                    onEdit: (entry) => _openEditEntryModal(entry),
                   ),
+                  const AnalyticsWeeklyReview(),
                 ],
               ],
             ),
@@ -282,8 +179,41 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Center(
               child: FloatingNavBar(
                 selectedIndex: 2,
-                onItemTapped: _onNavTapped,
-                onFabTapped: _onFabTapped,
+                onItemTapped: (index) {
+                  if (index == 0) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DashboardScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (index == 1) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PlannerScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                  if (index == 3) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                    return;
+                  }
+                },
+                onFabTapped: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CaptureScreen(),
+                  ),
+                ),
               ),
             ),
           ),

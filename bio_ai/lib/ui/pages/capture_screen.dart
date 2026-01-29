@@ -1,20 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:bio_ai/core/theme/app_colors.dart';
-import 'package:bio_ai/core/theme/app_text_styles.dart';
-import 'analytics_screen.dart';
-import 'dashboard_screen.dart';
-import 'planner_screen.dart';
-import 'settings_screen.dart';
-import 'capture/models/food_item.dart';
-import 'capture/widgets/capture_analysis_sheet.dart';
-import 'capture/widgets/capture_barcode_overlay.dart';
-import 'capture/widgets/capture_bottom_controls.dart';
-import 'capture/widgets/capture_offline_banner.dart';
-import 'capture/widgets/capture_quick_switch.dart';
-import 'capture/widgets/capture_reticle.dart';
-import 'capture/widgets/capture_search_overlay.dart';
-import 'capture/widgets/capture_top_overlay.dart';
+import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:bio_ai/ui/pages/capture/models/food_item.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/meal_detail_modal.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_screen_body.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/custom_food_dialog.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/log_dialog.dart';
+import 'package:bio_ai/ui/pages/capture/capture_state.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -24,177 +16,111 @@ class CaptureScreen extends StatefulWidget {
 }
 
 class _CaptureScreenState extends State<CaptureScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
-  bool _sheetOpen = false;
-  bool _searchOpen = false;
-  bool _offlineMode = false;
-  bool _barcodeOpen = false;
-  bool _barcodeFound = false;
-  bool _quickSwitchOpen = false;
-
-  String _mode = 'scan';
-  final List<double> _portionOptions = [0.75, 1.0, 1.5];
-  final List<FoodItem> _items = [];
-  List<FoodItem> _results = [];
-
-  Timer? _barcodeTimer;
-
-  final List<FoodItem> _catalog = [
-    FoodItem(
-      name: 'Cold Brew Coffee',
-      desc: 'Caffeine - 5 kcal',
-      cals: 5,
-      protein: 0,
-      fat: 0,
-      impact: 'caffeine',
-      image:
-          'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Gin and Tonic',
-      desc: 'Alcohol - 200 kcal',
-      cals: 200,
-      protein: 0,
-      fat: 0,
-      impact: 'alcohol',
-      image:
-          'https://images.unsplash.com/photo-1461009683692-68a47c8a75fd?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Ribeye Steak',
-      desc: 'High Protein - Iron Rich - 850 kcal',
-      cals: 850,
-      protein: 62,
-      fat: 48,
-      image:
-          'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Protein Smoothie',
-      desc: 'Whey - Banana - 260 kcal',
-      cals: 260,
-      protein: 24,
-      fat: 4,
-      image:
-          'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Oatmeal and Berries',
-      desc: 'Fiber Boost - 320 kcal',
-      cals: 320,
-      protein: 12,
-      fat: 6,
-      image:
-          'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Avocado Toast',
-      desc: 'Healthy Fats - 280 kcal',
-      cals: 280,
-      protein: 8,
-      fat: 14,
-      image:
-          'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Greek Yogurt Bowl',
-      desc: 'Probiotic - 210 kcal',
-      cals: 210,
-      protein: 18,
-      fat: 4,
-      image:
-          'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Salmon Power Bowl',
-      desc: 'Omega 3 - 520 kcal',
-      cals: 520,
-      protein: 34,
-      fat: 18,
-      image:
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=150&q=80',
-    ),
-  ];
-
-  final FoodItem _barcodeItem = FoodItem(
-    name: 'Blueberry Protein Bar',
-    desc: 'Packaged Snack - 220 kcal',
-    cals: 220,
-    protein: 12,
-    fat: 9,
-    image:
-        'https://images.unsplash.com/photo-1543339318-b43dc53e19e6?auto=format&fit=crop&w=150&q=80',
-  );
+  final CaptureScreenStateHolder _s = CaptureScreenStateHolder();
 
   @override
   void initState() {
     super.initState();
-    _items.add(_catalog.firstWhere((item) => item.name == 'Ribeye Steak'));
-    _results = List<FoodItem>.from(_catalog);
+    // Seed items & results from local catalog in the service
+    _s.items.add(
+      _s.searchService.catalog.firstWhere(
+        (item) => item.name == 'Ribeye Steak',
+      ),
+    );
+    _s.results = List<FoodItem>.from(_s.searchService.catalog);
   }
 
   @override
   void dispose() {
-    _barcodeTimer?.cancel();
-    _searchController.dispose();
+    _s.dispose();
+
     super.dispose();
   }
 
-  void _openSheet() => setState(() => _sheetOpen = true);
+  void _openSheet() => setState(() => _s.sheetOpen = true);
 
-  void _closeSheet() => setState(() => _sheetOpen = false);
+  void _closeSheet() => setState(() => _s.sheetOpen = false);
 
   void _openSearch() {
     setState(() {
-      _searchOpen = true;
-      _mode = 'search';
+      _s.searchOpen = true;
+      _s.mode = 'search';
     });
   }
 
   void _closeSearch() => setState(() {
-    _searchOpen = false;
-    _mode = 'scan';
+    _s.searchOpen = false;
+    _s.mode = 'scan';
   });
 
-  void _toggleOffline() => setState(() => _offlineMode = !_offlineMode);
-
   void _toggleQuickSwitch() =>
-      setState(() => _quickSwitchOpen = !_quickSwitchOpen);
+      setState(() => _s.quickSwitchOpen = !_s.quickSwitchOpen);
 
   void _toggleBarcode() {
     setState(() {
-      _barcodeOpen = !_barcodeOpen;
-      _barcodeFound = false;
+      _s.barcodeOpen = !_s.barcodeOpen;
+      _s.barcodeFound = false;
     });
-    _barcodeTimer?.cancel();
-    if (_barcodeOpen) {
-      _barcodeTimer = Timer(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          setState(() => _barcodeFound = true);
-        }
+    _s.barcodeTimer?.cancel();
+    if (_s.barcodeOpen) {
+      _s.barcodeTimer = Timer(const Duration(milliseconds: 800), () {
+        if (mounted) setState(() => _s.barcodeFound = true);
       });
     }
   }
 
   void _addItem(FoodItem item) {
-    setState(() => _items.add(item));
+    setState(() => _s.items.add(item));
     _openSheet();
     _showToast('Added ${item.name}');
   }
 
   void _removeItem(int index) {
-    setState(() => _items.removeAt(index));
+    setState(() => _s.items.removeAt(index));
     _showToast('Item removed');
   }
 
   void _filterSearch(String query) {
-    final lower = query.toLowerCase();
+    _s.searchDebounce?.cancel();
+    final q = query.trim();
+    if (q.isEmpty) {
+      setState(() {
+        _s.results = List<FoodItem>.from(_s.searchService.catalog);
+        _s.searching = false;
+      });
+      return;
+    }
+
+    // Immediate local filter for instant feedback
+    final lower = q.toLowerCase();
     setState(() {
-      _results = _catalog
+      _s.results = _s.searchService.catalog
           .where((item) => item.name.toLowerCase().contains(lower))
           .toList();
+      _s.searching = true;
     });
+
+    _s.searchDebounce = Timer(const Duration(seconds: 1), () async {
+      final res = await _s.searchService.search(q);
+      if (mounted) {
+        setState(() {
+          _s.results = res;
+          _s.searching = false;
+        });
+      }
+    });
+  }
+
+  // Use centralized MealDetailModal for details
+  void _openMealModal(FoodItem item) async {
+    final added = await showDialog<FoodItem?>(
+      context: context,
+      builder: (_) => MealDetailModal(
+        item: item,
+        loadFatSecret: _s.searchService.fetchFatSecretByName,
+      ),
+    );
+    if (added != null) _addItem(added);
   }
 
   void _showToast(String message) {
@@ -206,148 +132,83 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
   }
 
-  double get _totalCals {
-    double total = 0;
-    for (final item in _items) {
-      total += item.cals * _portionOptions[item.portionIndex];
-    }
-    return total;
-  }
-
-  double get _totalProtein {
-    double total = 0;
-    for (final item in _items) {
-      total += item.protein * _portionOptions[item.portionIndex];
-    }
-    return total;
-  }
-
-  double get _totalFat {
-    double total = 0;
-    for (final item in _items) {
-      total += item.fat * _portionOptions[item.portionIndex];
-    }
-    return total;
-  }
+  double get _totalCals => _s.items.fold(
+    0.0,
+    (p, e) => p + e.cals * _s.portionOptions[e.portionIndex],
+  );
+  double get _totalProtein => _s.items.fold(
+    0.0,
+    (p, e) => p + e.protein * _s.portionOptions[e.portionIndex],
+  );
+  double get _totalFat => _s.items.fold(
+    0.0,
+    (p, e) => p + e.fat * _s.portionOptions[e.portionIndex],
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          _buildCameraView(),
-          CaptureTopOverlay(
-            onClose: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const DashboardScreen()),
-            ),
-            onQuickSwitch: _toggleQuickSwitch,
-            quickSwitchOpen: _quickSwitchOpen,
-            onFlash: () {},
-            onToggleOffline: _toggleOffline,
-            offlineMode: _offlineMode,
-            onBarcode: _toggleBarcode,
-          ),
-          const CaptureReticle(),
-          CaptureOfflineBanner(visible: _offlineMode),
-          CaptureBottomControls(
-            mode: _mode,
-            onModeChanged: (mode) {
-              setState(() => _mode = mode);
-              if (mode == 'search') {
-                _openSearch();
-              }
+      body: CaptureScreenBody(
+        items: _s.items,
+        results: _s.results,
+        sheetOpen: _s.sheetOpen,
+        searchOpen: _s.searchOpen,
+        offlineMode: _s.offlineMode,
+        barcodeOpen: _s.barcodeOpen,
+        barcodeFound: _s.barcodeFound,
+        mode: _s.mode,
+        portionOptions: _s.portionOptions,
+        totalCals: _totalCals,
+        totalProtein: _totalProtein,
+        totalFat: _totalFat,
+        controller: _s.searchController,
+        isSearching: _s.searching,
+        barcodeItem: _s.barcodeItem,
+        onOpenSearch: _openSearch,
+        onCloseSearch: _closeSearch,
+        onToggleBarcode: _toggleBarcode,
+        onToggleQuickSwitch: _toggleQuickSwitch,
+        onNavigateFromQuick: _navigateFromQuick,
+        onAddItem: _addItem,
+        onRemoveItem: _removeItem,
+        onPortionChanged: (i, p) =>
+            setState(() => _s.items[i].portionIndex = p),
+        onCreateCustom: () async {
+          final custom = await showCustomFoodDialog(
+            context,
+            initialName: _s.searchController.text,
+          );
+          if (custom != null) {
+            _addItem(custom);
+            _s.searchController.clear();
+            _filterSearch('');
+          }
+        },
+        onLog: () {
+          if (_s.offlineMode) {
+            _showToast('Saved offline. Upload queued.');
+            _closeSheet();
+            return;
+          }
+          showLogDialog(
+            context,
+            onViewDiary: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AnalyticsScreen(),
+                ),
+              );
             },
-            onShutterTap: () {
-              if (_mode == 'search') {
-                _openSearch();
-                return;
-              }
-              if (_mode == 'barcode') {
-                _toggleBarcode();
-                return;
-              }
-              _openSheet();
-            },
-          ),
-          if (_sheetOpen && !_searchOpen) _buildSheetBackdrop(),
-          CaptureAnalysisSheet(
-            open: _sheetOpen,
-            searchOpen: _searchOpen,
-            items: _items,
-            totalCals: _totalCals,
-            totalProtein: _totalProtein,
-            totalFat: _totalFat,
-            offlineMode: _offlineMode,
             onClose: _closeSheet,
-            onOpenSearch: _openSearch,
-            onRemoveItem: _removeItem,
-            onPortionChanged: (index, portion) {
-              setState(() => _items[index].portionIndex = portion);
-            },
-            onLog: () {
-              if (_offlineMode) {
-                _showToast('Saved offline. Upload queued.');
-                _closeSheet();
-                return;
-              }
-              _openLogModal();
-            },
-          ),
-          CaptureSearchOverlay(
-            open: _searchOpen,
-            controller: _searchController,
-            onQueryChanged: _filterSearch,
-            onClose: _closeSearch,
-            onAddCaffeine: () => _addItem(_catalog[0]),
-            onAddAlcohol: () => _addItem(_catalog[1]),
-            results: _results,
-            onAddItem: (item) => _addItem(item),
-            onCreateCustom: _openCustomFood,
-          ),
-          CaptureBarcodeOverlay(
-            open: _barcodeOpen,
-            found: _barcodeFound,
-            item: _barcodeItem,
-            onAdd: () {
-              _addItem(_barcodeItem);
-              _toggleBarcode();
-            },
-            onClose: _toggleBarcode,
-            onNotFound: () => _showToast('Barcode not found'),
-          ),
-          CaptureQuickSwitch(
-            open: _quickSwitchOpen,
-            onClose: _toggleQuickSwitch,
-            onDashboard: () => _navigateFromQuick(const DashboardScreen()),
-            onPlanner: () => _navigateFromQuick(const PlannerScreen()),
-            onAnalytics: () => _navigateFromQuick(const AnalyticsScreen()),
-            onSettings: () => _navigateFromQuick(const SettingsScreen()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSheetBackdrop() {
-    return Positioned.fill(
-      child: GestureDetector(
-        onTap: _closeSheet,
-        child: Container(color: Colors.transparent),
-      ),
-    );
-  }
-
-  Widget _buildCameraView() {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-          ),
-          fit: BoxFit.cover,
-        ),
+          );
+        },
+        onAddCaffeine: () => _addItem(_s.searchService.catalog[0]),
+        onAddAlcohol: () => _addItem(_s.searchService.catalog[1]),
+        onQueryChanged: _filterSearch,
+        onTapItem: _openMealModal,
       ),
     );
   }
@@ -357,238 +218,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => screen),
-    );
-  }
-
-  void _openLogModal() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Meal Logged', style: AppTextStyles.dmSans16Bold),
-                const SizedBox(height: 12),
-                Text(
-                  'Your meal was added to the diary.',
-                  style: AppTextStyles.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AnalyticsScreen(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentBlue,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text('View Diary', style: AppTextStyles.button),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _closeSheet();
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFFF1F5F9),
-                          foregroundColor: AppColors.textMain,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text('Back Home', style: AppTextStyles.button),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _openCustomFood() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final nameController = TextEditingController(
-          text: _searchController.text,
-        );
-        final calController = TextEditingController();
-        final proteinController = TextEditingController();
-        final fatController = TextEditingController();
-        bool isPublic = false;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Create Custom Food',
-                          style: AppTextStyles.dmSans16Bold,
-                        ),
-                        InkWell(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close, size: 16),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _modalInput('Name', nameController),
-                    _modalInput(
-                      'Calories',
-                      calController,
-                      keyboard: TextInputType.number,
-                    ),
-                    _modalInput(
-                      'Protein',
-                      proteinController,
-                      keyboard: TextInputType.number,
-                    ),
-                    _modalInput(
-                      'Fat',
-                      fatController,
-                      keyboard: TextInputType.number,
-                    ),
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: isPublic,
-                          onChanged: (value) =>
-                              setModalState(() => isPublic = value ?? false),
-                          activeColor: AppColors.accentBlue,
-                        ),
-                        Text(
-                          'Add to public database',
-                          style: AppTextStyles.labelSmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final name = nameController.text.trim();
-                              final calories =
-                                  double.tryParse(calController.text) ?? 0;
-                              if (name.isEmpty || calories <= 0) {
-                                _showToast('Name and calories required');
-                                return;
-                              }
-                              final custom = FoodItem(
-                                name: name,
-                                desc:
-                                    '${isPublic ? 'Public' : 'Personal'} - ${calories.round()} kcal',
-                                cals: calories,
-                                protein:
-                                    double.tryParse(proteinController.text) ??
-                                    0,
-                                fat: double.tryParse(fatController.text) ?? 0,
-                                image:
-                                    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=150&q=80',
-                              );
-                              Navigator.pop(context);
-                              _addItem(custom);
-                              _searchController.clear();
-                              _filterSearch('');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.textMain,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text('Save', style: AppTextStyles.button),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: TextButton.styleFrom(
-                              backgroundColor: const Color(0xFFF1F5F9),
-                              foregroundColor: AppColors.textMain,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text('Cancel', style: AppTextStyles.button),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _modalInput(
-    String label,
-    TextEditingController controller, {
-    TextInputType keyboard = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboard,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: const Color(0xFFF8FAFC),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-        ),
-      ),
     );
   }
 }
