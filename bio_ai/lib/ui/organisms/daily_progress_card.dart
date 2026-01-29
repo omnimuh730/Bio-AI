@@ -22,7 +22,7 @@ class DailyProgressCard extends StatelessWidget {
     final caloriesRemaining =
         (goals?.caloriesTarget ?? 2000) - (metrics?.calories ?? 1850);
     final caloriesProgress =
-        (metrics?.calories ?? 1850) / (goals?.caloriesTarget ?? 2000);
+        ((metrics?.calories ?? 1850) / (goals?.caloriesTarget ?? 2000)).clamp(0.0, 1.0);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),

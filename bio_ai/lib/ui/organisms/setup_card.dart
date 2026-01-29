@@ -49,7 +49,9 @@ class SetupCard extends StatelessWidget {
             ),
             child: Text(
               localizations.continueLabel,
-              style: AppTextStyles.labelSmall,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: Colors.white,
+              ),
             ),
           ),
         ],

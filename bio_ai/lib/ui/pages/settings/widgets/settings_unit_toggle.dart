@@ -48,7 +48,12 @@ class SettingsUnitToggle extends StatelessWidget {
                 : null,
           ),
           alignment: Alignment.center,
-          child: Text(label, style: AppTextStyles.button),
+          child: Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: selected ? AppTextStyles.labelSmall.color : AppTextStyles.labelSmall.color?.withValues(alpha: 0.6),
+            ),
+          ),
         ),
       ),
     );

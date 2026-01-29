@@ -3,7 +3,8 @@ const Map<String, String> stringsAr = {
   'bio_sync_active': 'Bio-Sync نشط',
   'hello_user': 'مرحبا، {name}',
   'new_suggestion_loaded': 'تم تحميل اقتراح جديد',
-  'coming_soon': 'قريباً', 'finish_setup': 'أكمل الإعداد',
+  'coming_soon': 'قريباً',
+  'finish_setup': 'أكمل الإعداد',
   'setup_description':
       'أكمل الملف الشخصي وقواعد النظام الغذائي ومزامنة الجهاز لفتح الخطط التكيفية.',
   'continue': 'متابعة',

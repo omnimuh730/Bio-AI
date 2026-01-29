@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
 
 class SectionTitle extends StatelessWidget {
@@ -24,7 +25,9 @@ class SectionTitle extends StatelessWidget {
               onTap: onRefresh,
               child: Text(
                 linkText ?? localizations.refresh,
-                style: AppTextStyles.label,
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.primary,
+                ),
               ),
             ),
         ],
