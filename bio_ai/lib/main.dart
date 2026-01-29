@@ -16,7 +16,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Locale _locale = const Locale('en');
+  Locale _locale = const Locale('ko');
 
   void setLocale(Locale locale) {
     setState(() {
@@ -30,7 +30,15 @@ class _MyAppState extends State<MyApp> {
       title: 'Bio AI',
       debugShowCheckedModeBanner: false,
       locale: _locale,
-      supportedLocales: const [Locale('en'), Locale('ar')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+        Locale('fr'),
+        Locale('es'),
+        Locale('ru'),
+        Locale('zh'),
+        Locale('ko'),
+      ],
       localizationsDelegates: const [
         AppLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,

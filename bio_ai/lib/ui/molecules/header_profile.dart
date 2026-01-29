@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../core/localization/app_localizations.dart';
+import 'package:bio_ai/core/localization/app_localizations.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
-import '../../core/theme/app_spacing_borders_shadows.dart';
-import '../../data/providers/data_provider.dart';
+import 'package:bio_ai/core/theme/app_spacing_borders_shadows.dart';
+import 'package:bio_ai/data/providers/data_provider.dart';
 
 class HeaderProfile extends StatelessWidget {
   final DataProvider? dataProvider;

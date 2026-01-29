@@ -3,8 +3,19 @@ const Map<String, String> stringsAr = {
   'bio_sync_active': 'Bio-Sync نشط',
   'hello_user': 'مرحبا، {name}',
   'new_suggestion_loaded': 'تم تحميل اقتراح جديد',
-  'coming_soon': 'قريباً',
-
+  'coming_soon': 'قريباً', 'finish_setup': 'أكمل الإعداد',
+  'setup_description':
+      'أكمل الملف الشخصي وقواعد النظام الغذائي ومزامنة الجهاز لفتح الخطط التكيفية.',
+  'continue': 'متابعة',
+  'live_vitals': 'العلامات الحيوية الحية',
+  'vitals_synced': 'تمت مزامنة العلامات الحيوية',
+  'ai_suggestion': 'اقتراح الذكاء الاصطناعي',
+  'daily_fuel': 'الطاقة اليومية',
+  'quick_log': 'تسجيل سريع',
+  'view_history': 'عرض السجل',
+  'refresh': 'تحديث',
+  'why_this': 'لماذا هذا؟',
+  'eat_this': 'تناول هذا ({cals} كيلو كالوري)',
   // General
   'hello': 'مرحبا',
   'welcome': 'أهلا وسهلا',

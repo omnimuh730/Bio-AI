@@ -4,6 +4,19 @@ const Map<String, String> stringsEn = {
   'hello_user': 'Hello, {name}',
   'new_suggestion_loaded': 'New suggestion loaded',
   'coming_soon': 'Coming soon',
+  'finish_setup': 'Finish your setup',
+  'setup_description':
+      'Complete profile, dietary rules, and device sync to unlock adaptive plans.',
+  'continue': 'Continue',
+  'live_vitals': 'Live Vitals',
+  'vitals_synced': 'Vitals synced',
+  'ai_suggestion': 'AI Suggestion',
+  'daily_fuel': 'Daily Fuel',
+  'quick_log': 'Quick Log',
+  'view_history': 'View History',
+  'refresh': 'Refresh',
+  'why_this': 'Why this?',
+  'eat_this': 'Eat This ({cals} kcal)',
 
   // General
   'hello': 'Hello',

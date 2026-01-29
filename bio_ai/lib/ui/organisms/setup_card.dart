@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/core/localization/app_localizations.dart';
 
 class SetupCard extends StatelessWidget {
   const SetupCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 12, 24, 0),
       padding: const EdgeInsets.all(16),
@@ -25,10 +28,13 @@ class SetupCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Finish your setup', style: AppTextStyles.dmSans16Bold),
+                Text(
+                  localizations.finishSetup,
+                  style: AppTextStyles.dmSans16Bold,
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  'Complete profile, dietary rules, and device sync to unlock adaptive plans.',
+                  localizations.setupDescription,
                   style: AppTextStyles.labelSmall,
                 ),
               ],
@@ -41,7 +47,10 @@ class SetupCard extends StatelessWidget {
               color: AppColors.textMain,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Text('Continue', style: AppTextStyles.labelSmall),
+            child: Text(
+              localizations.continueLabel,
+              style: AppTextStyles.labelSmall,
+            ),
           ),
         ],
       ),

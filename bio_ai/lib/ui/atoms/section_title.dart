@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
+import '../../core/localization/app_localizations.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -10,6 +11,8 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       child: Row(
@@ -19,7 +22,10 @@ class SectionTitle extends StatelessWidget {
           if (onRefresh != null || linkText != null)
             GestureDetector(
               onTap: onRefresh,
-              child: Text(linkText ?? 'Refresh', style: AppTextStyles.label),
+              child: Text(
+                linkText ?? localizations.refresh,
+                style: AppTextStyles.label,
+              ),
             ),
         ],
       ),

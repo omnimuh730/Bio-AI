@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import '../../core/localization/app_localizations.dart';
 
 class AIMealCard extends StatelessWidget {
   final Map<String, dynamic> meal;
@@ -38,14 +39,7 @@ class AIMealCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                meal['time'],
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              Text(meal['time'], style: AppTextStyles.label),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -61,9 +55,7 @@ class AIMealCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       meal['badge'],
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.overline.copyWith(
                         color: meal['badgeColor'],
                       ),
                     ),
@@ -92,21 +84,9 @@ class AIMealCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      meal['title'],
-                      style: GoogleFonts.dmSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text(meal['title'], style: AppTextStyles.heading3),
                     const SizedBox(height: 4),
-                    Text(
-                      meal['macros'],
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+                    Text(meal['macros'], style: AppTextStyles.bodySmall),
                   ],
                 ),
               ),
@@ -137,10 +117,8 @@ class AIMealCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    "Why this?",
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    AppLocalizations.of(context).whyThis,
+                    style: AppTextStyles.label.copyWith(
                       color: AppColors.textMain,
                     ),
                   ),
@@ -151,11 +129,7 @@ class AIMealCard extends StatelessWidget {
                   padding: const EdgeInsets.all(12.0),
                   child: Text(
                     meal['why'],
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      height: 1.4,
-                      color: AppColors.textMain,
-                    ),
+                    style: AppTextStyles.body.copyWith(height: 1.4),
                   ),
                 ),
               ],
@@ -210,12 +184,10 @@ class AIMealCard extends StatelessWidget {
                         const Icon(Icons.add, color: Colors.white, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          'Eat This (${meal['cals']} kcal)',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                          AppLocalizations.of(
+                            context,
+                          ).eatThisCals(meal['cals'] as int),
+                          style: AppTextStyles.button,
                         ),
                       ],
                     ),

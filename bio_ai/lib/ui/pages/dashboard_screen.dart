@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../data/mock_data.dart';
 import '../atoms/section_title.dart';
 import '../molecules/header_profile.dart';
@@ -31,10 +32,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _mealIndex = (_mealIndex + 1) % mockMeals.length;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('New suggestion loaded'),
-        duration: Duration(milliseconds: 1000),
-        behavior: SnackBarBehavior.floating,
+      SnackBar(
+        content: Text(AppLocalizations.of(context).newSuggestionLoaded),
+        duration: const Duration(milliseconds: 1000),
       ),
     );
   }
@@ -85,6 +85,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.bgBody,
       body: Stack(
@@ -100,29 +102,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SetupCard(),
 
                 SectionTitle(
-                  'Live Vitals',
+                  localizations.liveVitals,
                   onRefresh: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Vitals synced')),
+                      SnackBar(content: Text(localizations.vitalsSynced)),
                     );
                   },
                 ),
                 const VitalsGrid(),
 
-                const SectionTitle('AI Suggestion'),
+                SectionTitle(localizations.aiSuggestion),
                 AIMealCard(
                   meal: mockMeals[_mealIndex],
                   onSwap: _swapMeal,
                   onLog: _logMeal,
                 ),
 
-                const SectionTitle('Daily Fuel'),
+                SectionTitle(localizations.dailyFuel),
                 const DailyProgressCard(),
 
-                const SectionTitle('Hydration'),
+                SectionTitle(localizations.hydration),
                 const HydrationCard(),
 
-                const SectionTitle('Quick Log', linkText: "View History"),
+                SectionTitle(
+                  localizations.quickLog,
+                  linkText: localizations.viewHistory,
+                ),
                 const QuickLogCard(),
               ],
             ),

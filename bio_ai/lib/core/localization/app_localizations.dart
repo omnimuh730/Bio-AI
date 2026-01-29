@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'strings/strings_en.dart';
 import 'strings/strings_ar.dart';
+import 'strings/strings_fr.dart';
+import 'strings/strings_es.dart';
+import 'strings/strings_ru.dart';
+import 'strings/strings_zh.dart';
+import 'strings/strings_ko.dart';
 
 class AppLocalizations {
   final Locale locale;
@@ -14,6 +19,21 @@ class AppLocalizations {
     switch (locale.languageCode) {
       case 'ar':
         _localizedStrings = stringsAr;
+        break;
+      case 'fr':
+        _localizedStrings = stringsFr;
+        break;
+      case 'es':
+        _localizedStrings = stringsEs;
+        break;
+      case 'ru':
+        _localizedStrings = stringsRu;
+        break;
+      case 'zh':
+        _localizedStrings = stringsZh;
+        break;
+      case 'ko':
+        _localizedStrings = stringsKo;
         break;
       case 'en':
       default:
@@ -34,6 +54,23 @@ class AppLocalizations {
   String get helloUser => get('hello_user');
   String get newSuggestionLoaded => get('new_suggestion_loaded');
   String get comingSoon => get('coming_soon');
+
+  // Setup & Dashboard labels
+  String get finishSetup => get('finish_setup');
+  String get setupDescription => get('setup_description');
+  String get continueLabel => get('continue');
+  String get liveVitals => get('live_vitals');
+  String get vitalsSynced => get('vitals_synced');
+  String get aiSuggestion => get('ai_suggestion');
+  String get dailyFuel => get('daily_fuel');
+  String get quickLog => get('quick_log');
+  String get viewHistory => get('view_history');
+  String get refresh => get('refresh');
+
+  // Meal / suggestion
+  String get whyThis => get('why_this');
+  String eatThisCals(int cals) =>
+      get('eat_this').replaceFirst('{cals}', cals.toString());
 
   // General strings
   String get hello => get('hello');
@@ -109,7 +146,15 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
 
   @override
   bool isSupported(Locale locale) {
-    return ['en', 'ar'].contains(locale.languageCode);
+    return [
+      'en',
+      'ar',
+      'fr',
+      'es',
+      'ru',
+      'zh',
+      'ko',
+    ].contains(locale.languageCode);
   }
 
   @override
