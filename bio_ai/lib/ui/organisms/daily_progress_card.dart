@@ -74,7 +74,7 @@ class DailyProgressCard extends StatelessWidget {
                   label: localizations.protein,
                   val:
                       '${metrics?.protein.toStringAsFixed(0) ?? '0'}g / ${goals?.proteinTarget.toStringAsFixed(0) ?? '100'}g',
-                  pct: (metrics?.protein ?? 0) / (goals?.proteinTarget ?? 100),
+                  pct: ((metrics?.protein ?? 0) / (goals?.proteinTarget ?? 100)).clamp(0.0, 1.0),
                   color: AppColors.accentPurple,
                 ),
                 const SizedBox(height: 12),
@@ -82,7 +82,7 @@ class DailyProgressCard extends StatelessWidget {
                   label: localizations.carbs,
                   val:
                       '${metrics?.carbs.toStringAsFixed(0) ?? '0'}g / ${goals?.carbsTarget.toStringAsFixed(0) ?? '250'}g',
-                  pct: (metrics?.carbs ?? 0) / (goals?.carbsTarget ?? 250),
+                  pct: ((metrics?.carbs ?? 0) / (goals?.carbsTarget ?? 250)).clamp(0.0, 1.0),
                   color: AppColors.accentGreen,
                 ),
                 const SizedBox(height: 12),
@@ -90,7 +90,7 @@ class DailyProgressCard extends StatelessWidget {
                   label: localizations.fat,
                   val:
                       '${metrics?.fat.toStringAsFixed(0) ?? '0'}g / ${goals?.fatTarget.toStringAsFixed(0) ?? '70'}g',
-                  pct: (metrics?.fat ?? 0) / (goals?.fatTarget ?? 70),
+                  pct: ((metrics?.fat ?? 0) / (goals?.fatTarget ?? 70)).clamp(0.0, 1.0),
                   color: AppColors.accentOrange,
                 ),
               ],
