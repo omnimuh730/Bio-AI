@@ -48,6 +48,9 @@ class CaptureScreenBody extends StatelessWidget {
   final void Function(String) onQueryChanged;
   final void Function(FoodItem) onTapItem;
 
+  /// Optional callback invoked when shutter is pressed in scan mode.
+  final Future<void> Function()? onCapturePhoto;
+
   const CaptureScreenBody({
     super.key,
     required this.items,
@@ -79,6 +82,7 @@ class CaptureScreenBody extends StatelessWidget {
     required this.onAddAlcohol,
     required this.onQueryChanged,
     required this.onTapItem,
+    this.onCapturePhoto,
   });
 
   @override
@@ -148,6 +152,8 @@ class CaptureScreenBody extends StatelessWidget {
               onToggleBarcode();
               return;
             }
+            // default: capture photo
+            if (onCapturePhoto != null) onCapturePhoto!();
           },
         ),
         if (sheetOpen && !searchOpen)

@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:path/path.dart' as p;
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/ui/pages/capture/models/food_item.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/meal_detail_modal.dart';
@@ -7,16 +10,51 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_screen_body.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/custom_food_dialog.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/log_dialog.dart';
 import 'package:bio_ai/ui/pages/capture/capture_state.dart';
+import 'package:bio_ai/core/config.dart';
+import 'package:bio_ai/app/di/injectors.dart';
 
-class CaptureScreen extends StatefulWidget {
+class CaptureScreen extends ConsumerStatefulWidget {
   const CaptureScreen({super.key});
 
   @override
-  State<CaptureScreen> createState() => _CaptureScreenState();
+  ConsumerState<CaptureScreen> createState() => _CaptureScreenState();
 }
 
-class _CaptureScreenState extends State<CaptureScreen> {
+class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   final CaptureScreenStateHolder _s = CaptureScreenStateHolder();
+
+  Future<void> _captureAndUpload() async {
+    final cam = ref.read(cameraServiceProvider);
+    try {
+      if (!cam.isInitialized) await cam.initialize();
+      final file = await cam.takePhoto();
+
+      final dio = Dio();
+      final fileName = p.basename(file.path);
+      final formData = FormData.fromMap({
+        'pitch': 0.0,
+        'file': await MultipartFile.fromFile(file.path, filename: fileName),
+      });
+
+      final resp = await dio.post(
+        '${backendBaseUrl}/api/vision/upload',
+        data: formData,
+      );
+
+      final uploadedFile = resp.data['file'];
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload started: $uploadedFile')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Capture/upload failed: $e')));
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -213,6 +251,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         onAddAlcohol: () => _addItem(_s.searchService.catalog[1]),
         onQueryChanged: _filterSearch,
         onTapItem: _openMealModal,
+        onCapturePhoto: _captureAndUpload,
       ),
     );
   }

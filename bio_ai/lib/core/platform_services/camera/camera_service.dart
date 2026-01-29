@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CameraService {
   CameraController? _controller;
@@ -10,6 +11,13 @@ class CameraService {
   Future<void> initialize({
     ResolutionPreset preset = ResolutionPreset.medium,
   }) async {
+    // Request camera permission first
+    final status = await Permission.camera.status;
+    if (!status.isGranted) {
+      final req = await Permission.camera.request();
+      if (!req.isGranted) throw Exception('Camera permission denied');
+    }
+
     final cameras = await availableCameras();
     if (cameras.isEmpty) throw Exception('No cameras available');
     _camera = cameras.firstWhere(
