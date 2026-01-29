@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'analytics_gauge_painter.dart';
 
 class AnalyticsScoreCard extends StatelessWidget {
@@ -17,10 +17,10 @@ class AnalyticsScoreCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 20,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -31,25 +31,19 @@ class AnalyticsScoreCard extends StatelessWidget {
                 painter: AnalyticsGaugePainter(
                   progress: 0.88,
                   background: const Color(0xFFF1F5F9),
-                  foreground: AppColors.kAccentBlue,
+                  foreground: AppColors.accentBlue,
                 ),
                 child: const SizedBox(width: 180, height: 90),
               ),
             ),
             Text(
               '88',
-              style: GoogleFonts.dmSans(
-                fontSize: 42,
-                fontWeight: FontWeight.w800,
-                color: AppColors.kTextMain,
-              ),
+              style: AppTextStyles.heading1.copyWith(color: AppColors.textMain),
             ),
             Text(
               'Excellent Energy',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.kTextSecondary,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textSecondary,
                 letterSpacing: 1,
               ),
             ),
@@ -65,7 +59,7 @@ class AnalyticsScoreCard extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.smart_toy_outlined,
-                    color: AppColors.kAccentBlue,
+                    color: AppColors.accentBlue,
                     size: 16,
                   ),
                   const SizedBox(width: 10),
@@ -73,8 +67,7 @@ class AnalyticsScoreCard extends StatelessWidget {
                     child: Text(
                       'Trend up: Your score improved by 12% this week. '
                       'Consistent protein intake post-workout has improved your recovery speed.',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: const Color(0xFF334155),
                       ),
                     ),

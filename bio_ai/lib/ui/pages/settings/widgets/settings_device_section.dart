@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 import '../models/device_state.dart';
 import 'settings_action_row.dart';
 import 'settings_card_container.dart';
@@ -35,48 +35,48 @@ class SettingsDeviceSection extends StatelessWidget {
             SettingsDeviceRow(
               device: devices['apple']!,
               icon: Icons.apple,
-              iconColor: AppColors.kTextMain,
+              iconColor: AppColors.textMain,
               onToggle: () => onToggle('apple'),
             ),
             const SettingsDivider(),
             SettingsDeviceRow(
               device: devices['google']!,
               icon: Icons.g_mobiledata,
-              iconColor: AppColors.kTextMain,
+              iconColor: AppColors.textMain,
               onToggle: () => onToggle('google'),
             ),
             const SettingsDivider(),
             SettingsDeviceRow(
               device: devices['garmin']!,
               icon: Icons.watch,
-              iconColor: AppColors.kTextMain,
+              iconColor: AppColors.textMain,
               onToggle: () => onToggle('garmin'),
             ),
             const SettingsDivider(),
             SettingsDeviceRow(
               device: devices['fitbit']!,
               icon: Icons.favorite_border,
-              iconColor: AppColors.kTextMain,
+              iconColor: AppColors.textMain,
               onToggle: () => onToggle('fitbit'),
             ),
             SettingsActionRow(
               label: 'Resync Devices',
               icon: Icons.sync,
-              color: AppColors.kAccentGreen,
+              color: AppColors.accentGreen,
               background: const Color(0xFFF0FDF4),
               onTap: onResync,
             ),
             SettingsActionRow(
               label: 'Re-Auth Devices',
               icon: Icons.verified_user_outlined,
-              color: AppColors.kAccentBlue,
+              color: AppColors.accentBlue,
               background: const Color(0xFFEEF2FF),
               onTap: onReauth,
             ),
             SettingsActionRow(
               label: 'Find Devices',
               icon: Icons.wifi_tethering,
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
               background: const Color(0xFFF8FAFC),
               onTap: onFind,
             ),

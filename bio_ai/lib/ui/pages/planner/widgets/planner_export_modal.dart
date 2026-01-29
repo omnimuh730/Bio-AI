@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerExportModal extends StatelessWidget {
   final VoidCallback onClose;
@@ -34,10 +34,8 @@ class PlannerExportModal extends StatelessWidget {
               children: [
                 Text(
                   'Export Shopping List',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -51,19 +49,24 @@ class PlannerExportModal extends StatelessWidget {
                     ),
                     child: const Icon(Icons.close, size: 16),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               'Choose a service to order or export your list.',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 12),
             ...options.map(
               (opt) => Container(
                 margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(12),
@@ -74,18 +77,14 @@ class PlannerExportModal extends StatelessWidget {
                   children: [
                     Text(
                       opt,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.kTextMain,
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textMain,
                       ),
                     ),
                     Text(
                       opt == 'Copy List' ? 'Clipboard' : 'Order',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.kTextSecondary,
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -97,15 +96,17 @@ class PlannerExportModal extends StatelessWidget {
               onPressed: onClose,
               style: TextButton.styleFrom(
                 backgroundColor: const Color(0xFFF1F5F9),
-                foregroundColor: AppColors.kTextMain,
+                foregroundColor: AppColors.textMain,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(
                 'Close',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                style: AppTextStyles.label.copyWith(color: AppColors.textMain),
               ),
-            )
+            ),
           ],
         ),
       ),

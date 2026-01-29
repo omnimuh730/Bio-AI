@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'analytics_correlation_chart_painter.dart';
 import 'analytics_metric_selector.dart';
 import 'analytics_time_toggle.dart';
@@ -41,14 +41,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Correlations',
-                style: GoogleFonts.dmSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.kTextMain,
-                ),
-              ),
+              Text('Correlations', style: AppTextStyles.dmSans16Bold),
               AnalyticsTimeToggle(selected: range, onChanged: onRangeChanged),
             ],
           ),
@@ -60,10 +53,10 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
-                )
+                ),
               ],
             ),
             child: Column(
@@ -73,7 +66,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                     Expanded(
                       child: AnalyticsMetricSelector(
                         label: metricLabels[metricA] ?? 'Metric A',
-                        color: AppColors.kAccentBlue,
+                        color: AppColors.accentBlue,
                         background: const Color(0x1A4B7BFF),
                         options: metricLabels.keys.take(5).toList(),
                         onSelected: onMetricAChanged,
@@ -84,7 +77,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                     Expanded(
                       child: AnalyticsMetricSelector(
                         label: metricLabels[metricB] ?? 'Metric B',
-                        color: AppColors.kAccentPurple,
+                        color: AppColors.accentPurple,
                         background: const Color(0x1A8B5CF6),
                         options: metricLabels.keys.skip(5).take(5).toList(),
                         onSelected: onMetricBChanged,
@@ -101,8 +94,8 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                     painter: AnalyticsCorrelationChartPainter(
                       primary: primary,
                       secondary: secondary,
-                      primaryColor: AppColors.kAccentBlue,
-                      secondaryColor: AppColors.kAccentPurple,
+                      primaryColor: AppColors.accentBlue,
+                      secondaryColor: AppColors.accentPurple,
                     ),
                   ),
                 ),
@@ -111,13 +104,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: labels
                       .map(
-                        (label) => Text(
-                          label,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.kTextSecondary,
-                          ),
-                        ),
+                        (label) => Text(label, style: AppTextStyles.labelSmall),
                       )
                       .toList(),
                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class AnalyticsWeeklyReview extends StatelessWidget {
   const AnalyticsWeeklyReview({super.key});
@@ -16,10 +16,10 @@ class AnalyticsWeeklyReview extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -30,15 +30,13 @@ class AnalyticsWeeklyReview extends StatelessWidget {
                 const Icon(
                   Icons.smart_toy_outlined,
                   size: 18,
-                  color: AppColors.kAccentBlue,
+                  color: AppColors.accentBlue,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Weekly AI Review',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                  style: AppTextStyles.heading3.copyWith(
+                    color: AppColors.textMain,
                   ),
                 ),
               ],
@@ -53,9 +51,8 @@ class AnalyticsWeeklyReview extends StatelessWidget {
               child: Text(
                 'You hit your protein goal 5 of 7 days. '
                 'Sleep quality improved by 10%. I will stop suggesting oatmeal for now.',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.kTextSecondary,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
                   height: 1.4,
                 ),
               ),

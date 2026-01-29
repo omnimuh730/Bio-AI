@@ -77,7 +77,7 @@ class CaptureBottomControls extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: isActive ? Colors.white : Colors.white.withOpacity(0.6),
+          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.6),
           letterSpacing: 1,
         ),
       ),

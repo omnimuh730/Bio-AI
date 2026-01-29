@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/food_item.dart';
 import 'food_card.dart';
 
@@ -45,7 +45,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
       height: height,
       child: Container(
         decoration: const BoxDecoration(
-          color: AppColors.kBgBody,
+          color: AppColors.bgBody,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
         child: Column(
@@ -64,18 +64,20 @@ class CaptureAnalysisSheet extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Analysis',
-                      style: GoogleFonts.dmSans(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.kTextMain)),
+                  Text(
+                    'Analysis',
+                    style: AppTextStyles.heading3.copyWith(
+                      color: AppColors.textMain,
+                    ),
+                  ),
                   GestureDetector(
                     onTap: onClose,
-                    child: Text('Edit',
-                        style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.kAccentBlue)),
+                    child: Text(
+                      'Edit',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.accentBlue,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -86,25 +88,26 @@ class CaptureAnalysisSheet extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 children: [
                   ...items.asMap().entries.map(
-                        (entry) => FoodCard(
-                          item: entry.value,
-                          onRemove: () => onRemoveItem(entry.key),
-                          onPortionChanged: (index) =>
-                              onPortionChanged(entry.key, index),
-                        ),
-                      ),
+                    (entry) => FoodCard(
+                      item: entry.value,
+                      onRemove: () => onRemoveItem(entry.key),
+                      onPortionChanged: (index) =>
+                          onPortionChanged(entry.key, index),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: onOpenSearch,
                     child: Row(
                       children: [
-                        const Icon(Icons.add, color: AppColors.kAccentBlue),
+                        const Icon(Icons.add, color: AppColors.accentBlue),
                         const SizedBox(width: 8),
-                        Text('Manual Search',
-                            style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.kAccentBlue)),
+                        Text(
+                          'Manual Search',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.accentBlue,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -112,9 +115,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: const BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
+                      border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -126,11 +127,12 @@ class CaptureAnalysisSheet extends StatelessWidget {
                             _macroTag('F: ${totalFat.round()}g'),
                           ],
                         ),
-                        Text('${totalCals.round()} kcal',
-                            style: GoogleFonts.dmSans(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.kTextMain)),
+                        Text(
+                          '${totalCals.round()} kcal',
+                          style: AppTextStyles.heading3.copyWith(
+                            color: AppColors.textMain,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -138,13 +140,16 @@ class CaptureAnalysisSheet extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: onLog,
                     icon: const Icon(Icons.check),
-                    label: Text(offlineMode ? 'Save for Later' : 'Log to Diary'),
+                    label: Text(
+                      offlineMode ? 'Save for Later' : 'Log to Diary',
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.kAccentBlue,
+                      backgroundColor: AppColors.accentBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 0,
                     ),
                   ),
@@ -166,10 +171,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.kAccentBlue),
+        style: AppTextStyles.labelSmall.copyWith(color: AppColors.accentBlue),
       ),
     );
   }

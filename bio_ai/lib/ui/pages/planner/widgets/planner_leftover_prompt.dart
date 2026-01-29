@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerLeftoverPrompt extends StatelessWidget {
   final String title;
@@ -32,10 +32,8 @@ class PlannerLeftoverPrompt extends StatelessWidget {
               children: [
                 Text(
                   'Save Leftovers',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                  style: AppTextStyles.dmSans14SemiBold.copyWith(
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -49,44 +47,61 @@ class PlannerLeftoverPrompt extends StatelessWidget {
                     ),
                     child: const Icon(Icons.close, size: 16),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
               'Did you cook the whole batch of $title?',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _promptButton('Yes, add leftovers', onConfirm, filled: true),
+                  child: _promptButton(
+                    'Yes, add leftovers',
+                    onConfirm,
+                    filled: true,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _promptButton('No, just this meal', () => Navigator.pop(context)),
+                  child: _promptButton(
+                    'No, just this meal',
+                    () => Navigator.pop(context),
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _promptButton(String label, VoidCallback onTap, {bool filled = false}) {
+  Widget _promptButton(
+    String label,
+    VoidCallback onTap, {
+    bool filled = false,
+  }) {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        backgroundColor: filled ? AppColors.kAccentBlue : const Color(0xFFF1F5F9),
-        foregroundColor: filled ? Colors.white : AppColors.kTextMain,
+        backgroundColor: filled
+            ? AppColors.accentBlue
+            : const Color(0xFFF1F5F9),
+        foregroundColor: filled ? Colors.white : AppColors.textMain,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+        style: AppTextStyles.labelSmall.copyWith(
+          color: filled ? Colors.white : AppColors.textMain,
+        ),
       ),
     );
   }

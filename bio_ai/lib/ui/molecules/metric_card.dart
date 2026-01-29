@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class MetricCard extends StatelessWidget {
   final IconData icon;
@@ -31,9 +31,10 @@ class MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 6,
-              offset: const Offset(0, 4))
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -44,32 +45,17 @@ class MetricCard extends StatelessWidget {
             children: [
               Icon(icon, size: 16, color: iconColor),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.kTextSecondary),
-              ),
+              Text(title, style: AppTextStyles.label),
             ],
           ),
           RichText(
             text: TextSpan(
               children: [
-                TextSpan(
-                  text: value,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
-                  ),
-                ),
+                TextSpan(text: value, style: AppTextStyles.heading3),
                 TextSpan(
                   text: ' $unit',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF94A3B8),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textLight,
                   ),
                 ),
               ],
@@ -77,11 +63,7 @@ class MetricCard extends StatelessWidget {
           ),
           Text(
             sub,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: stateColor,
-            ),
+            style: AppTextStyles.labelSmall.copyWith(color: stateColor),
           ),
         ],
       ),

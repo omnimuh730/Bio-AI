@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/food_item.dart';
 import 'search_result_row.dart';
 
@@ -73,11 +73,7 @@ class CaptureSearchOverlay extends StatelessWidget {
                     onAddCaffeine,
                   ),
                   const SizedBox(width: 8),
-                  _impactChip(
-                    'Alcohol',
-                    const Color(0xFF8B5CF6),
-                    onAddAlcohol,
-                  ),
+                  _impactChip('Alcohol', const Color(0xFF8B5CF6), onAddAlcohol),
                 ],
               ),
               const SizedBox(height: 16),
@@ -99,26 +95,26 @@ class CaptureSearchOverlay extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'No results found.',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: AppColors.kTextSecondary),
-                      ),
+                      Text('No results found.', style: AppTextStyles.overline),
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: onCreateCustom,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.kTextMain,
+                          backgroundColor: AppColors.textMain,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           elevation: 0,
                         ),
-                        child: Text('Create Custom Food',
-                            style: GoogleFonts.inter(
-                                fontSize: 12, fontWeight: FontWeight.w700)),
+                        child: Text(
+                          'Create Custom Food',
+                          style: AppTextStyles.overline,
+                        ),
                       ),
                     ],
                   ),
@@ -136,14 +132,10 @@ class CaptureSearchOverlay extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-              fontSize: 11, fontWeight: FontWeight.w700, color: color),
-        ),
+        child: Text(label, style: AppTextStyles.label.copyWith(color: color)),
       ),
     );
   }
@@ -158,7 +150,7 @@ class CaptureSearchOverlay extends StatelessWidget {
           color: const Color(0x33FFFFFF),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Icon(icon, color: AppColors.kTextMain),
+        child: Icon(icon, color: AppColors.textMain),
       ),
     );
   }

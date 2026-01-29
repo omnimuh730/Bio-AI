@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/food_item.dart';
 import 'portion_selector.dart';
 
@@ -26,9 +26,10 @@ class FoodCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -48,15 +49,19 @@ class FoodCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name,
-                    style: GoogleFonts.dmSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.kTextMain)),
+                Text(
+                  item.name,
+                  style: AppTextStyles.title.copyWith(
+                    color: AppColors.textMain,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(item.desc,
-                    style: GoogleFonts.inter(
-                        fontSize: 13, color: AppColors.kTextSecondary)),
+                Text(
+                  item.desc,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 PortionSelector(
                   selectedIndex: item.portionIndex,
@@ -67,8 +72,10 @@ class FoodCard extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(Icons.remove_circle_outline,
-                color: Color(0xFFCBD5E1)),
+            child: const Icon(
+              Icons.remove_circle_outline,
+              color: Color(0xFFCBD5E1),
+            ),
           ),
         ],
       ),

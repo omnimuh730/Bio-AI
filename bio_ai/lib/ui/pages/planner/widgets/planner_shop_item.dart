@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerShopItem extends StatefulWidget {
   final String label;
@@ -36,7 +36,7 @@ class _PlannerShopItemState extends State<PlannerShopItem> {
               width: 20,
               height: 20,
               decoration: BoxDecoration(
-                color: _checked ? AppColors.kAccentBlue : Colors.white,
+                color: _checked ? AppColors.accentBlue : Colors.white,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
               ),
@@ -49,10 +49,12 @@ class _PlannerShopItemState extends State<PlannerShopItem> {
           Expanded(
             child: Text(
               widget.label,
-              style: GoogleFonts.inter(
+              style: AppTextStyles.labelSmall.copyWith(
                 fontSize: 14,
-                color: _checked ? const Color(0xFFCBD5E1) : AppColors.kTextMain,
-                decoration: _checked ? TextDecoration.lineThrough : TextDecoration.none,
+                color: _checked ? const Color(0xFFCBD5E1) : AppColors.textMain,
+                decoration: _checked
+                    ? TextDecoration.lineThrough
+                    : TextDecoration.none,
               ),
             ),
           ),

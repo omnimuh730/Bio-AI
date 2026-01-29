@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+import '../../core/localization/app_localizations.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -11,29 +11,20 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.kTextMain,
-            ),
-          ),
+          Text(title, style: AppTextStyles.subtitle),
           if (onRefresh != null || linkText != null)
             GestureDetector(
               onTap: onRefresh,
               child: Text(
-                linkText ?? 'Refresh',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.kAccentBlue,
-                ),
+                linkText ?? localizations.refresh,
+                style: AppTextStyles.label,
               ),
             ),
         ],

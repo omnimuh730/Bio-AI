@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/localization/app_localizations.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+import '../../core/theme/app_spacing_borders_shadows.dart';
+import '../../data/providers/data_provider.dart';
 import '../molecules/macro_row.dart';
 
 class DailyProgressCard extends StatelessWidget {
-  const DailyProgressCard({super.key});
+  final DataProvider? dataProvider;
+
+  const DailyProgressCard({super.key, this.dataProvider});
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    // Get data from provider or use mock values
+    final metrics = dataProvider?.todayMetrics;
+    final goals = dataProvider?.dailyGoals;
+
+    final caloriesRemaining =
+        (goals?.caloriesTarget ?? 2000) - (metrics?.calories ?? 1850);
+    final caloriesProgress =
+        (metrics?.calories ?? 1850) / (goals?.caloriesTarget ?? 2000);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+      decoration: const BoxDecoration(
+        color: AppColors.bgSurface,
+        borderRadius: AppBorderRadius.bXl,
+        boxShadow: AppShadows.shadow2,
       ),
       child: Row(
         children: [
@@ -24,31 +41,24 @@ class DailyProgressCard extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const SizedBox(
+                SizedBox(
                   width: 72,
                   height: 72,
                   child: CircularProgressIndicator(
-                    value: 0.65,
+                    value: caloriesProgress,
                     strokeWidth: 6,
-                    backgroundColor: Color(0xFFF1F5F9),
-                    color: AppColors.kAccentBlue,
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    color: AppColors.primary,
                     strokeCap: StrokeCap.round,
                   ),
                 ),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Text('$caloriesRemaining', style: AppTextStyles.subtitle),
                     Text(
-                      '1,240',
-                      style: GoogleFonts.dmSans(
-                          fontSize: 18, fontWeight: FontWeight.w700),
-                    ),
-                    Text(
-                      'LEFT',
-                      style: GoogleFonts.inter(
-                          fontSize: 10,
-                          color: AppColors.kTextSecondary,
-                          fontWeight: FontWeight.w500),
+                      localizations.calories.toUpperCase(),
+                      style: AppTextStyles.labelSmall,
                     ),
                   ],
                 ),
@@ -57,26 +67,32 @@ class DailyProgressCard extends StatelessWidget {
           ),
           const SizedBox(width: 20),
           // Macros
-          const Expanded(
+          Expanded(
             child: Column(
               children: [
                 MacroRow(
-                    label: 'Protein',
-                    val: '80g / 140g',
-                    pct: 0.6,
-                    color: AppColors.kAccentPurple),
-                SizedBox(height: 12),
+                  label: localizations.protein,
+                  val:
+                      '${metrics?.protein.toStringAsFixed(0) ?? '0'}g / ${goals?.proteinTarget.toStringAsFixed(0) ?? '100'}g',
+                  pct: (metrics?.protein ?? 0) / (goals?.proteinTarget ?? 100),
+                  color: AppColors.accentPurple,
+                ),
+                const SizedBox(height: 12),
                 MacroRow(
-                    label: 'Carbs',
-                    val: '120g / 200g',
-                    pct: 0.8,
-                    color: AppColors.kAccentGreen),
-                SizedBox(height: 12),
+                  label: localizations.carbs,
+                  val:
+                      '${metrics?.carbs.toStringAsFixed(0) ?? '0'}g / ${goals?.carbsTarget.toStringAsFixed(0) ?? '250'}g',
+                  pct: (metrics?.carbs ?? 0) / (goals?.carbsTarget ?? 250),
+                  color: AppColors.accentGreen,
+                ),
+                const SizedBox(height: 12),
                 MacroRow(
-                    label: 'Fat',
-                    val: '30g / 70g',
-                    pct: 0.4,
-                    color: AppColors.kAccentOrange),
+                  label: localizations.fat,
+                  val:
+                      '${metrics?.fat.toStringAsFixed(0) ?? '0'}g / ${goals?.fatTarget.toStringAsFixed(0) ?? '70'}g',
+                  pct: (metrics?.fat ?? 0) / (goals?.fatTarget ?? 70),
+                  color: AppColors.accentOrange,
+                ),
               ],
             ),
           ),

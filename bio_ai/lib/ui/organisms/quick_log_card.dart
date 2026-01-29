@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class QuickLogCard extends StatelessWidget {
   const QuickLogCard({super.key});
@@ -15,9 +15,10 @@ class QuickLogCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -26,12 +27,14 @@ class QuickLogCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Copy Yesterday Breakfast',
-                  style: GoogleFonts.dmSans(
-                      fontSize: 15, fontWeight: FontWeight.w600)),
-              Text('Oatmeal and berries - 320 kcal',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: AppColors.kTextSecondary)),
+              Text(
+                'Copy Yesterday Breakfast',
+                style: AppTextStyles.dmSans16Bold,
+              ),
+              Text(
+                'Oatmeal and berries - 320 kcal',
+                style: AppTextStyles.labelSmall,
+              ),
             ],
           ),
           Container(
@@ -42,10 +45,9 @@ class QuickLogCard extends StatelessWidget {
             ),
             child: Text(
               'Copy',
-              style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.kTextMain),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textMain,
+              ),
             ),
           ),
         ],
