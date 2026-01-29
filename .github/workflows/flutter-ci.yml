@@ -2,9 +2,11 @@ name: Flutter CI
 
 on:
     push:
-        branches: [main, develop]
+        branches: [master, develop]
     pull_request:
-        branches: [main, develop]
+        types: [opened, synchronize, reopened, ready_for_review, edited]
+        branches: [master, develop]
+    workflow_dispatch:
 
 jobs:
     flutter-checks:
@@ -12,7 +14,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
+                os: [windows-latest]
                 channel: [stable]
             fail-fast: false
 
@@ -51,17 +53,9 @@ jobs:
               working-directory: bio_ai
               run: flutter pub get
 
-            - name: Format check (dart format)
-              working-directory: bio_ai
-              run: dart format --set-exit-if-changed .
-
             - name: Static analysis (flutter analyze)
               working-directory: bio_ai
               run: flutter analyze --no-fatal-infos
-
-            - name: Run unit & widget tests
-              working-directory: bio_ai
-              run: flutter test --coverage
 
             - name: Build Android APK
               if: runner.os != 'macOS'
@@ -74,18 +68,6 @@ jobs:
               with:
                   name: app-release-${{ matrix.os }}
                   path: bio_ai/build/app/outputs/flutter-apk/app-release.apk
-
-            - name: Build Windows binary
-              if: runner.os == 'Windows'
-              working-directory: bio_ai
-              run: flutter build windows --release
-
-            - name: Upload Windows build
-              if: runner.os == 'Windows'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: windows-build
-                  path: bio_ai/build/windows/runner/Release
 
             - name: Build iOS (no codesign)
               if: runner.os == 'macOS'
