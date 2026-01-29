@@ -26,6 +26,7 @@ dependencies:
     sensors_plus: any
     geolocator: any
     flutter_blue_plus: any
+    permission_handler: any
     camera: any
     path_provider: any
     mobile_scanner: any

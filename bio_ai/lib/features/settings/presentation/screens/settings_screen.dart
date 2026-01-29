@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:bio_ai/app/di/injectors.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
@@ -272,13 +273,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _openFindDevicesModal() async {
-    _showToast('Fetching connected Bluetooth devices...');
+    _showToast('Checking Bluetooth permissions...');
     try {
-      final devices = await ref.read(bleServiceProvider).connectedDevices();
+      final ble = ref.read(bleServiceProvider);
+      final ok = await ble.ensurePermissions();
+      if (!ok) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Bluetooth permission required'),
+            content: const Text(
+              'This action requires Bluetooth access. Please enable Bluetooth permissions in system settings and try again.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  openAppSettings();
+                  Navigator.pop(context);
+                },
+                child: const Text('Open Settings'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      _showToast('Fetching connected Bluetooth devices...');
+      final supported = await ble.isSupported();
+      if (!supported) {
+        _showToast('Bluetooth not supported on this device');
+        return;
+      }
+
+      final devices = await ble.connectedDeviceSummaries();
       if (devices.isEmpty) {
         _showToast('No connected devices found');
         return;
       }
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -290,12 +327,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: devices
                   .map(
                     (d) => ListTile(
-                      title: Text(d.name.isNotEmpty ? d.name : d.id.id),
-                      subtitle: Text(d.id.id),
-                      trailing: Text('-'),
-                      onTap: () => _showToast(
-                        '${d.name.isNotEmpty ? d.name : d.id.id} selected',
-                      ),
+                      title: Text(d['name'] ?? 'Unknown'),
+                      subtitle: Text(d['id'] ?? '-'),
+                      trailing: const Text('-'),
+                      onTap: () =>
+                          _showToast('${d['name'] ?? d['id']} selected'),
                     ),
                   )
                   .toList(),
