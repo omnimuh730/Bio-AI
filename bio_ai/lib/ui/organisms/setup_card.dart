@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 
 class SetupCard extends StatelessWidget {
   const SetupCard({super.key});
@@ -28,15 +28,18 @@ class SetupCard extends StatelessWidget {
                 Text(
                   'Finish your setup',
                   style: GoogleFonts.dmSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.kTextMain,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Complete profile, dietary rules, and device sync to unlock adaptive plans.',
                   style: GoogleFonts.inter(
-                      fontSize: 12, color: AppColors.kTextSecondary),
+                    fontSize: 12,
+                    color: AppColors.kTextSecondary,
+                  ),
                 ),
               ],
             ),
@@ -51,9 +54,10 @@ class SetupCard extends StatelessWidget {
             child: Text(
               'Continue',
               style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

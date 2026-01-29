@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 
 class FloatingNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -65,9 +65,9 @@ class FloatingNavBar extends StatelessWidget {
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  color: AppColors.kTextMain,
+                  color: AppColors.textMain,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.kBgBody, width: 4),
+                  border: Border.all(color: AppColors.bgBody, width: 4),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.2),
@@ -100,7 +100,7 @@ class FloatingNavBar extends StatelessWidget {
           alignment: Alignment.center,
           child: Icon(
             icon,
-            color: isSelected ? AppColors.kTextMain : AppColors.kTextSecondary,
+            color: isSelected ? AppColors.textMain : AppColors.textSecondary,
             size: 24,
           ),
         ),

@@ -29,8 +29,8 @@ class PlannerMenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = selected
-        ? AppColors.kAccentBlue
-        : (best ? AppColors.kAccentGreen : Colors.transparent);
+        ? AppColors.accentBlue
+        : (best ? AppColors.accentGreen : Colors.transparent);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -43,7 +43,7 @@ class PlannerMenuCard extends StatelessWidget {
           boxShadow: best
               ? [
                   BoxShadow(
-                    color: AppColors.kAccentGreen.withValues(alpha: 0.15),
+                    color: AppColors.accentGreen.withValues(alpha: 0.15),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
@@ -62,7 +62,7 @@ class PlannerMenuCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: const BoxDecoration(
-                    color: AppColors.kAccentGreen,
+                    color: AppColors.accentGreen,
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(16),
                       topRight: Radius.circular(20),
@@ -161,7 +161,7 @@ class PlannerMenuCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain,
+                      color: AppColors.textMain,
                     ),
                   ),
                 ),

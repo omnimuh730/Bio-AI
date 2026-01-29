@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 import '../atoms/water_button.dart';
 
 class HydrationCard extends StatelessWidget {
@@ -21,18 +21,29 @@ class HydrationCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.water_drop,
-                    color: AppColors.kAccentBlue, size: 24),
+                const Icon(
+                  Icons.water_drop,
+                  color: AppColors.kAccentBlue,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('1,250ml',
-                        style: GoogleFonts.dmSans(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
-                    Text('Goal: 2,500ml',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: AppColors.kTextSecondary)),
+                    Text(
+                      '1,250ml',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Goal: 2,500ml',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.kTextSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ],

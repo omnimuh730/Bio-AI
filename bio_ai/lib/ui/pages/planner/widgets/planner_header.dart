@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import 'planner_view_toggle.dart';
 
 class PlannerHeader extends StatelessWidget {
@@ -41,13 +42,13 @@ class PlannerHeader extends StatelessWidget {
                 style: GoogleFonts.dmSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.kTextMain,
+                  color: AppColors.textMain,
                 ),
               ),
               const Icon(
                 Icons.calendar_month,
                 size: 20,
-                color: AppColors.kAccentBlue,
+                color: AppColors.accentBlue,
               ),
             ],
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'analytics_gauge_painter.dart';
 
 class AnalyticsScoreCard extends StatelessWidget {
@@ -31,7 +31,7 @@ class AnalyticsScoreCard extends StatelessWidget {
                 painter: AnalyticsGaugePainter(
                   progress: 0.88,
                   background: const Color(0xFFF1F5F9),
-                  foreground: AppColors.kAccentBlue,
+                  foreground: AppColors.accentBlue,
                 ),
                 child: const SizedBox(width: 180, height: 90),
               ),
@@ -41,7 +41,7 @@ class AnalyticsScoreCard extends StatelessWidget {
               style: GoogleFonts.dmSans(
                 fontSize: 42,
                 fontWeight: FontWeight.w800,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
             Text(
@@ -49,7 +49,7 @@ class AnalyticsScoreCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.kTextSecondary,
+                color: AppColors.textSecondary,
                 letterSpacing: 1,
               ),
             ),
@@ -65,7 +65,7 @@ class AnalyticsScoreCard extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.smart_toy_outlined,
-                    color: AppColors.kAccentBlue,
+                    color: AppColors.accentBlue,
                     size: 16,
                   ),
                   const SizedBox(width: 10),

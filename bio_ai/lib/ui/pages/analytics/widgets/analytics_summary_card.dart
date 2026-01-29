@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AnalyticsSummaryCard extends StatelessWidget {
   final IconData icon;
@@ -53,7 +53,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
                   label,
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.kTextSecondary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -62,7 +62,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
               ],

@@ -69,9 +69,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Coming soon')));
   }
 
   void _onFabTapped() {
@@ -97,14 +97,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(milliseconds: 1200)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1200),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.kBgBody,
+      backgroundColor: AppColors.bgBody,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -125,12 +128,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 SettingsPreferenceSection(
                   metricUnits: _metricUnits,
-                  onMetricChanged: (value) => setState(() => _metricUnits = value),
+                  onMetricChanged: (value) =>
+                      setState(() => _metricUnits = value),
                   notificationsOn: _notificationsOn,
-                  onNotificationsChanged:
-                      (value) => setState(() => _notificationsOn = value),
+                  onNotificationsChanged: (value) =>
+                      setState(() => _notificationsOn = value),
                   offlineOn: _offlineOn,
-                  onOfflineChanged: (value) => setState(() => _offlineOn = value),
+                  onOfflineChanged: (value) =>
+                      setState(() => _offlineOn = value),
                 ),
                 SettingsGoalSection(
                   goals: [
@@ -191,8 +196,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'Current plan: ${_planLabel(_selectedPlan)}',
-                    style:
-                        GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   SettingsPlanOptions(
@@ -235,7 +242,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Export Data',
           child: Text(
             'CSV export ready. This is a mock download.',
-            style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
           ),
           primaryText: 'Download CSV',
           onPrimary: () {
@@ -255,7 +265,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Find Devices',
           child: Text(
             'Scanning nearby devices... (mock)',
-            style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
           ),
           primaryText: 'Done',
           onPrimary: () {
@@ -276,7 +289,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Delete Account',
           primaryText: 'Confirm Delete',
           primaryColor: const Color(0xFFEF4444),
-          primaryEnabled: _deleteController.text.trim().toUpperCase() == 'DELETE',
+          primaryEnabled:
+              _deleteController.text.trim().toUpperCase() == 'DELETE',
           onPrimary: () {
             Navigator.pop(context);
             _showToast('Account deleted (mock)');
@@ -286,12 +300,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 'This will permanently remove your health data (mock).',
-                style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Type DELETE to confirm.',
-                style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.kTextSecondary,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(

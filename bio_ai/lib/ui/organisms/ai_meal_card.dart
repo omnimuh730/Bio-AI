@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 
 class AIMealCard extends StatelessWidget {
   final Map<String, dynamic> meal;
@@ -22,10 +22,11 @@ class AIMealCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.kAccentBlue.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.1)),
+
         boxShadow: [
           BoxShadow(
-            color: AppColors.kAccentBlue.withValues(alpha: 0.1),
+            color: AppColors.accentBlue.withValues(alpha: 0.1),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -132,7 +133,7 @@ class AIMealCard extends StatelessWidget {
                   const Icon(
                     Icons.auto_awesome,
                     size: 14,
-                    color: AppColors.kAccentBlue,
+                    color: AppColors.accentBlue,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -140,7 +141,7 @@ class AIMealCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain,
+                      color: AppColors.textMain,
                     ),
                   ),
                 ],
@@ -153,7 +154,7 @@ class AIMealCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       height: 1.4,
-                      color: AppColors.kTextMain,
+                      color: AppColors.textMain,
                     ),
                   ),
                 ),
@@ -175,7 +176,7 @@ class AIMealCard extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.refresh,
-                    color: AppColors.kTextSecondary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -188,7 +189,7 @@ class AIMealCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
-                          AppColors.kAccentBlue,
+                          AppColors.accentBlue,
                           Color(0xFF2563EB),
                         ], // Slight gradient
                         begin: Alignment.topLeft,
@@ -197,7 +198,7 @@ class AIMealCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.kAccentBlue.withValues(alpha: 0.3),
+                          color: AppColors.accentBlue.withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
