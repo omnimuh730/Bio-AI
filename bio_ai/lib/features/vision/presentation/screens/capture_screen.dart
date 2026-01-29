@@ -259,12 +259,86 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
           ? data['foods']['food'] as List<dynamic>?
           : null;
       if (foods == null) {
+        // Try a broader first-letter search for fuzzy matches
+        final first = query.isNotEmpty ? query[0].toLowerCase() : '';
+        if (first.isNotEmpty) {
+          try {
+            final resp2 = await _dio.get(
+              'https://platform.fatsecret.com/rest/server.api',
+              queryParameters: {
+                'method': 'foods.search',
+                'search_expression': first,
+                'format': 'json',
+              },
+              options: Options(
+                headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
+              ),
+            );
+            final data2 = resp2.data as Map<String, dynamic>;
+            final foods2 = data2['foods'] != null
+                ? data2['foods']['food'] as List<dynamic>?
+                : null;
+            if (foods2 != null) {
+              final candidates = foods2
+                  .map((f) => f as Map<String, dynamic>)
+                  .where((food) {
+                    final name =
+                        (food['food_name'] as String? ??
+                                food['name'] as String? ??
+                                '')
+                            .toLowerCase();
+                    final words = name.split(RegExp(r'\s+'));
+                    for (final w in words) {
+                      if (w.isEmpty) continue;
+                      final dist = _levenshtein(w, query.toLowerCase());
+                      if (dist <= 1 || dist <= (w.length * 0.2).ceil())
+                        return true;
+                    }
+                    return false;
+                  })
+                  .toList();
+              if (candidates.isNotEmpty) {
+                final mapped2 = candidates.map((food) {
+                  final name =
+                      food['food_name'] as String? ??
+                      food['name'] as String? ??
+                      '';
+                  final foodId =
+                      food['food_id']?.toString() ??
+                      food['id']?.toString() ??
+                      '';
+                  final desc = food['food_type'] ?? '';
+                  return FoodItem(
+                    name: name,
+                    desc: desc,
+                    cals: 0,
+                    protein: 0,
+                    fat: 0,
+                    image: '',
+                    metadata: {
+                      'fatsecret_food': {'food_id': foodId, 'raw': food},
+                    },
+                  );
+                }).toList();
+                setState(() {
+                  _results = mapped2;
+                  _searching = false;
+                });
+                return;
+              }
+            }
+          } catch (_) {}
+        }
+
+        // final fallback to fuzzy local matches
+        final fallback = _fuzzyLocalMatches(query);
         setState(() {
-          _results = [];
+          _results = fallback;
           _searching = false;
         });
         return;
       }
+
       final mapped = foods.map((f) {
         final food = f as Map<String, dynamic>;
         final name =
@@ -524,6 +598,24 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               .where((s) => s.isNotEmpty)
               .toList();
 
+    Widget _nutrientRow(String label, String value) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: AppTextStyles.bodySmall),
+            Text(
+              value,
+              style: AppTextStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final youtube = (raw?['strYoutube'] as String?) ?? '';
     final ytId = youtube.isNotEmpty ? _youtubeIdFromUrl(youtube) : null;
 
@@ -636,18 +728,231 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     const Divider(),
                     Text('Nutrition Facts', style: AppTextStyles.titleMedium),
                     const SizedBox(height: 8),
+
+                    // Servings selector
                     if (fatRaw['servings'] != null &&
                         fatRaw['servings']['serving'] != null) ...[
-                      Text(
-                        'Serving: ${fatRaw['servings']['serving'][0]['serving_description'] ?? '-'}',
-                        style: AppTextStyles.overline,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Calories: ${fatRaw['servings']['serving'][0]['calories'] ?? '-'} kcal',
-                        style: AppTextStyles.label,
+                      Builder(
+                        builder: (context) {
+                          final servings =
+                              fatRaw['servings']['serving'] as List;
+                          String selectedDesc =
+                              servings[0]['serving_description'] ?? '';
+                          String selectedIndex = '0';
+                          return StatefulBuilder(
+                            builder: (context, setModalState) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  DropdownButton<String>(
+                                    value: selectedIndex,
+                                    items: List<DropdownMenuItem<String>>.generate(
+                                      servings.length,
+                                      (i) => DropdownMenuItem(
+                                        value: i.toString(),
+                                        child: Text(
+                                          servings[i]['serving_description'] ??
+                                              '',
+                                        ),
+                                      ),
+                                    ),
+                                    onChanged: (val) {
+                                      if (val == null) return;
+                                      setModalState(() => selectedIndex = val);
+                                      selectedDesc =
+                                          servings[int.parse(
+                                            val,
+                                          )]['serving_description'] ??
+                                          '';
+                                      // force rebuild of parent by calling outer setState
+                                      setState(() {});
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Serving: $selectedDesc',
+                                    style: AppTextStyles.overline,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Calories: ${servings[int.parse(selectedIndex)]['calories'] ?? '-'} kcal',
+                                    style: AppTextStyles.label,
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Nutrition table
+                                  Card(
+                                    elevation: 0,
+                                    color: const Color(0xFFF8FAFC),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _nutrientRow(
+                                            'Total Fat',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['fat']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Saturated Fat',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['saturated_fat']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Polyunsaturated Fat',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['polyunsaturated_fat']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Monounsaturated Fat',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['monounsaturated_fat']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Trans Fat',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['trans_fat']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          const SizedBox(height: 6),
+                                          _nutrientRow(
+                                            'Cholesterol',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['cholesterol']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Sodium',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['sodium']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          const SizedBox(height: 6),
+                                          _nutrientRow(
+                                            'Total Carbohydrate',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['carbohydrate']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Dietary Fiber',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['fiber']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Sugars',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['sugar']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Added Sugars',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['added_sugars']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          const SizedBox(height: 6),
+                                          _nutrientRow(
+                                            'Protein',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['protein']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          const SizedBox(height: 6),
+                                          _nutrientRow(
+                                            'Vitamin D',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['vitamin_d']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Calcium',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['calcium']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Iron',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['iron']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Potassium',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['potassium']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Vitamin A',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['vitamin_a']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                          _nutrientRow(
+                                            'Vitamin C',
+                                            servings[int.parse(
+                                                      selectedIndex,
+                                                    )]['vitamin_c']
+                                                    ?.toString() ??
+                                                '-',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
+
                     const SizedBox(height: 8),
                     if (fatRaw['food_attributes'] != null) ...[
                       Text('Attributes', style: AppTextStyles.label),
@@ -698,6 +1003,60 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                           ),
                         ),
                       const SizedBox(height: 8),
+
+                      // Dietary suitability (preferences)
+                      if (fatRaw['food_attributes']['preferences'] != null &&
+                          fatRaw['food_attributes']['preferences']['preference'] !=
+                              null) ...[
+                        Text('Dietary Suitability', style: AppTextStyles.label),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          children: List<Widget>.from(
+                            (fatRaw['food_attributes']['preferences']['preference']
+                                    as List)
+                                .map((p) {
+                                  final name = p['name'] ?? '';
+                                  final value = p['value'] ?? '0';
+                                  final bool suitable =
+                                      value.toString() == '1' ||
+                                      value.toString().toLowerCase() == 'true';
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: suitable
+                                          ? const Color(0xFFDFF7E0)
+                                          : const Color(0xFFFFEDEB),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          suitable
+                                              ? Icons.check_circle
+                                              : Icons.cancel,
+                                          size: 14,
+                                          color: suitable
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          name,
+                                          style: AppTextStyles.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ],
                   ],
                 ],
