@@ -53,7 +53,7 @@ class HeaderProfile extends StatelessWidget {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: AppBorderRadius.bMd,
               boxShadow: AppShadows.shadow2,

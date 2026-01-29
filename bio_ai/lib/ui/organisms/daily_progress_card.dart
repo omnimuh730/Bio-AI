@@ -27,7 +27,7 @@ class DailyProgressCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: AppBorderRadius.bXl,
         boxShadow: AppShadows.shadow2,

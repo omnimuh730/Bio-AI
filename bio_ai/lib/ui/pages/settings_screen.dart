@@ -191,6 +191,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           builder: (context, setModalState) {
             return SettingsModalShell(
               title: 'Subscription',
+              primaryText: 'Apply Plan',
+              onPrimary: () {
+                Navigator.pop(context);
+                _showToast('Plan updated to ${_planLabel(_selectedPlan)}');
+              },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -211,11 +216,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              primaryText: 'Apply Plan',
-              onPrimary: () {
-                Navigator.pop(context);
-                _showToast('Plan updated to ${_planLabel(_selectedPlan)}');
-              },
             );
           },
         );
@@ -240,6 +240,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) {
         return SettingsModalShell(
           title: 'Export Data',
+          primaryText: 'Download CSV',
+          onPrimary: () {
+            Navigator.pop(context);
+            _showToast('Export started');
+          },
           child: Text(
             'CSV export ready. This is a mock download.',
             style: GoogleFonts.inter(
@@ -247,11 +252,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: AppColors.textSecondary,
             ),
           ),
-          primaryText: 'Download CSV',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Export started');
-          },
         );
       },
     );
@@ -263,6 +263,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) {
         return SettingsModalShell(
           title: 'Find Devices',
+          primaryText: 'Done',
+          onPrimary: () {
+            Navigator.pop(context);
+            _showToast('Scan complete');
+          },
           child: Text(
             'Scanning nearby devices... (mock)',
             style: GoogleFonts.inter(
@@ -270,11 +275,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: AppColors.textSecondary,
             ),
           ),
-          primaryText: 'Done',
-          onPrimary: () {
-            Navigator.pop(context);
-            _showToast('Scan complete');
-          },
         );
       },
     );
