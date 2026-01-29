@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PortionSelector extends StatelessWidget {
   final int selectedIndex;
@@ -63,9 +64,7 @@ class PortionSelector extends StatelessWidget {
           height: 32,
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            style: AppTextStyles.labelSmall.copyWith(
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),

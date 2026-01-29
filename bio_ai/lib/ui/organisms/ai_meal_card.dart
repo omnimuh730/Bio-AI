@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 
 class AIMealCard extends StatelessWidget {
   final Map<String, dynamic> meal;

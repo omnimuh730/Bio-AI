@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../molecules/metric_card.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 
 class VitalsGrid extends StatelessWidget {
   const VitalsGrid({super.key});

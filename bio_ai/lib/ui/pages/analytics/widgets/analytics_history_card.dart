@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 import '../models/analytics_history_entry.dart';
 
 class AnalyticsHistoryCard extends StatelessWidget {

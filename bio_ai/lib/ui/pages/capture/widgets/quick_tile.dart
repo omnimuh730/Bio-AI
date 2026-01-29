@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class QuickTile extends StatelessWidget {
   final IconData icon;
@@ -30,9 +31,7 @@ class QuickTile extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textMain,
               ),
             ),

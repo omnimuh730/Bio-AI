@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'analytics_correlation_chart_painter.dart';
 import 'analytics_metric_selector.dart';
 import 'analytics_time_toggle.dart';
@@ -40,14 +41,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Correlations',
-                style: GoogleFonts.dmSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMain,
-                ),
-              ),
+              Text('Correlations', style: AppTextStyles.dmSans16Bold),
               AnalyticsTimeToggle(selected: range, onChanged: onRangeChanged),
             ],
           ),
@@ -110,13 +104,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: labels
                       .map(
-                        (label) => Text(
-                          label,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+                        (label) => Text(label, style: AppTextStyles.labelSmall),
                       )
                       .toList(),
                 ),

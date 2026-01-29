@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 
 class FloatingNavBar extends StatelessWidget {
   final int selectedIndex;

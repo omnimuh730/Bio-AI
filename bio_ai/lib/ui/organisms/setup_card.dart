@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SetupCard extends StatelessWidget {
   const SetupCard({super.key});
@@ -24,21 +25,11 @@ class SetupCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Finish your setup',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMain,
-                  ),
-                ),
+                Text('Finish your setup', style: AppTextStyles.dmSans16Bold),
                 const SizedBox(height: 4),
                 Text(
                   'Complete profile, dietary rules, and device sync to unlock adaptive plans.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTextStyles.labelSmall,
                 ),
               ],
             ),
@@ -50,14 +41,7 @@ class SetupCard extends StatelessWidget {
               color: AppColors.textMain,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Text(
-              'Continue',
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+            child: Text('Continue', style: AppTextStyles.labelSmall),
           ),
         ],
       ),

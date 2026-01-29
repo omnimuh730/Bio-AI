@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 import '../models/planner_recipe_item.dart';
 
 class PlannerRecipeCard extends StatelessWidget {

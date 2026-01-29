@@ -1,3 +1,4 @@
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 class CaptureOfflineBanner extends StatelessWidget {
@@ -23,7 +24,7 @@ class CaptureOfflineBanner extends StatelessWidget {
           ),
           child: Text(
             'Offline mode. Uploads will queue.',
-            style: GoogleFonts.inter(fontSize: 11, color: Colors.white),
+            style: AppTextStyles.labelSmall,
           ),
         ),
       ),
