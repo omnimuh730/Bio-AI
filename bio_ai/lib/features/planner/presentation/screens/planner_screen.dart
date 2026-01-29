@@ -62,6 +62,92 @@ class _PlannerScreenState extends State<PlannerScreen> {
     ),
   ];
 
+  // Leftovers live state for planner
+  final List<PlannerLeftoverItem> _leftovers = [
+    PlannerLeftoverItem('Power Chicken Bowl', 3, 'Cooked today'),
+    PlannerLeftoverItem('Green Keto Salad', 1, 'Cooked yesterday'),
+  ];
+
+  void _openRecipe(PlannerRecipeItem recipe) {
+    _activeRecipe = recipe.keyId;
+    showDialog(
+      context: context,
+      builder: (context) => PlannerRecipeModal(
+        recipe: recipe,
+        onCooked: _openLeftoverPrompt,
+        onAddMissing: () {
+          setState(() => _shoppingCount += 1);
+          _showToast('Added missing items');
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  void _openLeftoverPrompt() {
+    final recipe = _recipes.firstWhere((item) => item.keyId == _activeRecipe);
+    showDialog(
+      context: context,
+      builder: (context) => PlannerLeftoverPrompt(
+        title: recipe.title,
+        onConfirm: () {
+          final servings = recipe.batchServings;
+          final left = servings > 1 ? servings - 1 : 1;
+          setState(() {
+            _leftovers.insert(
+              0,
+              PlannerLeftoverItem(recipe.title, left, 'Cooked today'),
+            );
+            _cookTab = 'leftovers';
+          });
+          Navigator.pop(context);
+          Navigator.pop(context);
+          _showToast('Leftovers added');
+        },
+      ),
+    );
+  }
+
+  void _logLeftover(int index) {
+    setState(() {
+      _leftovers[index].servings -= 1;
+      if (_leftovers[index].servings <= 0) {
+        _leftovers.removeAt(index);
+      }
+    });
+    _showToast('Leftover logged');
+  }
+
+  void _removeLeftover(int index) {
+    setState(() => _leftovers.removeAt(index));
+    _showToast('Leftover removed');
+  }
+
+  void _addToShoppingList(PlannerRecipeItem recipe) {
+    final alreadyAdded = _addedRecipes.contains(recipe.keyId);
+    if (alreadyAdded) {
+      _showToast('Already in shopping list');
+      return;
+    }
+    if (recipe.missing == 'Pantry Ready') {
+      _showToast('Already in pantry');
+      return;
+    }
+    setState(() {
+      _addedRecipes.add(recipe.keyId);
+      _shoppingCount += 1;
+    });
+    _showToast('Added to shopping list');
+  }
+
+  void _showExportModal() {
+    showDialog(
+      context: context,
+      builder: (context) =>
+          PlannerExportModal(onClose: () => Navigator.pop(context)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,15 +170,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
                     onTabChanged: (tab) => setState(() => _cookTab = tab),
                     pantryTags: _pantryTags,
                     recipes: _recipes,
-                    leftovers: const [],
+                    leftovers: _leftovers,
                     addedRecipeIds: _addedRecipes,
-                    onOpenRecipe: (r) =>
-                        setState(() => _activeRecipe = r.keyId),
-                    onAddToShop: (r) =>
-                        setState(() => _addedRecipes.add(r.keyId)),
-                    onLogLeftover: (idx) => _showToast('Logged leftover #$idx'),
-                    onRemoveLeftover: (idx) =>
-                        _showToast('Removed leftover #$idx'),
+                    onOpenRecipe: _openRecipe,
+                    onAddToShop: _addToShoppingList,
+                    onLogLeftover: _logLeftover,
+                    onRemoveLeftover: _removeLeftover,
                   )
                 else
                   const PlannerEatOutView(),
@@ -117,7 +200,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
               onToggle: () =>
                   setState(() => _drawerExpanded = !_drawerExpanded),
               shoppingCount: _shoppingCount,
-              onExport: () => _showToast('Export shopping list'),
+              onExport: _showExportModal,
             ),
           Positioned(
             bottom: 30,
