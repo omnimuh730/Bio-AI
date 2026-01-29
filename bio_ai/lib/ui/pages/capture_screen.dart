@@ -22,12 +22,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
   void initState() {
     super.initState();
     // Seed items & results from local catalog in the service
-    _s.items.add(
-      _s.searchService.catalog.firstWhere(
+    if (_s.searchService.catalog.isNotEmpty) {
+      final seed = _s.searchService.catalog.firstWhere(
         (item) => item.name == 'Ribeye Steak',
-      ),
-    );
-    _s.results = List<FoodItem>.from(_s.searchService.catalog);
+        orElse: () => _s.searchService.catalog.first,
+      );
+      _s.items.add(seed);
+      _s.results = List<FoodItem>.from(_s.searchService.catalog);
+    } else {
+      _s.results = [];
+    }
   }
 
   @override

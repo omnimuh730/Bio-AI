@@ -8,7 +8,35 @@ class FoodSearchService {
   FoodSearchService([Dio? dio]) : _dio = dio ?? Dio();
 
   // Small in-memory catalog used as a quick local source
-  final List<FoodItem> catalog = [];
+  final List<FoodItem> catalog = [
+    FoodItem(
+      name: 'Ribeye Steak',
+      desc: 'Grilled steak',
+      cals: 700,
+      protein: 62,
+      fat: 48,
+      image:
+          'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=150&q=80',
+    ),
+    FoodItem(
+      name: 'Blueberry Protein Bar',
+      desc: 'Packaged Snack - 220 kcal',
+      cals: 220,
+      protein: 12,
+      fat: 9,
+      image:
+          'https://images.unsplash.com/photo-1543339318-b43dc53e19e6?auto=format&fit=crop&w=150&q=80',
+    ),
+    FoodItem(
+      name: 'Avocado Toast',
+      desc: 'Breakfast - 320 kcal',
+      cals: 320,
+      protein: 8,
+      fat: 20,
+      image:
+          'https://images.unsplash.com/photo-1551183053-1a9c2f2c4d04?auto=format&fit=crop&w=150&q=80',
+    ),
+  ];
 
   Future<List<FoodItem>> search(String query) async {
     final q = query.trim();
