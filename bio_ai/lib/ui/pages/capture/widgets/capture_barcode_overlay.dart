@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/food_item.dart';
 
 class CaptureBarcodeOverlay extends StatelessWidget {
@@ -44,7 +45,7 @@ class CaptureBarcodeOverlay extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             found ? 'Barcode detected' : 'Scanning barcode...',
-            style: GoogleFonts.inter(fontSize: 12, color: Colors.white),
+            style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 12),
           if (found)
@@ -59,17 +60,12 @@ class CaptureBarcodeOverlay extends StatelessWidget {
                 children: [
                   Text(
                     item.name,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                    style: AppTextStyles.label.copyWith(color: Colors.white),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${item.cals} kcal - ${item.protein}g Protein - ${item.fat}g Fat',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: Colors.white70,
                     ),
                   ),
@@ -86,9 +82,8 @@ class CaptureBarcodeOverlay extends StatelessWidget {
                     ),
                     child: Text(
                       'Add Item',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textMain,
                       ),
                     ),
                   ),
@@ -100,7 +95,7 @@ class CaptureBarcodeOverlay extends StatelessWidget {
             onPressed: onNotFound,
             child: Text(
               'Barcode not found',
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white70),
+              style: AppTextStyles.labelSmall.copyWith(color: Colors.white70),
             ),
           ),
           const SizedBox(height: 12),
@@ -116,7 +111,10 @@ class CaptureBarcodeOverlay extends StatelessWidget {
             ),
             child: Text(
               'Close',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textMain,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'planner_shop_item.dart';
 
 class PlannerShoppingDrawer extends StatelessWidget {
@@ -62,11 +63,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                           children: [
                             Text(
                               'Shopping List',
-                              style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textMain,
-                              ),
+                              style: AppTextStyles.dmSans16Bold,
                             ),
                             const SizedBox(width: 8),
                             Container(
@@ -80,9 +77,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                               ),
                               child: Text(
                                 '$shoppingCount',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                                style: AppTextStyles.labelSmall.copyWith(
                                   color: Colors.white,
                                 ),
                               ),

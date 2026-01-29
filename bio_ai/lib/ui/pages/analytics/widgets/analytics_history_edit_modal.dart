@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/analytics_history_entry.dart';
 
 class AnalyticsHistoryEditModal extends StatelessWidget {
@@ -39,9 +40,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
               children: [
                 Text(
                   'Edit Entry',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  style: AppTextStyles.heading3.copyWith(
                     color: AppColors.textMain,
                   ),
                 ),
@@ -62,17 +61,12 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               entry.title,
-              style: GoogleFonts.dmSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
-              ),
+              style: AppTextStyles.heading3.copyWith(color: AppColors.textMain),
             ),
             const SizedBox(height: 6),
             Text(
               entry.subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
@@ -106,7 +100,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                     ),
                     child: Text(
                       'Save Changes',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.labelSmall,
                     ),
                   ),
                 ),
@@ -122,10 +116,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                    ),
+                    child: Text('Cancel', style: AppTextStyles.labelSmall),
                   ),
                 ),
               ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class AnalyticsMetricSelector extends StatelessWidget {
   final String label;
@@ -29,8 +30,7 @@ class AnalyticsMetricSelector extends StatelessWidget {
               value: option,
               child: Text(
                 formatter(option),
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textMain,
                 ),
               ),
@@ -52,11 +52,7 @@ class AnalyticsMetricSelector extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
+                style: AppTextStyles.labelSmall.copyWith(color: color),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

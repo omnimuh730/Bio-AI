@@ -1,3 +1,4 @@
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 
@@ -36,20 +37,12 @@ class AnalyticsEmptyState extends StatelessWidget {
             child: const Icon(Icons.eco, color: AppColors.accentBlue, size: 28),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Gathering your bio-data...',
-            style: GoogleFonts.dmSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMain,
-            ),
-          ),
+          Text('Gathering your bio-data...', style: AppTextStyles.dmSans16Bold),
           const SizedBox(height: 8),
           Text(
             'Log your first meals and sync your devices to unlock trends.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 12,
+            style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
@@ -69,7 +62,7 @@ class AnalyticsEmptyState extends StatelessWidget {
               ),
               child: Text(
                 'Load Demo Data',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                style: AppTextStyles.label.copyWith(color: Colors.white),
               ),
             ),
           ),

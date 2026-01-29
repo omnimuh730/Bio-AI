@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'analytics_gauge_painter.dart';
 
 class AnalyticsScoreCard extends StatelessWidget {
@@ -37,17 +38,11 @@ class AnalyticsScoreCard extends StatelessWidget {
             ),
             Text(
               '88',
-              style: GoogleFonts.dmSans(
-                fontSize: 42,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textMain,
-              ),
+              style: AppTextStyles.heading1.copyWith(color: AppColors.textMain),
             ),
             Text(
               'Excellent Energy',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textSecondary,
                 letterSpacing: 1,
               ),
@@ -72,8 +67,7 @@ class AnalyticsScoreCard extends StatelessWidget {
                     child: Text(
                       'Trend up: Your score improved by 12% this week. '
                       'Consistent protein intake post-workout has improved your recovery speed.',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: const Color(0xFF334155),
                       ),
                     ),

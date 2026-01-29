@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/planner_leftover_item.dart';
 
 class PlannerLeftoverCard extends StatelessWidget {
@@ -38,17 +39,14 @@ class PlannerLeftoverCard extends StatelessWidget {
             children: [
               Text(
                 item.title,
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textMain,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 '${item.servings} servings - ${item.note}',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -82,9 +80,7 @@ class PlannerLeftoverCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+        style: AppTextStyles.labelSmall.copyWith(
           color: primary ? AppColors.accentBlue : AppColors.textSecondary,
         ),
       ),

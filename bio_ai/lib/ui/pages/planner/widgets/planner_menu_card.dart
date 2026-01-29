@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerMenuCard extends StatelessWidget {
   final Color brandColor;
@@ -69,9 +70,7 @@ class PlannerMenuCard extends StatelessWidget {
                   ),
                   child: Text(
                     match,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: Colors.white,
                     ),
                   ),
@@ -95,9 +94,7 @@ class PlannerMenuCard extends StatelessWidget {
                   ),
                   child: Text(
                     match,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textMain,
                     ),
                   ),
@@ -119,9 +116,7 @@ class PlannerMenuCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       brand,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -130,18 +125,14 @@ class PlannerMenuCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                  style: AppTextStyles.heading3.copyWith(
                     color: AppColors.textMain,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   desc,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    height: 1.4,
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -157,9 +148,7 @@ class PlannerMenuCard extends StatelessWidget {
                   ),
                   child: Text(
                     calories,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textMain,
                     ),
                   ),

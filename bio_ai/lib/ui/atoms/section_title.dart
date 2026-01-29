@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SectionTitle extends StatelessWidget {

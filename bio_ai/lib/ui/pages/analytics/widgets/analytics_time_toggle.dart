@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class AnalyticsTimeToggle extends StatelessWidget {
   final String selected;
@@ -46,7 +47,7 @@ class AnalyticsTimeToggle extends StatelessWidget {
                   ),
                   child: Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: AppTextStyles.labelSmall.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: selected == label

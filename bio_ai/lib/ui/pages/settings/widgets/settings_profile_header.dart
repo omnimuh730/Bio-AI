@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsProfileHeader extends StatelessWidget {
   const SettingsProfileHeader({super.key});
@@ -55,11 +56,7 @@ class SettingsProfileHeader extends StatelessWidget {
                 ),
                 child: Text(
                   'PRO',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                  style: AppTextStyles.proLabel.copyWith(color: Colors.white),
                 ),
               ),
             ],
@@ -67,19 +64,12 @@ class SettingsProfileHeader extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Dekomori Sanae',
-            style: GoogleFonts.dmSans(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMain,
-            ),
+            style: AppTextStyles.header1.copyWith(color: AppColors.textMain),
           ),
           const SizedBox(height: 4),
           Text(
             'sanae@Bio AI.ai',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),

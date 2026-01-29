@@ -25,6 +25,20 @@ class AppTextStyles {
     height: 1.4,
   );
 
+  static TextStyle get heading4 => GoogleFonts.dmSans(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+    height: 1.4,
+  );
+
+  static TextStyle get header1 => GoogleFonts.dmSans(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+    height: 1.4,
+  );
+
   static TextStyle get title => GoogleFonts.dmSans(
     fontSize: 18,
     fontWeight: FontWeight.w700,
@@ -60,6 +74,13 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
     height: 1.5,
+  );
+
+  static TextStyle get proLabel => GoogleFonts.dmSans(
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: 1.0,
   );
 
   // Label
@@ -107,6 +128,18 @@ class AppTextStyles {
   static TextStyle get dmSans16Bold => GoogleFonts.dmSans(
     fontSize: 16,
     fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+  );
+
+  static TextStyle get dmSans22Bold => GoogleFonts.dmSans(
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+  );
+
+  static TextStyle get dmSans14SemiBold => GoogleFonts.dmSans(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
     color: AppColors.textMain,
   );
 }

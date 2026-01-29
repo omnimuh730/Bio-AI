@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerPantryBox extends StatelessWidget {
   final List<String> pantryTags;
@@ -19,9 +20,7 @@ class PlannerPantryBox extends StatelessWidget {
         children: [
           Text(
             'Smart Pantry',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+            style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               letterSpacing: 0.5,
             ),
@@ -33,7 +32,7 @@ class PlannerPantryBox extends StatelessWidget {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Add ingredients (e.g. Avocado)...',
-                    hintStyle: GoogleFonts.inter(fontSize: 14),
+                    hintStyle: AppTextStyles.labelSmall,
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     contentPadding: const EdgeInsets.symmetric(
@@ -79,9 +78,7 @@ class PlannerPantryBox extends StatelessWidget {
                       children: [
                         Text(
                           tag,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                          style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.accentBlue,
                           ),
                         ),

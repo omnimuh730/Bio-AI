@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/device_state.dart';
 import 'settings_toggle_switch.dart';
 
@@ -39,9 +40,7 @@ class SettingsDeviceRow extends StatelessWidget {
               children: [
                 Text(
                   device.label,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                  style: AppTextStyles.dmSans14SemiBold.copyWith(
                     color: AppColors.textMain,
                   ),
                 ),
@@ -50,8 +49,7 @@ class SettingsDeviceRow extends StatelessWidget {
                   device.connected
                       ? 'Synced: ${device.lastSync.isEmpty ? 'just now' : device.lastSync}'
                       : 'Disconnected',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: device.connected
                         ? AppColors.accentGreen
                         : AppColors.textSecondary,

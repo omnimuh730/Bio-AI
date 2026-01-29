@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/planner_recipe_item.dart';
 
 class PlannerRecipeCard extends StatelessWidget {
@@ -50,14 +51,7 @@ class PlannerRecipeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  recipe.title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMain,
-                  ),
-                ),
+                Text(recipe.title, style: AppTextStyles.dmSans16Bold),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -69,8 +63,7 @@ class PlannerRecipeCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       recipe.minutes,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -83,8 +76,7 @@ class PlannerRecipeCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       recipe.calories,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -104,9 +96,7 @@ class PlannerRecipeCard extends StatelessWidget {
                   ),
                   child: Text(
                     recipe.missing,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: isMissing
                           ? const Color(0xFFF59E0B)
                           : AppColors.textSecondary,
@@ -128,10 +118,9 @@ class PlannerRecipeCard extends StatelessWidget {
                   ),
                   child: Text(
                     'View Recipe',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textMain,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

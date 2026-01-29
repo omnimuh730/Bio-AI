@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/analytics_history_entry.dart';
 
 class AnalyticsHistoryCard extends StatelessWidget {
@@ -39,17 +40,13 @@ class AnalyticsHistoryCard extends StatelessWidget {
                   children: [
                     Text(
                       entry.hour,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                     Text(
                       entry.meridiem,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -62,16 +59,13 @@ class AnalyticsHistoryCard extends StatelessWidget {
                 children: [
                   Text(
                     entry.title,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.dmSans14SemiBold.copyWith(
                       color: AppColors.textMain,
                     ),
                   ),
                   Text(
                     entry.subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -84,9 +78,7 @@ class AnalyticsHistoryCard extends StatelessWidget {
             children: [
               Text(
                 entry.value,
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                style: AppTextStyles.dmSans14SemiBold.copyWith(
                   color: entry.valueColor,
                 ),
               ),
@@ -94,8 +86,7 @@ class AnalyticsHistoryCard extends StatelessWidget {
                 onTap: onEdit,
                 child: Text(
                   'Edit',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.accentBlue,
                   ),
                 ),

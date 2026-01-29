@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/food_item.dart';
 import 'food_card.dart';
 
@@ -65,9 +66,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
                 children: [
                   Text(
                     'Analysis',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.heading3.copyWith(
                       color: AppColors.textMain,
                     ),
                   ),
@@ -75,9 +74,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
                     onTap: onClose,
                     child: Text(
                       'Edit',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.accentBlue,
                       ),
                     ),
@@ -107,9 +104,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Manual Search',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                          style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.accentBlue,
                           ),
                         ),
@@ -134,9 +129,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
                         ),
                         Text(
                           '${totalCals.round()} kcal',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
+                          style: AppTextStyles.heading3.copyWith(
                             color: AppColors.textMain,
                           ),
                         ),
@@ -178,11 +171,7 @@ class CaptureAnalysisSheet extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: AppColors.accentBlue,
-        ),
+        style: AppTextStyles.labelSmall.copyWith(color: AppColors.accentBlue),
       ),
     );
   }

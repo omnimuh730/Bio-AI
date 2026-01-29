@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsModalShell extends StatelessWidget {
   final String title;
@@ -46,9 +47,7 @@ class SettingsModalShell extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  style: AppTextStyles.heading4.copyWith(
                     color: AppColors.textMain,
                   ),
                 ),
@@ -85,7 +84,10 @@ class SettingsModalShell extends StatelessWidget {
                     ),
                     child: Text(
                       primaryText,
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -103,7 +105,10 @@ class SettingsModalShell extends StatelessWidget {
                     ),
                     child: Text(
                       'Close',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textMain,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),

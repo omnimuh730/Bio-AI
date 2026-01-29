@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'planner_menu_card.dart';
 
 class PlannerEatOutView extends StatefulWidget {
@@ -31,9 +32,7 @@ class _PlannerEatOutViewState extends State<PlannerEatOutView> {
                 const SizedBox(width: 8),
                 Text(
                   'Near 5th Avenue, NYC',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.accentGreen,
                   ),
                 ),
@@ -48,7 +47,7 @@ class _PlannerEatOutViewState extends State<PlannerEatOutView> {
                 color: AppColors.textSecondary,
               ),
               hintText: 'Search menu (e.g. Starbucks)',
-              hintStyle: GoogleFonts.inter(fontSize: 14),
+              hintStyle: AppTextStyles.labelSmall,
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
@@ -60,9 +59,7 @@ class _PlannerEatOutViewState extends State<PlannerEatOutView> {
           const SizedBox(height: 24),
           Text(
             'Menu Coach',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+            style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               letterSpacing: 0.5,
             ),

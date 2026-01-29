@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsInputField extends StatelessWidget {
   final String label;
@@ -18,8 +19,7 @@ class SettingsInputField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
+          style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
@@ -27,7 +27,7 @@ class SettingsInputField extends StatelessWidget {
         TextField(
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(fontSize: 13),
+            hintStyle: AppTextStyles.labelSmall,
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(

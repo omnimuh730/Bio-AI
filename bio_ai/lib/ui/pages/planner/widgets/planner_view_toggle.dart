@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerViewToggle extends StatelessWidget {
   final bool cookView;
@@ -68,9 +69,7 @@ class PlannerViewToggle extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            style: AppTextStyles.labelSmall.copyWith(
               color: active ? AppColors.accentBlue : AppColors.textSecondary,
             ),
           ),

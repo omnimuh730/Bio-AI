@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerShopItem extends StatefulWidget {
   final String label;
@@ -48,7 +49,7 @@ class _PlannerShopItemState extends State<PlannerShopItem> {
           Expanded(
             child: Text(
               widget.label,
-              style: GoogleFonts.inter(
+              style: AppTextStyles.labelSmall.copyWith(
                 fontSize: 14,
                 color: _checked ? const Color(0xFFCBD5E1) : AppColors.textMain,
                 decoration: _checked

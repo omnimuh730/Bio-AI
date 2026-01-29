@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsPlanOptions extends StatelessWidget {
   final String selectedPlan;
@@ -40,9 +41,7 @@ class SettingsPlanOptions extends StatelessWidget {
               children: [
                 Text(
                   entry.value,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  style: AppTextStyles.dmSans14SemiBold.copyWith(
                     color: selected ? AppColors.accentBlue : AppColors.textMain,
                   ),
                 ),
@@ -52,8 +51,7 @@ class SettingsPlanOptions extends StatelessWidget {
                       : entry.key == 'pro-annual'
                       ? '\$79'
                       : '5 scans/week',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: FontWeight.w600,
                     color: selected
                         ? AppColors.accentBlue

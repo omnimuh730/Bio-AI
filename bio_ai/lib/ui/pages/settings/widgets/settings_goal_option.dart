@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsGoalOption extends StatelessWidget {
   final String title;
@@ -30,14 +31,7 @@ class SettingsGoalOption extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMain,
-              ),
-            ),
+            Text(title, style: AppTextStyles.dmSans14SemiBold),
             Container(
               width: 18,
               height: 18,

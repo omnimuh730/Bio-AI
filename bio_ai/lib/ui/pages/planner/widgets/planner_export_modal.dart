@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerExportModal extends StatelessWidget {
   final VoidCallback onClose;
@@ -33,9 +34,7 @@ class PlannerExportModal extends StatelessWidget {
               children: [
                 Text(
                   'Export Shopping List',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  style: AppTextStyles.titleMedium.copyWith(
                     color: AppColors.textMain,
                   ),
                 ),
@@ -56,8 +55,7 @@ class PlannerExportModal extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Choose a service to order or export your list.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTextStyles.body.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
@@ -79,17 +77,13 @@ class PlannerExportModal extends StatelessWidget {
                   children: [
                     Text(
                       opt,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.label.copyWith(
                         color: AppColors.textMain,
                       ),
                     ),
                     Text(
                       opt == 'Copy List' ? 'Clipboard' : 'Order',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                      style: AppTextStyles.label.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -110,7 +104,7 @@ class PlannerExportModal extends StatelessWidget {
               ),
               child: Text(
                 'Close',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                style: AppTextStyles.label.copyWith(color: AppColors.textMain),
               ),
             ),
           ],
