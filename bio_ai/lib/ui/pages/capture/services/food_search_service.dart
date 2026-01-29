@@ -8,53 +8,7 @@ class FoodSearchService {
   FoodSearchService([Dio? dio]) : _dio = dio ?? Dio();
 
   // Small in-memory catalog used as a quick local source
-  final List<FoodItem> catalog = [
-    FoodItem(
-      name: 'Cold Brew Coffee',
-      desc: 'Caffeine - 5 kcal',
-      cals: 5,
-      protein: 0,
-      fat: 0,
-      image:
-          'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Gin and Tonic',
-      desc: 'Alcohol - 200 kcal',
-      cals: 200,
-      protein: 0,
-      fat: 0,
-      image:
-          'https://images.unsplash.com/photo-1461009683692-68a47c8a75fd?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Ribeye Steak',
-      desc: 'High Protein - Iron Rich - 850 kcal',
-      cals: 850,
-      protein: 62,
-      fat: 48,
-      image:
-          'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Protein Smoothie',
-      desc: 'Whey - Banana - 260 kcal',
-      cals: 260,
-      protein: 24,
-      fat: 4,
-      image:
-          'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Oatmeal and Berries',
-      desc: 'Fiber Boost - 320 kcal',
-      cals: 320,
-      protein: 12,
-      fat: 6,
-      image:
-          'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=150&q=80',
-    ),
-  ];
+  final List<FoodItem> catalog = [];
 
   Future<List<FoodItem>> search(String query) async {
     final q = query.trim();
