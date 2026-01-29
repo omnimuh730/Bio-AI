@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 import 'analytics_summary_card.dart';
 
 class AnalyticsSummaryGrid extends StatelessWidget {
@@ -21,28 +21,28 @@ class AnalyticsSummaryGrid extends StatelessWidget {
             icon: Icons.local_fire_department,
             label: 'Calories',
             value: '1,840 / 2,300',
-            color: AppColors.kAccentBlue,
+            color: AppColors.accentBlue,
             bg: Color(0x1A4B7BFF),
           ),
           AnalyticsSummaryCard(
             icon: Icons.biotech,
             label: 'Protein',
             value: '118g / 140g',
-            color: AppColors.kAccentPurple,
+            color: AppColors.accentPurple,
             bg: Color(0x1A8B5CF6),
           ),
           AnalyticsSummaryCard(
             icon: Icons.directions_run,
             label: 'Active Burn',
             value: '620 kcal',
-            color: AppColors.kAccentGreen,
+            color: AppColors.accentGreen,
             bg: Color(0x1A10B981),
           ),
           AnalyticsSummaryCard(
             icon: Icons.nightlight_outlined,
             label: 'Sleep Score',
             value: '74 / 100',
-            color: AppColors.kTextSecondary,
+            color: AppColors.textSecondary,
             bg: Color(0xFFF1F5F9),
           ),
         ],

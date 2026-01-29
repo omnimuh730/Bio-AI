@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class QuickTile extends StatelessWidget {
   final IconData icon;
@@ -27,14 +27,12 @@ class QuickTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.kAccentBlue, size: 22),
+            Icon(icon, color: AppColors.accentBlue, size: 22),
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.kTextMain,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textMain,
               ),
             ),
           ],

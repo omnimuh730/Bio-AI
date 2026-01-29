@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsAccountRow extends StatelessWidget {
   final String label;
@@ -26,15 +26,17 @@ class SettingsAccountRow extends StatelessWidget {
           children: [
             SizedBox(
               width: 30,
-              child: Icon(icon, size: 18, color: color ?? AppColors.kTextSecondary),
+              child: Icon(
+                icon,
+                size: 18,
+                color: color ?? AppColors.textSecondary,
+              ),
             ),
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: color ?? AppColors.kTextMain,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: color ?? AppColors.textMain,
                 ),
               ),
             ),

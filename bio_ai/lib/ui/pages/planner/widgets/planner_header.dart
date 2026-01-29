@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'planner_view_toggle.dart';
 
 class PlannerHeader extends StatelessWidget {
@@ -24,10 +24,10 @@ class PlannerHeader extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -36,18 +36,11 @@ class PlannerHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Smart Planner',
-                style: GoogleFonts.dmSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.kTextMain,
-                ),
-              ),
+              Text('Smart Planner', style: AppTextStyles.heading1),
               const Icon(
                 Icons.calendar_month,
                 size: 20,
-                color: AppColors.kAccentBlue,
+                color: AppColors.accentBlue,
               ),
             ],
           ),

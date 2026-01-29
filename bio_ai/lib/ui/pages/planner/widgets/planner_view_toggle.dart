@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PlannerViewToggle extends StatelessWidget {
   final bool cookView;
@@ -39,10 +39,10 @@ class PlannerViewToggle extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -69,10 +69,8 @@ class PlannerViewToggle extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: active ? AppColors.kAccentBlue : AppColors.kTextSecondary,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: active ? AppColors.accentBlue : AppColors.textSecondary,
             ),
           ),
         ),

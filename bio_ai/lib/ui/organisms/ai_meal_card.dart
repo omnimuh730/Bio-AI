@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import '../../core/localization/app_localizations.dart';
 
 class AIMealCard extends StatelessWidget {
   final Map<String, dynamic> meal;
@@ -22,12 +23,14 @@ class AIMealCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.kAccentBlue.withOpacity(0.1)),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.1)),
+
         boxShadow: [
           BoxShadow(
-              color: AppColors.kAccentBlue.withOpacity(0.1),
-              blurRadius: 30,
-              offset: const Offset(0, 10))
+            color: AppColors.accentBlue.withValues(alpha: 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Column(
@@ -36,17 +39,14 @@ class AIMealCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                meal['time'],
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.kTextSecondary),
-              ),
+              Text(meal['time'], style: AppTextStyles.label),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: (meal['badgeColor'] as Color).withOpacity(0.1),
+                  color: (meal['badgeColor'] as Color).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -55,9 +55,7 @@ class AIMealCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       meal['badge'],
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.overline.copyWith(
                         color: meal['badgeColor'],
                       ),
                     ),
@@ -86,17 +84,9 @@ class AIMealCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      meal['title'],
-                      style: GoogleFonts.dmSans(
-                          fontSize: 18, fontWeight: FontWeight.w700),
-                    ),
+                    Text(meal['title'], style: AppTextStyles.heading3),
                     const SizedBox(height: 4),
-                    Text(
-                      meal['macros'],
-                      style: GoogleFonts.inter(
-                          fontSize: 13, color: AppColors.kTextSecondary),
-                    ),
+                    Text(meal['macros'], style: AppTextStyles.bodySmall),
                   ],
                 ),
               ),
@@ -112,20 +102,26 @@ class AIMealCard extends StatelessWidget {
               collapsedBackgroundColor: const Color(0xFFF8FAFC),
               backgroundColor: const Color(0xFFEEF2FF),
               collapsedShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               title: Row(
                 children: [
                   const SizedBox(width: 12),
-                  const Icon(Icons.auto_awesome,
-                      size: 14, color: AppColors.kAccentBlue),
+                  const Icon(
+                    Icons.auto_awesome,
+                    size: 14,
+                    color: AppColors.accentBlue,
+                  ),
                   const SizedBox(width: 6),
-                  Text("Why this?",
-                      style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.kTextMain)),
+                  Text(
+                    AppLocalizations.of(context).whyThis,
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.textMain,
+                    ),
+                  ),
                 ],
               ),
               children: [
@@ -133,10 +129,7 @@ class AIMealCard extends StatelessWidget {
                   padding: const EdgeInsets.all(12.0),
                   child: Text(
                     meal['why'],
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
-                        height: 1.4,
-                        color: AppColors.kTextMain),
+                    style: AppTextStyles.body.copyWith(height: 1.4),
                   ),
                 ),
               ],
@@ -155,8 +148,10 @@ class AIMealCard extends StatelessWidget {
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child:
-                      const Icon(Icons.refresh, color: AppColors.kTextSecondary),
+                  child: const Icon(
+                    Icons.refresh,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -168,8 +163,8 @@ class AIMealCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
-                          AppColors.kAccentBlue,
-                          Color(0xFF2563EB)
+                          AppColors.accentBlue,
+                          Color(0xFF2563EB),
                         ], // Slight gradient
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -177,7 +172,7 @@ class AIMealCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.kAccentBlue.withOpacity(0.3),
+                          color: AppColors.accentBlue.withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -189,11 +184,10 @@ class AIMealCard extends StatelessWidget {
                         const Icon(Icons.add, color: Colors.white, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          'Eat This (${meal['cals']} kcal)',
-                          style: GoogleFonts.dmSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white),
+                          AppLocalizations.of(
+                            context,
+                          ).eatThisCals(meal['cals'] as int),
+                          style: AppTextStyles.button,
                         ),
                       ],
                     ),

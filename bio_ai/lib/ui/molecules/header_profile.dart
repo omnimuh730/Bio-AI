@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/localization/app_localizations.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/core/theme/app_spacing_borders_shadows.dart';
+import 'package:bio_ai/data/providers/data_provider.dart';
 
 class HeaderProfile extends StatelessWidget {
-  const HeaderProfile({super.key});
+  final DataProvider? dataProvider;
+
+  const HeaderProfile({super.key, this.dataProvider});
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    // Get user name from data provider or use default
+    final userName = dataProvider?.userProfile.name ?? 'Dekomori';
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      padding: AppSpacings.contentPadding,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -21,52 +31,37 @@ class HeaderProfile extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppColors.kAccentGreen,
+                      color: AppColors.success,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                            color: AppColors.kAccentGreen.withOpacity(0.4),
-                            blurRadius: 8,
-                            spreadRadius: 2)
-                      ],
+                      boxShadow: AppShadows.shadowColor(AppColors.success, 8),
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Bio-Sync Active',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 14,
-                      color: AppColors.kTextSecondary,
-                    ),
+                    localizations.bioSyncActive,
+                    style: AppTextStyles.bodySmall,
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
-                'Hello, Dekomori',
-                style: GoogleFonts.dmSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.kTextMain,
-                ),
+                '${localizations.hello}, $userName',
+                style: AppTextStyles.heading3,
               ),
             ],
           ),
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4))
-              ],
+              borderRadius: AppBorderRadius.bMd,
+              boxShadow: AppShadows.shadow2,
             ),
-            child: const Icon(Icons.notifications_outlined,
-                color: AppColors.kAccentBlue),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),

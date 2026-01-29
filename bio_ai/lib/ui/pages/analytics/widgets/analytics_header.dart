@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class AnalyticsHeader extends StatelessWidget {
   const AnalyticsHeader({super.key});
@@ -14,16 +14,14 @@ class AnalyticsHeader extends StatelessWidget {
         children: [
           Text(
             'Analysis',
-            style: GoogleFonts.dmSans(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
+            style: AppTextStyles.dmSans22Bold.copyWith(
+              color: AppColors.textMain,
             ),
           ),
           const Icon(
             Icons.calendar_today_outlined,
             size: 20,
-            color: AppColors.kTextMain,
+            color: AppColors.textMain,
           ),
         ],
       ),

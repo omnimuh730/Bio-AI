@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsModalShell extends StatelessWidget {
   final String title;
@@ -32,10 +32,10 @@ class SettingsModalShell extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 40,
               offset: const Offset(0, 20),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -47,10 +47,8 @@ class SettingsModalShell extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                  style: AppTextStyles.heading4.copyWith(
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -86,7 +84,10 @@ class SettingsModalShell extends StatelessWidget {
                     ),
                     child: Text(
                       primaryText,
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -96,7 +97,7 @@ class SettingsModalShell extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       backgroundColor: const Color(0xFFF1F5F9),
-                      foregroundColor: AppColors.kTextMain,
+                      foregroundColor: AppColors.textMain,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -104,12 +105,15 @@ class SettingsModalShell extends StatelessWidget {
                     ),
                     child: Text(
                       'Close',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textMain,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

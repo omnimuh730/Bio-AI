@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 
 class SettingsToggleSwitch extends StatelessWidget {
   final bool value;
@@ -17,7 +17,7 @@ class SettingsToggleSwitch extends StatelessWidget {
         height: 24,
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: value ? AppColors.kAccentGreen : const Color(0xFFE2E8F0),
+          color: value ? AppColors.accentGreen : const Color(0xFFE2E8F0),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Align(

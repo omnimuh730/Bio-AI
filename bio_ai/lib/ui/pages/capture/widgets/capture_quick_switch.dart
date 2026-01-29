@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'quick_tile.dart';
 
 class CaptureQuickSwitch extends StatelessWidget {
@@ -30,7 +29,7 @@ class CaptureQuickSwitch extends StatelessWidget {
       child: GestureDetector(
         onTap: onClose,
         child: Container(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           padding: const EdgeInsets.all(24),
           child: Center(
             child: GestureDetector(
@@ -47,11 +46,7 @@ class CaptureQuickSwitch extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Quick Switch',
-                            style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.kTextMain)),
+                        Text('Quick Switch', style: AppTextStyles.titleMedium),
                         GestureDetector(
                           onTap: onClose,
                           child: Container(

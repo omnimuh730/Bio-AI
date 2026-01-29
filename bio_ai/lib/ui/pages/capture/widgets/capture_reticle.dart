@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class CaptureReticle extends StatelessWidget {
   const CaptureReticle({super.key});
@@ -17,13 +17,16 @@ class CaptureReticle extends StatelessWidget {
           height: 250,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.5),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 0,
                 spreadRadius: 1000,
-              )
+              ),
             ],
           ),
           child: Stack(
@@ -36,8 +39,8 @@ class CaptureReticle extends StatelessWidget {
                   height: 20,
                   decoration: const BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppColors.kAccentBlue, width: 4),
-                      left: BorderSide(color: AppColors.kAccentBlue, width: 4),
+                      top: BorderSide(color: AppColors.accentBlue, width: 4),
+                      left: BorderSide(color: AppColors.accentBlue, width: 4),
                     ),
                   ),
                 ),
@@ -50,8 +53,8 @@ class CaptureReticle extends StatelessWidget {
                   height: 20,
                   decoration: const BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(color: AppColors.kAccentBlue, width: 4),
-                      right: BorderSide(color: AppColors.kAccentBlue, width: 4),
+                      bottom: BorderSide(color: AppColors.accentBlue, width: 4),
+                      right: BorderSide(color: AppColors.accentBlue, width: 4),
                     ),
                   ),
                 ),
@@ -62,18 +65,19 @@ class CaptureReticle extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.kAccentBlue,
+                      color: AppColors.accentBlue,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'AI Focus',
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white),
+                      style: AppTextStyles.overline.copyWith(
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

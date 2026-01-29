@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/analytics_history_entry.dart';
 
 class AnalyticsHistoryEditModal extends StatelessWidget {
@@ -25,10 +25,10 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 40,
               offset: const Offset(0, 20),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -40,10 +40,8 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
               children: [
                 Text(
                   'Edit Entry',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                  style: AppTextStyles.heading3.copyWith(
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -63,18 +61,13 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               entry.title,
-              style: GoogleFonts.dmSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.kTextMain,
-              ),
+              style: AppTextStyles.heading3.copyWith(color: AppColors.textMain),
             ),
             const SizedBox(height: 6),
             Text(
               entry.subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.kTextSecondary,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -97,7 +90,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.kAccentBlue,
+                      backgroundColor: AppColors.accentBlue,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -107,7 +100,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                     ),
                     child: Text(
                       'Save Changes',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.labelSmall,
                     ),
                   ),
                 ),
@@ -117,20 +110,17 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       backgroundColor: const Color(0xFFF1F5F9),
-                      foregroundColor: AppColors.kTextMain,
+                      foregroundColor: AppColors.textMain,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                    ),
+                    child: Text('Cancel', style: AppTextStyles.labelSmall),
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

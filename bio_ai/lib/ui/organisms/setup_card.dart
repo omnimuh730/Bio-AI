@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/core/localization/app_localizations.dart';
 
 class SetupCard extends StatelessWidget {
   const SetupCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 12, 24, 0),
       padding: const EdgeInsets.all(16),
@@ -26,17 +29,13 @@ class SetupCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Finish your setup',
-                  style: GoogleFonts.dmSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain),
+                  localizations.finishSetup,
+                  style: AppTextStyles.dmSans16Bold,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Complete profile, dietary rules, and device sync to unlock adaptive plans.',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: AppColors.kTextSecondary),
+                  localizations.setupDescription,
+                  style: AppTextStyles.labelSmall,
                 ),
               ],
             ),
@@ -45,15 +44,12 @@ class SetupCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(
-              'Continue',
-              style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white),
+              localizations.continueLabel,
+              style: AppTextStyles.labelSmall,
             ),
           ),
         ],

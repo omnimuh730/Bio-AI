@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/analytics_history_entry.dart';
 import 'analytics_history_card.dart';
 
@@ -21,21 +20,16 @@ class AnalyticsHistorySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Today's History",
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
-            ),
-          ),
+          Text("Today's History", style: AppTextStyles.dmSans16Bold),
           const SizedBox(height: 12),
           Column(
             children: history
-                .map((entry) => AnalyticsHistoryCard(
-                      entry: entry,
-                      onEdit: () => onEdit(entry),
-                    ))
+                .map(
+                  (entry) => AnalyticsHistoryCard(
+                    entry: entry,
+                    onEdit: () => onEdit(entry),
+                  ),
+                )
                 .toList(),
           ),
         ],

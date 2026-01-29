@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsPlanOptions extends StatelessWidget {
   final String selectedPlan;
@@ -30,7 +30,9 @@ class SettingsPlanOptions extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: selected ? AppColors.kAccentBlue : const Color(0xFFE2E8F0),
+                color: selected
+                    ? AppColors.accentBlue
+                    : const Color(0xFFE2E8F0),
               ),
               color: selected ? const Color(0x144B7BFF) : Colors.transparent,
             ),
@@ -39,23 +41,21 @@ class SettingsPlanOptions extends StatelessWidget {
               children: [
                 Text(
                   entry.value,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? AppColors.kAccentBlue : AppColors.kTextMain,
+                  style: AppTextStyles.dmSans14SemiBold.copyWith(
+                    color: selected ? AppColors.accentBlue : AppColors.textMain,
                   ),
                 ),
                 Text(
                   entry.key == 'pro-monthly'
                       ? '\$9.99'
                       : entry.key == 'pro-annual'
-                          ? '\$79'
-                          : '5 scans/week',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                      ? '\$79'
+                      : '5 scans/week',
+                  style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: FontWeight.w600,
-                    color:
-                        selected ? AppColors.kAccentBlue : AppColors.kTextSecondary,
+                    color: selected
+                        ? AppColors.accentBlue
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],

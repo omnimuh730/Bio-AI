@@ -1,6 +1,6 @@
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 
 class AnalyticsEmptyState extends StatelessWidget {
   final VoidCallback onLoadDemo;
@@ -17,10 +17,10 @@ class AnalyticsEmptyState extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 20,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -34,28 +34,16 @@ class AnalyticsEmptyState extends StatelessWidget {
                 colors: [Color(0x224B7BFF), Colors.transparent],
               ),
             ),
-            child: const Icon(
-              Icons.eco,
-              color: AppColors.kAccentBlue,
-              size: 28,
-            ),
+            child: const Icon(Icons.eco, color: AppColors.accentBlue, size: 28),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Gathering your bio-data...',
-            style: GoogleFonts.dmSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
-            ),
-          ),
+          Text('Gathering your bio-data...', style: AppTextStyles.dmSans16Bold),
           const SizedBox(height: 8),
           Text(
             'Log your first meals and sync your devices to unlock trends.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.kTextSecondary,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -74,10 +62,10 @@ class AnalyticsEmptyState extends StatelessWidget {
               ),
               child: Text(
                 'Load Demo Data',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                style: AppTextStyles.label.copyWith(color: Colors.white),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

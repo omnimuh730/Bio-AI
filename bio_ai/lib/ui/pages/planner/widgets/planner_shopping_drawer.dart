@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'planner_shop_item.dart';
 
 class PlannerShoppingDrawer extends StatelessWidget {
@@ -33,10 +33,10 @@ class PlannerShoppingDrawer extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 30,
               offset: const Offset(0, -5),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -63,11 +63,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                           children: [
                             Text(
                               'Shopping List',
-                              style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.kTextMain,
-                              ),
+                              style: AppTextStyles.dmSans16Bold,
                             ),
                             const SizedBox(width: 8),
                             Container(
@@ -76,14 +72,12 @@ class PlannerShoppingDrawer extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.kAccentBlue,
+                                color: AppColors.accentBlue,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 '$shoppingCount',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                                style: AppTextStyles.labelSmall.copyWith(
                                   color: Colors.white,
                                 ),
                               ),
@@ -94,7 +88,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                           expanded
                               ? Icons.keyboard_arrow_down
                               : Icons.keyboard_arrow_up,
-                          color: AppColors.kTextSecondary,
+                          color: AppColors.textSecondary,
                         ),
                       ],
                     ),
@@ -115,7 +109,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                     icon: const Icon(Icons.shopping_basket),
                     label: const Text('Order or Export'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.kTextMain,
+                      backgroundColor: AppColors.textMain,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -125,7 +119,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

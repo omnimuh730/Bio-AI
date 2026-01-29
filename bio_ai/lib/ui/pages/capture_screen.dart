@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'analytics_screen.dart';
 import 'dashboard_screen.dart';
 import 'planner_screen.dart';
@@ -153,9 +153,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   void _closeSearch() => setState(() {
-        _searchOpen = false;
-        _mode = 'scan';
-      });
+    _searchOpen = false;
+    _mode = 'scan';
+  });
 
   void _toggleOffline() => setState(() => _offlineMode = !_offlineMode);
 
@@ -199,7 +199,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(milliseconds: 1200)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1200),
+      ),
     );
   }
 
@@ -226,6 +229,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
     return total;
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -348,10 +352,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
   }
 
-
-
-
-
   void _navigateFromQuick(Widget screen) {
     _toggleQuickSwitch();
     Navigator.pushReplacement(
@@ -375,15 +375,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Meal Logged',
-                    style: GoogleFonts.dmSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.kTextMain)),
+                Text('Meal Logged', style: AppTextStyles.dmSans16Bold),
                 const SizedBox(height: 12),
-                Text('Your meal was added to the diary.',
-                    style: GoogleFonts.inter(
-                        fontSize: 13, color: AppColors.kTextSecondary)),
+                Text(
+                  'Your meal was added to the diary.',
+                  style: AppTextStyles.bodySmall,
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -394,18 +391,19 @@ class _CaptureScreenState extends State<CaptureScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const AnalyticsScreen()),
+                              builder: (context) => const AnalyticsScreen(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.kAccentBlue,
+                          backgroundColor: AppColors.accentBlue,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: Text('View Diary',
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        child: Text('View Diary', style: AppTextStyles.button),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -417,12 +415,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         },
                         style: TextButton.styleFrom(
                           backgroundColor: const Color(0xFFF1F5F9),
-                          foregroundColor: AppColors.kTextMain,
+                          foregroundColor: AppColors.textMain,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: Text('Back Home',
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        child: Text('Back Home', style: AppTextStyles.button),
                       ),
                     ),
                   ],
@@ -439,7 +437,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final nameController = TextEditingController(text: _searchController.text);
+        final nameController = TextEditingController(
+          text: _searchController.text,
+        );
         final calController = TextEditingController();
         final proteinController = TextEditingController();
         final fatController = TextEditingController();
@@ -461,31 +461,45 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Create Custom Food',
-                            style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.kTextMain)),
+                        Text(
+                          'Create Custom Food',
+                          style: AppTextStyles.dmSans16Bold,
+                        ),
                         InkWell(
                           onTap: () => Navigator.pop(context),
                           child: const Icon(Icons.close, size: 16),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     _modalInput('Name', nameController),
-                    _modalInput('Calories', calController, keyboard: TextInputType.number),
-                    _modalInput('Protein', proteinController, keyboard: TextInputType.number),
-                    _modalInput('Fat', fatController, keyboard: TextInputType.number),
+                    _modalInput(
+                      'Calories',
+                      calController,
+                      keyboard: TextInputType.number,
+                    ),
+                    _modalInput(
+                      'Protein',
+                      proteinController,
+                      keyboard: TextInputType.number,
+                    ),
+                    _modalInput(
+                      'Fat',
+                      fatController,
+                      keyboard: TextInputType.number,
+                    ),
                     Row(
                       children: [
                         Checkbox(
                           value: isPublic,
-                          onChanged: (value) => setModalState(() => isPublic = value ?? false),
-                          activeColor: AppColors.kAccentBlue,
+                          onChanged: (value) =>
+                              setModalState(() => isPublic = value ?? false),
+                          activeColor: AppColors.accentBlue,
                         ),
-                        Text('Add to public database',
-                            style: GoogleFonts.inter(fontSize: 12)),
+                        Text(
+                          'Add to public database',
+                          style: AppTextStyles.labelSmall,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -495,16 +509,20 @@ class _CaptureScreenState extends State<CaptureScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               final name = nameController.text.trim();
-                              final calories = double.tryParse(calController.text) ?? 0;
+                              final calories =
+                                  double.tryParse(calController.text) ?? 0;
                               if (name.isEmpty || calories <= 0) {
                                 _showToast('Name and calories required');
                                 return;
                               }
                               final custom = FoodItem(
                                 name: name,
-                                desc: '${isPublic ? 'Public' : 'Personal'} - ${calories.round()} kcal',
+                                desc:
+                                    '${isPublic ? 'Public' : 'Personal'} - ${calories.round()} kcal',
                                 cals: calories,
-                                protein: double.tryParse(proteinController.text) ?? 0,
+                                protein:
+                                    double.tryParse(proteinController.text) ??
+                                    0,
                                 fat: double.tryParse(fatController.text) ?? 0,
                                 image:
                                     'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=150&q=80',
@@ -515,14 +533,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
                               _filterSearch('');
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.kTextMain,
+                              backgroundColor: AppColors.textMain,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            child: Text('Save',
-                                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                            child: Text('Save', style: AppTextStyles.button),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -531,12 +549,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             onPressed: () => Navigator.pop(context),
                             style: TextButton.styleFrom(
                               backgroundColor: const Color(0xFFF1F5F9),
-                              foregroundColor: AppColors.kTextMain,
+                              foregroundColor: AppColors.textMain,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            child: Text('Cancel',
-                                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                            child: Text('Cancel', style: AppTextStyles.button),
                           ),
                         ),
                       ],
@@ -551,8 +569,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
   }
 
-  Widget _modalInput(String label, TextEditingController controller,
-      {TextInputType keyboard = TextInputType.text}) {
+  Widget _modalInput(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(

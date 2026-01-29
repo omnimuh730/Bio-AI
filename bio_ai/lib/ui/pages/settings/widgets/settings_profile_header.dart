@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class SettingsProfileHeader extends StatelessWidget {
   const SettingsProfileHeader({super.key});
@@ -15,7 +15,7 @@ class SettingsProfileHeader extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -40,7 +40,7 @@ class SettingsProfileHeader extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -56,11 +56,7 @@ class SettingsProfileHeader extends StatelessWidget {
                 ),
                 child: Text(
                   'PRO',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                  style: AppTextStyles.proLabel.copyWith(color: Colors.white),
                 ),
               ),
             ],
@@ -68,19 +64,12 @@ class SettingsProfileHeader extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Dekomori Sanae',
-            style: GoogleFonts.dmSans(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
-            ),
+            style: AppTextStyles.header1.copyWith(color: AppColors.textMain),
           ),
           const SizedBox(height: 4),
           Text(
             'sanae@Bio AI.ai',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.kTextSecondary,
-            ),
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),

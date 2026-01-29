@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import '../models/planner_recipe_item.dart';
 
 class PlannerRecipeModal extends StatelessWidget {
@@ -33,14 +33,7 @@ class PlannerRecipeModal extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  recipe.title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
-                  ),
-                ),
+                Text(recipe.title, style: AppTextStyles.heading3),
                 InkWell(
                   onTap: () => Navigator.pop(context),
                   child: Container(
@@ -52,35 +45,36 @@ class PlannerRecipeModal extends StatelessWidget {
                     ),
                     child: const Icon(Icons.close, size: 16),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               recipe.meta,
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Ingredients',
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTextStyles.bodySmall.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               recipe.ingredients,
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               recipe.steps,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                height: 1.4,
-                color: AppColors.kTextSecondary,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -92,7 +86,7 @@ class PlannerRecipeModal extends StatelessWidget {
                 _modalButton('Add Missing to List', onAddMissing),
                 _modalButton('Close', () => Navigator.pop(context)),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -103,14 +97,16 @@ class PlannerRecipeModal extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        backgroundColor: filled ? AppColors.kAccentBlue : const Color(0xFFF1F5F9),
-        foregroundColor: filled ? Colors.white : AppColors.kTextMain,
+        backgroundColor: filled
+            ? AppColors.accentBlue
+            : const Color(0xFFF1F5F9),
+        foregroundColor: filled ? Colors.white : AppColors.textMain,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+        style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

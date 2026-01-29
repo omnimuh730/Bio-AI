@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 import 'settings_account_row.dart';
 import 'settings_card_container.dart';
 import 'settings_divider.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 class PortionSelector extends StatelessWidget {
   final int selectedIndex;
@@ -35,7 +35,7 @@ class PortionSelector extends StatelessWidget {
                   width: slot,
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -64,10 +64,8 @@ class PortionSelector extends StatelessWidget {
           height: 32,
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : AppColors.kTextSecondary,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),
