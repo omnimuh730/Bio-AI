@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './../models//data_models.dart';
+import 'package:bio_ai/data/models/data_models.dart';
 
 /// Central data provider for the application.
 /// This class manages all application state and provides it to UI components.
