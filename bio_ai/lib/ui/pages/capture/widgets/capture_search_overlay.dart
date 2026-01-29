@@ -12,7 +12,9 @@ class CaptureSearchOverlay extends StatelessWidget {
   final VoidCallback onAddCaffeine;
   final VoidCallback onAddAlcohol;
   final List<FoodItem> results;
+  final bool isSearching;
   final ValueChanged<FoodItem> onAddItem;
+  final ValueChanged<FoodItem>? onTapItem;
   final VoidCallback onCreateCustom;
 
   const CaptureSearchOverlay({
@@ -24,7 +26,9 @@ class CaptureSearchOverlay extends StatelessWidget {
     required this.onAddCaffeine,
     required this.onAddAlcohol,
     required this.results,
+    required this.isSearching,
     required this.onAddItem,
+    this.onTapItem,
     required this.onCreateCustom,
   });
 
@@ -78,47 +82,55 @@ class CaptureSearchOverlay extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView(
-                  children: results
-                      .map(
-                        (item) => SearchResultRow(
-                          item: item,
-                          onAdd: () => onAddItem(item),
-                        ),
+                child: isSearching
+                    ? const Center(child: CircularProgressIndicator())
+                    : results.isNotEmpty
+                    ? ListView(
+                        children: results
+                            .map(
+                              (item) => SearchResultRow(
+                                item: item,
+                                onAdd: () => onAddItem(item),
+                                onTap: onTapItem == null
+                                    ? null
+                                    : () => onTapItem!(item),
+                              ),
+                            )
+                            .toList(),
                       )
-                      .toList(),
-                ),
-              ),
-              if (results.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('No results found.', style: AppTextStyles.overline),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: onCreateCustom,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.textMain,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Create Custom Food',
-                          style: AppTextStyles.overline,
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'No results found.',
+                              style: AppTextStyles.overline,
+                            ),
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: onCreateCustom,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.textMain,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                'Create Custom Food',
+                                style: AppTextStyles.overline,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
+              ),
             ],
           ),
         ),

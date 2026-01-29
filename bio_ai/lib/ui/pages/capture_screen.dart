@@ -17,6 +17,7 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_quick_switch.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
+import 'package:dio/dio.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -41,6 +42,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
   List<FoodItem> _results = [];
 
   Timer? _barcodeTimer;
+
+  final Dio _dio = Dio();
+  Timer? _searchDebounce;
+  bool _searching = false;
 
   final List<FoodItem> _catalog = [
     FoodItem(
@@ -139,6 +144,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   @override
   void dispose() {
     _barcodeTimer?.cancel();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -191,12 +197,123 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   void _filterSearch(String query) {
-    final lower = query.toLowerCase();
+    _searchDebounce?.cancel();
+    final q = query.trim();
+    if (q.isEmpty) {
+      setState(() {
+        _results = List<FoodItem>.from(_catalog);
+        _searching = false;
+      });
+      return;
+    }
+
+    // Immediate local filter for instant feedback
+    final lower = q.toLowerCase();
     setState(() {
       _results = _catalog
           .where((item) => item.name.toLowerCase().contains(lower))
           .toList();
+      _searching = true;
     });
+
+    _searchDebounce = Timer(const Duration(seconds: 1), () async {
+      await _searchMeals(q);
+    });
+  }
+
+  Future<void> _searchMeals(String query) async {
+    try {
+      final response = await _dio.get(
+        'https://www.themealdb.com/api/json/v1/1/search.php',
+        queryParameters: {'s': query},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final meals = data['meals'] as List<dynamic>?;
+      if (meals == null) {
+        setState(() => _results = []);
+        return;
+      }
+      final mapped = meals.map((m) {
+        final meal = m as Map<String, dynamic>;
+        final name = meal['strMeal'] as String? ?? '';
+        final thumb = meal['strMealThumb'] as String? ?? '';
+        final category = meal['strCategory'] as String? ?? '';
+        final area = meal['strArea'] as String? ?? '';
+        final desc = [
+          if (category.isNotEmpty) category,
+          if (area.isNotEmpty) area,
+        ].join(' • ');
+        return FoodItem(
+          name: name,
+          desc: desc,
+          cals: 0,
+          protein: 0,
+          fat: 0,
+          image: thumb,
+          metadata: {'rawMeal': meal},
+        );
+      }).toList();
+      setState(() => _results = mapped);
+    } catch (e) {
+      // On error, fall back to local catalog filtered
+      final lower = query.toLowerCase();
+      setState(() {
+        _results = _catalog
+            .where((item) => item.name.toLowerCase().contains(lower))
+            .toList();
+      });
+    }
+  }
+
+  void _openMealModal(FoodItem item) {
+    final raw = item.metadata?['rawMeal'] as Map<String, dynamic>?;
+    if (raw == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(item.name),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (item.image.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(item.image),
+                ),
+              const SizedBox(height: 8),
+              Text(
+                'Category: ${raw['strCategory'] ?? '-'}',
+                style: AppTextStyles.overline,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Area: ${raw['strArea'] ?? '-'}',
+                style: AppTextStyles.overline,
+              ),
+              const SizedBox(height: 8),
+              Text('Instructions', style: AppTextStyles.label),
+              const SizedBox(height: 4),
+              Text(raw['strInstructions'] ?? '-', style: AppTextStyles.body),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Add item (we keep 0 cals and default portion)
+              _addItem(item);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showToast(String message) {
@@ -305,7 +422,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
             onAddCaffeine: () => _addItem(_catalog[0]),
             onAddAlcohol: () => _addItem(_catalog[1]),
             results: _results,
+            isSearching: _searching,
             onAddItem: (item) => _addItem(item),
+            onTapItem: (item) => _openMealModal(item),
             onCreateCustom: _openCustomFood,
           ),
           CaptureBarcodeOverlay(
