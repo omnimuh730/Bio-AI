@@ -4,7 +4,9 @@ class NetworkService {
   final Dio dio;
 
   NetworkService({Dio? client})
-    : dio = client ?? Dio(BaseOptions(connectTimeout: 5000));
+    : dio =
+          client ??
+          Dio(BaseOptions(connectTimeout: Duration(milliseconds: 5000)));
 
   Future<Response> get(String path, {Map<String, dynamic>? query}) async {
     return dio.get(path, queryParameters: query);
