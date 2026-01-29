@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../organisms/floating_nav_bar.dart';
 import 'analytics_screen.dart';
 import 'capture_screen.dart';
@@ -201,10 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'Current plan: ${_planLabel(_selectedPlan)}',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: AppTextStyles.bodySmall,
                   ),
                   const SizedBox(height: 12),
                   SettingsPlanOptions(
@@ -247,10 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
           child: Text(
             'CSV export ready. This is a mock download.',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodySmall,
           ),
         );
       },
@@ -270,10 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
           child: Text(
             'Scanning nearby devices... (mock)',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodySmall,
           ),
         );
       },
@@ -300,19 +291,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 'This will permanently remove your health data (mock).',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+                style: AppTextStyles.bodySmall,
               ),
               const SizedBox(height: 12),
-              Text(
-                'Type DELETE to confirm.',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              Text('Type DELETE to confirm.', style: AppTextStyles.bodySmall),
               const SizedBox(height: 8),
               TextField(
                 controller: _deleteController,

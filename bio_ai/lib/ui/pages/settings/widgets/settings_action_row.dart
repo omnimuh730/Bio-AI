@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SettingsActionRow extends StatelessWidget {
   final String label;
@@ -26,7 +25,9 @@ class SettingsActionRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(20),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

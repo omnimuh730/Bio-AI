@@ -25,6 +25,20 @@ class AppTextStyles {
     height: 1.4,
   );
 
+  static TextStyle get title => GoogleFonts.dmSans(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+    height: 1.4,
+  );
+
+  static TextStyle get titleMedium => GoogleFonts.dmSans(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textMain,
+    height: 1.4,
+  );
+
   // Subtitle
   static TextStyle get subtitle => GoogleFonts.dmSans(
     fontSize: 16,

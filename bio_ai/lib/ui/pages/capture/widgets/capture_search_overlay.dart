@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../models/food_item.dart';
 import 'search_result_row.dart';
 
@@ -95,13 +95,7 @@ class CaptureSearchOverlay extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'No results found.',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                      Text('No results found.', style: AppTextStyles.overline),
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: onCreateCustom,
@@ -119,10 +113,7 @@ class CaptureSearchOverlay extends StatelessWidget {
                         ),
                         child: Text(
                           'Create Custom Food',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: AppTextStyles.overline,
                         ),
                       ),
                     ],
@@ -144,14 +135,7 @@ class CaptureSearchOverlay extends StatelessWidget {
           color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-        ),
+        child: Text(label, style: AppTextStyles.label.copyWith(color: color)),
       ),
     );
   }

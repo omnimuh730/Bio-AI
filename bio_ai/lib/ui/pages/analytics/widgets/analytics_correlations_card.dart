@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'analytics_correlation_chart_painter.dart';
 import 'analytics_metric_selector.dart';

@@ -80,7 +80,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
-        hintStyle: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+        hintStyle: AppTextStyles.body,
         labelStyle: AppTextStyles.label,
       ),
 

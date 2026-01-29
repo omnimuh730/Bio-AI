@@ -20,13 +20,7 @@ class SectionTitle extends StatelessWidget {
           if (onRefresh != null || linkText != null)
             GestureDetector(
               onTap: onRefresh,
-              child: Text(
-                linkText ?? 'Refresh',
-                style: AppTextStyles.label.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              child: Text(linkText ?? 'Refresh', style: AppTextStyles.label),
             ),
         ],
       ),
