@@ -21,6 +21,7 @@ dependencies:
 
     # Networking
     dio: any
+    url_launcher: any
 
     # Sensors & hardware
     sensors_plus: any
