@@ -86,6 +86,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     },
   };
 
+  final List<AnalyticsHistoryEntry> _history = const [
+    AnalyticsHistoryEntry(
+      '12',
+      'PM',
+      'Magnesium Power Bowl',
+      'Quinoa, Avocado, Kale',
+      '450',
+      AppColors.textMain,
+    ),
+    AnalyticsHistoryEntry(
+      '08',
+      'AM',
+      'Oatmeal & Berries',
+      'Rolled oats, Blueberry',
+      '320',
+      AppColors.textMain,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,14 +116,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AnalyticsHeader(
-                  onRangeChanged: (r) => setState(() => _range = r),
-                ),
+                const AnalyticsHeader(),
                 const SizedBox(height: 8),
                 AnalyticsScoreCard(),
                 AnalyticsSummaryGrid(),
-                AnalyticsCorrelationsCard(),
-                AnalyticsHistorySection(entries: const [], onEdit: (entry) {}),
+                AnalyticsCorrelationsCard(
+                  range: _range,
+                  onRangeChanged: (r) => setState(() => _range = r),
+                  metricA: _metricA,
+                  metricB: _metricB,
+                  metricLabels: _metricLabels,
+                  onMetricAChanged: (m) => setState(() => _metricA = m),
+                  onMetricBChanged: (m) => setState(() => _metricB = m),
+                  primary: _chartData[_range]?[_metricA] ?? [],
+                  secondary: _chartData[_range]?[_metricB] ?? [],
+                  labels: _xAxis[_range] ?? [],
+                ),
+                AnalyticsHistorySection(history: _history, onEdit: (entry) {}),
                 AnalyticsWeeklyReview(),
               ],
             ),

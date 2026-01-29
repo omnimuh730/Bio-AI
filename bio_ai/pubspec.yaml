@@ -27,6 +27,8 @@ dependencies:
     geolocator: any
     flutter_blue_plus: any
     camera: any
+    path_provider: any
+    mobile_scanner: any
 
 dev_dependencies:
     flutter_test:

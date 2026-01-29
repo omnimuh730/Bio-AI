@@ -78,9 +78,20 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   onOpenDrawer: () => setState(() => _drawerExpanded = true),
                 ),
                 if (_cookView)
-                  PlannerCookViewTab(
-                    tab: _cookTab,
-                    onChange: (tab) => setState(() => _cookTab = tab),
+                  PlannerCookView(
+                    cookTab: _cookTab,
+                    onTabChanged: (tab) => setState(() => _cookTab = tab),
+                    pantryTags: _pantryTags,
+                    recipes: _recipes,
+                    leftovers: const [],
+                    addedRecipeIds: _addedRecipes,
+                    onOpenRecipe: (r) =>
+                        setState(() => _activeRecipe = r.keyId),
+                    onAddToShop: (r) =>
+                        setState(() => _addedRecipes.add(r.keyId)),
+                    onLogLeftover: (idx) => _showToast('Logged leftover #$idx'),
+                    onRemoveLeftover: (idx) =>
+                        _showToast('Removed leftover #$idx'),
                   )
                 else
                   PlannerEatOutView(),
@@ -97,7 +108,11 @@ class _PlannerScreenState extends State<PlannerScreen> {
           ),
           if (_drawerExpanded)
             PlannerShoppingDrawer(
-              onClose: () => setState(() => _drawerExpanded = false),
+              expanded: _drawerExpanded,
+              onToggle: () =>
+                  setState(() => _drawerExpanded = !_drawerExpanded),
+              shoppingCount: _shoppingCount,
+              onExport: () => _showToast('Export shopping list'),
             ),
           Positioned(
             bottom: 30,
