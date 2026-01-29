@@ -24,7 +24,9 @@ class CaptureOfflineBanner extends StatelessWidget {
           ),
           child: Text(
             'Offline mode. Uploads will queue.',
-            style: AppTextStyles.labelSmall,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: Colors.white,
+            ),
           ),
         ),
       ),

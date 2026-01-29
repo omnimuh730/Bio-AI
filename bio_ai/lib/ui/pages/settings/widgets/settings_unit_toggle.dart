@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/core/theme/app_colors.dart';
 
 class SettingsUnitToggle extends StatelessWidget {
   final bool metricUnits;
@@ -48,7 +49,12 @@ class SettingsUnitToggle extends StatelessWidget {
                 : null,
           ),
           alignment: Alignment.center,
-          child: Text(label, style: AppTextStyles.button),
+          child: Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: selected ? AppColors.textMain : AppColors.textSecondary,
+            ),
+          ),
         ),
       ),
     );
