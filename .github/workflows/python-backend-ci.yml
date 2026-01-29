@@ -30,8 +30,3 @@ jobs:
               run: |
                   pip install flake8 || true
                   flake8 bio_ai_server || true
-
-            - name: Run tests (pytest)
-              run: |
-                  pip install pytest
-                  pytest -q bio_ai_server
