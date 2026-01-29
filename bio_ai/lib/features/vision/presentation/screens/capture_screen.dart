@@ -19,7 +19,6 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
 import 'package:dio/dio.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:bio_ai/core/config.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
@@ -616,9 +615,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       );
     }
 
-    final youtube = (raw?['strYoutube'] as String?) ?? '';
-    final ytId = youtube.isNotEmpty ? _youtubeIdFromUrl(youtube) : null;
-
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -632,7 +628,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                   if (item.image.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(item.image),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 180,
+                        child: Image.network(item.image, fit: BoxFit.cover),
+                      ),
                     ),
                   const SizedBox(height: 8),
                   if (raw != null) ...[
@@ -647,28 +647,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     ),
                     const SizedBox(height: 8),
                   ],
-                  if (tags.isNotEmpty) ...[
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: tags
-                          .map(
-                            (t) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(t, style: AppTextStyles.overline),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+
                   if (raw != null) ...[
                     Text('Instructions', style: AppTextStyles.label),
                     const SizedBox(height: 4),
@@ -676,52 +655,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       raw['strInstructions'] ?? '-',
                       style: AppTextStyles.body,
                     ),
-                    const SizedBox(height: 12),
-                    if (ytId != null) ...[
-                      GestureDetector(
-                        onTap: () => _openUrl(youtube),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Image.network(
-                                    'https://img.youtube.com/vi/$ytId/hqdefault.jpg',
-                                    width: 120,
-                                    height: 74,
-                                    fit: BoxFit.cover,
-                                  ),
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.black54,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Watch video tutorial',
-                                style: AppTextStyles.label.copyWith(
-                                  color: AppColors.accentBlue,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
                   ],
 
                   if (fatRaw != null) ...[
@@ -1093,28 +1026,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         },
       ),
     );
-  }
-
-  String? _youtubeIdFromUrl(String url) {
-    try {
-      final uri = Uri.parse(url);
-      if (uri.queryParameters.containsKey('v')) return uri.queryParameters['v'];
-      if (uri.pathSegments.isNotEmpty) return uri.pathSegments.last;
-    } catch (_) {}
-    return null;
-  }
-
-  Future<void> _openUrl(String url) async {
-    try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        _showToast('Could not open link');
-      }
-    } catch (e) {
-      _showToast('Could not open link');
-    }
   }
 
   double get _totalCals {
