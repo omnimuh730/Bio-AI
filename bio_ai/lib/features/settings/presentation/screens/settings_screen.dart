@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:bio_ai/app/di/injectors.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -40,6 +40,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _deleteController = TextEditingController();
   bool _notificationsOn = true;
   bool _offlineOn = false;
+
+  // Bluetooth permission status cache
+  PermissionStatus? _btPermissionStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check Bluetooth permission status once the widget is mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateBtPermission());
+  }
 
   @override
   void dispose() {
@@ -193,15 +203,112 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             onPressed: _testNetwork,
                             child: const Text('Network'),
                           ),
+                          Chip(
+                            label: Text('Bluetooth: ${_btPermissionLabel()}'),
+                          ),
                           ElevatedButton(
                             onPressed: _openFindDevicesModal,
-                            child: const Text('Scan BLE'),
+                            child: const Text('Show Devices'),
+                          ),
+                          TextButton(
+                            onPressed: _requestBluetoothPermission,
+                            child: const Text('Request Permission'),
                           ),
                           ElevatedButton(
                             onPressed: _testCapture,
                             child: const Text('Capture'),
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Connected Devices',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                IconButton(
+                                  tooltip: 'Refresh',
+                                  onPressed: () async {
+                                    await _updateBtPermission();
+                                    ref.invalidate(
+                                      connectedDeviceSummariesProvider,
+                                    );
+                                    _showToast('Refreshing devices...');
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final devicesAsync = ref.watch(
+                                  connectedDeviceSummariesProvider,
+                                );
+                                return devicesAsync.when(
+                                  data: (list) {
+                                    if (list.isEmpty) {
+                                      return Text(
+                                        'No connected devices',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      );
+                                    }
+                                    return Column(
+                                      children: list
+                                          .map(
+                                            (d) => ListTile(
+                                              dense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                              title: Text(
+                                                d['name'] ?? 'Unknown',
+                                              ),
+                                              subtitle: Text(d['id'] ?? '-'),
+                                              onTap: () => _showToast(
+                                                '${d['name'] ?? d['id']} selected',
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                    );
+                                  },
+                                  loading: () => const SizedBox(
+                                    height: 40,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                  error: (e, st) => Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Unable to load devices: ${e.toString()}',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: _requestBluetoothPermission,
+                                        child: const Text('Request Permission'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -277,6 +384,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       final ble = ref.read(bleServiceProvider);
       final ok = await ble.ensurePermissions();
+      await _updateBtPermission();
       if (!ok) {
         showDialog(
           context: context,
@@ -347,6 +455,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
     } catch (e) {
       _showToast('Device query failed: $e');
+    } finally {
+      // Update cached permission state in case user updated permissions during this flow
+      await _updateBtPermission();
     }
   }
 
@@ -397,6 +508,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       _showToast('Capture error: $e');
     }
+  }
+
+  // ----- Bluetooth helpers -----
+  Future<void> _updateBtPermission() async {
+    try {
+      final status = await ref.read(bleServiceProvider).permissionStatus();
+      if (mounted) setState(() => _btPermissionStatus = status);
+    } catch (_) {
+      if (mounted) setState(() => _btPermissionStatus = null);
+    }
+  }
+
+  Future<void> _requestBluetoothPermission() async {
+    try {
+      final ok = await ref.read(bleServiceProvider).ensurePermissions();
+      await _updateBtPermission();
+      _showToast(
+        ok ? 'Bluetooth permission granted' : 'Bluetooth permission denied',
+      );
+    } catch (e) {
+      _showToast('Permission request failed: $e');
+    }
+  }
+
+  String _btPermissionLabel() {
+    final s = _btPermissionStatus;
+    if (s == null) return 'Unknown';
+    if (s.isGranted) return 'Granted';
+    if (s.isPermanentlyDenied) return 'Permanently denied';
+    if (s.isDenied) return 'Denied';
+    if (s.isRestricted) return 'Restricted';
+    return s.toString().split('.').last;
   }
 
   void _openDeleteModal() {

@@ -86,8 +86,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     },
   };
 
-  final List<AnalyticsHistoryEntry> _history = const [
-    AnalyticsHistoryEntry(
+  final List<AnalyticsHistoryEntry> _history = [
+    const AnalyticsHistoryEntry(
       '12',
       'PM',
       'Magnesium Power Bowl',
@@ -95,7 +95,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       '450',
       AppColors.textMain,
     ),
-    AnalyticsHistoryEntry(
+    const AnalyticsHistoryEntry(
       '08',
       'AM',
       'Oatmeal & Berries',
@@ -104,6 +104,34 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       AppColors.textMain,
     ),
   ];
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1200),
+      ),
+    );
+  }
+
+  void _loadDemo() {
+    setState(() => _hasData = true);
+    _showToast('Demo data loaded');
+  }
+
+  void _openEditEntryModal(AnalyticsHistoryEntry entry) {
+    showDialog(
+      context: context,
+      builder: (context) => AnalyticsHistoryEditModal(
+        entry: entry,
+        onSave: () {
+          Navigator.pop(context);
+          _showToast('Entry saved');
+          // Placeholder: real implementation should update the entry in _history
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,22 +146,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               children: [
                 const AnalyticsHeader(),
                 const SizedBox(height: 8),
-                const AnalyticsScoreCard(),
-                const AnalyticsSummaryGrid(),
-                AnalyticsCorrelationsCard(
-                  range: _range,
-                  onRangeChanged: (r) => setState(() => _range = r),
-                  metricA: _metricA,
-                  metricB: _metricB,
-                  metricLabels: _metricLabels,
-                  onMetricAChanged: (m) => setState(() => _metricA = m),
-                  onMetricBChanged: (m) => setState(() => _metricB = m),
-                  primary: _chartData[_range]?[_metricA] ?? [],
-                  secondary: _chartData[_range]?[_metricB] ?? [],
-                  labels: _xAxis[_range] ?? [],
-                ),
-                AnalyticsHistorySection(history: _history, onEdit: (entry) {}),
-                const AnalyticsWeeklyReview(),
+                if (!_hasData)
+                  AnalyticsEmptyState(onLoadDemo: _loadDemo)
+                else ...[
+                  const AnalyticsScoreCard(),
+                  const AnalyticsSummaryGrid(),
+                  AnalyticsCorrelationsCard(
+                    range: _range,
+                    onRangeChanged: (r) => setState(() => _range = r),
+                    metricA: _metricA,
+                    metricB: _metricB,
+                    metricLabels: _metricLabels,
+                    onMetricAChanged: (m) => setState(() => _metricA = m),
+                    onMetricBChanged: (m) => setState(() => _metricB = m),
+                    primary: _chartData[_range]?[_metricA] ?? [],
+                    secondary: _chartData[_range]?[_metricB] ?? [],
+                    labels: _xAxis[_range] ?? [],
+                  ),
+                  AnalyticsHistorySection(
+                    history: _history,
+                    onEdit: (entry) => _openEditEntryModal(entry),
+                  ),
+                  const AnalyticsWeeklyReview(),
+                ],
               ],
             ),
           ),
