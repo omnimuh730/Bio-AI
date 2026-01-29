@@ -2,19 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
-import 'analytics_screen.dart';
-import 'dashboard_screen.dart';
-import 'planner_screen.dart';
-import 'settings_screen.dart';
-import 'capture/models/food_item.dart';
-import 'capture/widgets/capture_analysis_sheet.dart';
-import 'capture/widgets/capture_barcode_overlay.dart';
-import 'capture/widgets/capture_bottom_controls.dart';
-import 'capture/widgets/capture_offline_banner.dart';
-import 'capture/widgets/capture_quick_switch.dart';
-import 'capture/widgets/capture_reticle.dart';
-import 'capture/widgets/capture_search_overlay.dart';
-import 'capture/widgets/capture_top_overlay.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bio_ai/app/di/injectors.dart';
+import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
+import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
+import 'package:bio_ai/ui/pages/capture/models/food_item.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_analysis_sheet.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_bottom_controls.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_offline_banner.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_quick_switch.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -324,6 +326,42 @@ class _CaptureScreenState extends State<CaptureScreen> {
             onPlanner: () => _navigateFromQuick(const PlannerScreen()),
             onAnalytics: () => _navigateFromQuick(const AnalyticsScreen()),
             onSettings: () => _navigateFromQuick(const SettingsScreen()),
+          ),
+
+          // Small debug / guidance overlay showing device pitch (gyro)
+          Positioned(
+            top: 40,
+            right: 16,
+            child: Consumer(
+              builder: (context, ref, _) {
+                final pitchAsync = ref.watch(pitchProvider);
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: pitchAsync.when(
+                    data: (val) => Text(
+                      'Pitch: ${val.toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    loading: () => const SizedBox(
+                      width: 60,
+                      height: 14,
+                      child: LinearProgressIndicator(),
+                    ),
+                    error: (e, st) => const Text(
+                      'Pitch: —',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

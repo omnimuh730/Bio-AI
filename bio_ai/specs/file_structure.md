@@ -16,7 +16,16 @@ lib/
 │ │ ├── location/ # gps_service.dart (geolocator for restaurant geo-fence)
 │ │ ├── bluetooth/ # ble_service.dart (flutter_blue_plus for wearables)
 │ │ ├── flashlight/ # torch_service.dart (torch_light for camera flash)
+│ │ ├── network/ # network_client.dart (Dio wrapper)
 │ │ └── device/ # device_info.dart (biometrics, platform channels)
+│
+
+# Notes: Platform services & DI
+
+- Services are small, focused wrappers around platform plugins. Each service exposes a clean API and a corresponding Riverpod `Provider` in `lib/app/di/injectors.dart`.
+- Example providers: `sensorsServiceProvider`, `gpsServiceProvider`, `bleServiceProvider`, `torchServiceProvider`, `networkServiceProvider`.
+- Use `StreamProvider` for sensor streams (e.g., `pitchProvider`) so UI can subscribe reactively.
+
 │ ├── security/ # auth_token_handler.dart, biometric_auth.dart
 │ ├── theme/ # app_theme.dart, text_styles.dart (design system tokens)
 │ ├── utils/ # formatters.dart, validators.dart, logger.dart, extensions.dart
