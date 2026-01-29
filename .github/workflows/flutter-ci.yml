@@ -14,7 +14,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                os: [macos-latest, windows-latest]
+                os: [windows-latest]
                 channel: [stable]
             fail-fast: false
 
@@ -68,18 +68,6 @@ jobs:
               with:
                   name: app-release-${{ matrix.os }}
                   path: bio_ai/build/app/outputs/flutter-apk/app-release.apk
-
-            - name: Build Windows binary
-              if: runner.os == 'Windows'
-              working-directory: bio_ai
-              run: flutter build windows --release
-
-            - name: Upload Windows build
-              if: runner.os == 'Windows'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: windows-build
-                  path: bio_ai/build/windows/runner/Release
 
             - name: Build iOS (no codesign)
               if: runner.os == 'macOS'
