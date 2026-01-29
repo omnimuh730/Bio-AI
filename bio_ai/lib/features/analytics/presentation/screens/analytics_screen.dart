@@ -118,8 +118,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               children: [
                 const AnalyticsHeader(),
                 const SizedBox(height: 8),
-                AnalyticsScoreCard(),
-                AnalyticsSummaryGrid(),
+                const AnalyticsScoreCard(),
+                const AnalyticsSummaryGrid(),
                 AnalyticsCorrelationsCard(
                   range: _range,
                   onRangeChanged: (r) => setState(() => _range = r),
@@ -133,7 +133,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   labels: _xAxis[_range] ?? [],
                 ),
                 AnalyticsHistorySection(history: _history, onEdit: (entry) {}),
-                AnalyticsWeeklyReview(),
+                const AnalyticsWeeklyReview(),
               ],
             ),
           ),

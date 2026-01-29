@@ -21,7 +21,7 @@ class CaptureReticle extends ConsumerWidget {
             final inRange = deg >= 40 && deg <= 50;
             final borderColor = inRange
                 ? AppColors.accentGreen
-                : Colors.white.withOpacity(0.5);
+                : Colors.white.withValues(alpha: 0.5);
             return Container(
               width: 250,
               height: 250,
@@ -30,7 +30,7 @@ class CaptureReticle extends ConsumerWidget {
                 border: Border.all(color: borderColor, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 0,
                     spreadRadius: 1000,
                   ),
@@ -44,7 +44,7 @@ class CaptureReticle extends ConsumerWidget {
                     child: Container(
                       width: 20,
                       height: 20,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         border: Border(
                           top: BorderSide(
                             color: AppColors.accentBlue,
@@ -64,7 +64,7 @@ class CaptureReticle extends ConsumerWidget {
                     child: Container(
                       width: 20,
                       height: 20,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
                             color: AppColors.accentBlue,
@@ -107,10 +107,10 @@ class CaptureReticle extends ConsumerWidget {
               ),
             );
           },
-          loading: () => SizedBox(
+          loading: () => const SizedBox(
             width: 250,
             height: 250,
-            child: const Center(child: CircularProgressIndicator()),
+            child: Center(child: CircularProgressIndicator()),
           ),
           error: (_, __) => Container(
             width: 250,

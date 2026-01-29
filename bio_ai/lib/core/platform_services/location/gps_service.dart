@@ -13,8 +13,7 @@ class GpsService {
   Future<Position?> getCurrentPosition() async {
     final ok = await ensurePermission();
     if (!ok) return null;
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    const settings = LocationSettings(accuracy: LocationAccuracy.high);
+    return await Geolocator.getCurrentPosition(locationSettings: settings);
   }
 }
