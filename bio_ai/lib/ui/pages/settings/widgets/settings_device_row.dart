@@ -43,7 +43,7 @@ class SettingsDeviceRow extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -54,8 +54,8 @@ class SettingsDeviceRow extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: device.connected
-                        ? AppColors.kAccentGreen
-                        : AppColors.kTextSecondary,
+                        ? AppColors.accentGreen
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],

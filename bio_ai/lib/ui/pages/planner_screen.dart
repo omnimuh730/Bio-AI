@@ -42,7 +42,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
           'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=150&q=80',
       meta: '20 min - 520 kcal',
       ingredients: 'Chicken breast, spinach, rice, lemon, olive oil',
-      steps: 'Sear chicken, steam rice, saute spinach, finish with lemon and olive oil.',
+      steps:
+          'Sear chicken, steam rice, saute spinach, finish with lemon and olive oil.',
       batchServings: 4,
     ),
     PlannerRecipeItem(
@@ -55,7 +56,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
           'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80',
       meta: '10 min - 340 kcal',
       ingredients: 'Kale, avocado, cucumber, olive oil, pumpkin seeds',
-      steps: 'Chop greens, toss with avocado and cucumber, dress with olive oil, top seeds.',
+      steps:
+          'Chop greens, toss with avocado and cucumber, dress with olive oil, top seeds.',
       batchServings: 2,
     ),
   ];
@@ -132,7 +134,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
           final servings = recipe.batchServings;
           final left = servings > 1 ? servings - 1 : 1;
           setState(() {
-            _leftovers.insert(0, PlannerLeftoverItem(recipe.title, left, 'Cooked today'));
+            _leftovers.insert(
+              0,
+              PlannerLeftoverItem(recipe.title, left, 'Cooked today'),
+            );
             _cookTab = 'leftovers';
           });
           Navigator.pop(context);
@@ -177,21 +182,25 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(milliseconds: 1200)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1200),
+      ),
     );
   }
 
   void _showExportModal() {
     showDialog(
       context: context,
-      builder: (context) => PlannerExportModal(onClose: () => Navigator.pop(context)),
+      builder: (context) =>
+          PlannerExportModal(onClose: () => Navigator.pop(context)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.kBgBody,
+      backgroundColor: AppColors.bgBody,
       body: Stack(
         children: [
           SingleChildScrollView(

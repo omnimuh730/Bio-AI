@@ -46,7 +46,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                 style: GoogleFonts.dmSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.kTextMain,
+                  color: AppColors.textMain,
                 ),
               ),
               AnalyticsTimeToggle(selected: range, onChanged: onRangeChanged),
@@ -73,7 +73,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                     Expanded(
                       child: AnalyticsMetricSelector(
                         label: metricLabels[metricA] ?? 'Metric A',
-                        color: AppColors.kAccentBlue,
+                        color: AppColors.accentBlue,
                         background: const Color(0x1A4B7BFF),
                         options: metricLabels.keys.take(5).toList(),
                         onSelected: onMetricAChanged,
@@ -84,7 +84,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                     Expanded(
                       child: AnalyticsMetricSelector(
                         label: metricLabels[metricB] ?? 'Metric B',
-                        color: AppColors.kAccentPurple,
+                        color: AppColors.accentPurple,
                         background: const Color(0x1A8B5CF6),
                         options: metricLabels.keys.skip(5).take(5).toList(),
                         onSelected: onMetricBChanged,
@@ -101,8 +101,8 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                     painter: AnalyticsCorrelationChartPainter(
                       primary: primary,
                       secondary: secondary,
-                      primaryColor: AppColors.kAccentBlue,
-                      secondaryColor: AppColors.kAccentPurple,
+                      primaryColor: AppColors.accentBlue,
+                      secondaryColor: AppColors.accentPurple,
                     ),
                   ),
                 ),
@@ -115,7 +115,7 @@ class AnalyticsCorrelationsCard extends StatelessWidget {
                           label,
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            color: AppColors.kTextSecondary,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       )

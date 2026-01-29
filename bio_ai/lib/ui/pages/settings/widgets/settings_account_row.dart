@@ -26,7 +26,11 @@ class SettingsAccountRow extends StatelessWidget {
           children: [
             SizedBox(
               width: 30,
-              child: Icon(icon, size: 18, color: color ?? AppColors.kTextSecondary),
+              child: Icon(
+                icon,
+                size: 18,
+                color: color ?? AppColors.textSecondary,
+              ),
             ),
             Expanded(
               child: Text(
@@ -34,7 +38,7 @@ class SettingsAccountRow extends StatelessWidget {
                 style: GoogleFonts.dmSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: color ?? AppColors.kTextMain,
+                  color: color ?? AppColors.textMain,
                 ),
               ),
             ),

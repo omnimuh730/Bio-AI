@@ -17,7 +17,7 @@ class SettingsToggleSwitch extends StatelessWidget {
         height: 24,
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: value ? AppColors.kAccentGreen : const Color(0xFFE2E8F0),
+          color: value ? AppColors.accentGreen : const Color(0xFFE2E8F0),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Align(

@@ -99,14 +99,14 @@ class CaptureSearchOverlay extends StatelessWidget {
                         'No results found.',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: AppColors.kTextSecondary,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: onCreateCustom,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.kTextMain,
+                          backgroundColor: AppColors.textMain,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -166,7 +166,7 @@ class CaptureSearchOverlay extends StatelessWidget {
           color: const Color(0x33FFFFFF),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Icon(icon, color: AppColors.kTextMain),
+        child: Icon(icon, color: AppColors.textMain),
       ),
     );
   }

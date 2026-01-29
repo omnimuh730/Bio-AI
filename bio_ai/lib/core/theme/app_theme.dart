@@ -97,17 +97,15 @@ class AppTheme {
       ),
 
       // Color Scheme
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         tertiary: AppColors.tertiary,
         surface: Colors.white,
-        background: AppColors.bgBody,
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: AppColors.textMain,
-        onBackground: AppColors.textMain,
         onError: Colors.white,
       ),
     );

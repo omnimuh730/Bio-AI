@@ -35,20 +35,4 @@ class AppColors {
 
   // Shadow
   static const Color shadowColor = Color(0x1F000000);
-
-  // Deprecated: Use primary, secondary, etc. instead
-  @deprecated
-  static const kBgBody = bgBody;
-  @deprecated
-  static const kTextMain = textMain;
-  @deprecated
-  static const kTextSecondary = textSecondary;
-  @deprecated
-  static const kAccentBlue = accentBlue;
-  @deprecated
-  static const kAccentGreen = accentGreen;
-  @deprecated
-  static const kAccentOrange = accentOrange;
-  @deprecated
-  static const kAccentPurple = accentPurple;
 }

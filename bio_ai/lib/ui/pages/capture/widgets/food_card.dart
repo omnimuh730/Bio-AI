@@ -54,7 +54,7 @@ class FoodCard extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -62,7 +62,7 @@ class FoodCard extends StatelessWidget {
                   item.desc,
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: AppColors.kTextSecondary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 10),

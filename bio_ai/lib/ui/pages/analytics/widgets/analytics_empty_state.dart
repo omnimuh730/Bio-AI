@@ -34,11 +34,7 @@ class AnalyticsEmptyState extends StatelessWidget {
                 colors: [Color(0x224B7BFF), Colors.transparent],
               ),
             ),
-            child: const Icon(
-              Icons.eco,
-              color: AppColors.kAccentBlue,
-              size: 28,
-            ),
+            child: const Icon(Icons.eco, color: AppColors.accentBlue, size: 28),
           ),
           const SizedBox(height: 16),
           Text(
@@ -46,7 +42,7 @@ class AnalyticsEmptyState extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
             ),
           ),
           const SizedBox(height: 8),
@@ -55,7 +51,7 @@ class AnalyticsEmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.kTextSecondary,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),

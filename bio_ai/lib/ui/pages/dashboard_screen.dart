@@ -71,9 +71,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Coming soon')));
   }
 
   void _onFabTapped() {
@@ -86,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.kBgBody,
+      backgroundColor: AppColors.bgBody,
       body: Stack(
         children: [
           // Main Scrollable Content
@@ -98,19 +98,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 50),
                 const HeaderProfile(),
                 const SetupCard(),
-                
-                SectionTitle('Live Vitals', onRefresh: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vitals synced')),
-                  );
-                }),
+
+                SectionTitle(
+                  'Live Vitals',
+                  onRefresh: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Vitals synced')),
+                    );
+                  },
+                ),
                 const VitalsGrid(),
 
                 const SectionTitle('AI Suggestion'),
                 AIMealCard(
-                  meal: mockMeals[_mealIndex], 
-                  onSwap: _swapMeal, 
-                  onLog: _logMeal
+                  meal: mockMeals[_mealIndex],
+                  onSwap: _swapMeal,
+                  onLog: _logMeal,
                 ),
 
                 const SectionTitle('Daily Fuel'),

@@ -28,7 +28,10 @@ class AnalyticsHistoryCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
@@ -40,7 +43,7 @@ class AnalyticsHistoryCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     Text(
@@ -48,7 +51,7 @@ class AnalyticsHistoryCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -63,14 +66,14 @@ class AnalyticsHistoryCard extends StatelessWidget {
                     style: GoogleFonts.dmSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain,
+                      color: AppColors.textMain,
                     ),
                   ),
                   Text(
                     entry.subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.kTextSecondary,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -94,7 +97,7 @@ class AnalyticsHistoryCard extends StatelessWidget {
                   'Edit',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.kAccentBlue,
+                    color: AppColors.accentBlue,
                   ),
                 ),
               ),

@@ -7,11 +7,7 @@ class SearchResultRow extends StatelessWidget {
   final FoodItem item;
   final VoidCallback onAdd;
 
-  const SearchResultRow({
-    super.key,
-    required this.item,
-    required this.onAdd,
-  });
+  const SearchResultRow({super.key, required this.item, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -28,29 +24,41 @@ class SearchResultRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.name,
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain)),
+              Text(
+                item.name,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textMain,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(item.desc,
-                  style: GoogleFonts.inter(
-                      fontSize: 11, color: AppColors.kTextSecondary)),
+              Text(
+                item.desc,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ],
           ),
           TextButton(
             onPressed: onAdd,
             style: TextButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: AppColors.kAccentBlue,
+              foregroundColor: AppColors.accentBlue,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: Text('Add',
-                style: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w700)),
+            child: Text(
+              'Add',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),

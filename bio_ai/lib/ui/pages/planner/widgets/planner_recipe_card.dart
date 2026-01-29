@@ -56,7 +56,7 @@ class PlannerRecipeCard extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -65,28 +65,28 @@ class PlannerRecipeCard extends StatelessWidget {
                     const Icon(
                       Icons.schedule,
                       size: 12,
-                      color: AppColors.kTextSecondary,
+                      color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       recipe.minutes,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: 12),
                     const Icon(
                       Icons.local_fire_department,
                       size: 12,
-                      color: AppColors.kTextSecondary,
+                      color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       recipe.calories,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -110,7 +110,7 @@ class PlannerRecipeCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isMissing
                           ? const Color(0xFFF59E0B)
-                          : AppColors.kTextSecondary,
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -132,7 +132,7 @@ class PlannerRecipeCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.kTextMain,
+                      color: AppColors.textMain,
                     ),
                   ),
                 ),
@@ -151,7 +151,7 @@ class PlannerRecipeCard extends StatelessWidget {
               child: Icon(
                 isChecked ? Icons.check : Icons.shopping_cart,
                 size: 16,
-                color: isChecked ? AppColors.kAccentGreen : AppColors.kTextMain,
+                color: isChecked ? AppColors.accentGreen : AppColors.textMain,
               ),
             ),
           ),

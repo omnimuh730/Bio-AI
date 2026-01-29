@@ -66,7 +66,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                               style: GoogleFonts.dmSans(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.kTextMain,
+                                color: AppColors.textMain,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -76,7 +76,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.kAccentBlue,
+                                color: AppColors.accentBlue,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
@@ -94,7 +94,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                           expanded
                               ? Icons.keyboard_arrow_down
                               : Icons.keyboard_arrow_up,
-                          color: AppColors.kTextSecondary,
+                          color: AppColors.textSecondary,
                         ),
                       ],
                     ),
@@ -115,7 +115,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                     icon: const Icon(Icons.shopping_basket),
                     label: const Text('Order or Export'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.kTextMain,
+                      backgroundColor: AppColors.textMain,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

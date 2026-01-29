@@ -37,7 +37,7 @@ class PlannerExportModal extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -51,19 +51,25 @@ class PlannerExportModal extends StatelessWidget {
                     ),
                     child: const Icon(Icons.close, size: 16),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               'Choose a service to order or export your list.',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 12),
             ...options.map(
               (opt) => Container(
                 margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(12),
@@ -77,7 +83,7 @@ class PlannerExportModal extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.kTextMain,
+                        color: AppColors.textMain,
                       ),
                     ),
                     Text(
@@ -85,7 +91,7 @@ class PlannerExportModal extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -97,15 +103,17 @@ class PlannerExportModal extends StatelessWidget {
               onPressed: onClose,
               style: TextButton.styleFrom(
                 backgroundColor: const Color(0xFFF1F5F9),
-                foregroundColor: AppColors.kTextMain,
+                foregroundColor: AppColors.textMain,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(
                 'Close',
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
-            )
+            ),
           ],
         ),
       ),

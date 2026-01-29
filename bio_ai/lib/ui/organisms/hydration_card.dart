@@ -23,7 +23,7 @@ class HydrationCard extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.water_drop,
-                  color: AppColors.kAccentBlue,
+                  color: AppColors.accentBlue,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -41,7 +41,7 @@ class HydrationCard extends StatelessWidget {
                       'Goal: 2,500ml',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],

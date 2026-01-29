@@ -27,14 +27,14 @@ class QuickTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.kAccentBlue, size: 22),
+            Icon(icon, color: AppColors.accentBlue, size: 22),
             const SizedBox(height: 8),
             Text(
               label,
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
           ],

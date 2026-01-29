@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../models/planner_recipe_item.dart';
@@ -34,14 +33,7 @@ class PlannerRecipeModal extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  recipe.title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
-                  ),
-                ),
+                Text(recipe.title, style: AppTextStyles.heading3),
                 InkWell(
                   onTap: () => Navigator.pop(context),
                   child: Container(
@@ -59,16 +51,14 @@ class PlannerRecipeModal extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               recipe.meta,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.kTextSecondary,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               'Ingredients',
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTextStyles.bodySmall.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.textMain,
               ),
@@ -76,18 +66,15 @@ class PlannerRecipeModal extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               recipe.ingredients,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               recipe.steps,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                height: 1.4,
-                color: AppColors.kTextSecondary,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -119,7 +106,7 @@ class PlannerRecipeModal extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+        style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

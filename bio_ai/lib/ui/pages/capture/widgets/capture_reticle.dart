@@ -39,8 +39,8 @@ class CaptureReticle extends StatelessWidget {
                   height: 20,
                   decoration: const BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppColors.kAccentBlue, width: 4),
-                      left: BorderSide(color: AppColors.kAccentBlue, width: 4),
+                      top: BorderSide(color: AppColors.accentBlue, width: 4),
+                      left: BorderSide(color: AppColors.accentBlue, width: 4),
                     ),
                   ),
                 ),
@@ -53,11 +53,8 @@ class CaptureReticle extends StatelessWidget {
                   height: 20,
                   decoration: const BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(
-                        color: AppColors.kAccentBlue,
-                        width: 4,
-                      ),
-                      right: BorderSide(color: AppColors.kAccentBlue, width: 4),
+                      bottom: BorderSide(color: AppColors.accentBlue, width: 4),
+                      right: BorderSide(color: AppColors.accentBlue, width: 4),
                     ),
                   ),
                 ),
@@ -73,7 +70,7 @@ class CaptureReticle extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.kAccentBlue,
+                      color: AppColors.accentBlue,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

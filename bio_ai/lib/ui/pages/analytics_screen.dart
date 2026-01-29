@@ -93,7 +93,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Magnesium Power Bowl',
       'Quinoa, Avocado, Kale',
       '450',
-      AppColors.kTextMain,
+      AppColors.textMain,
     ),
     AnalyticsHistoryEntry(
       '08',
@@ -101,7 +101,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Oatmeal & Berries',
       'Rolled oats, Blueberry',
       '320',
-      AppColors.kTextMain,
+      AppColors.textMain,
     ),
     AnalyticsHistoryEntry(
       '03',
@@ -109,7 +109,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Protein Smoothie',
       'Whey, Banana, Almond Milk',
       '260',
-      AppColors.kTextMain,
+      AppColors.textMain,
     ),
     AnalyticsHistoryEntry(
       '07',
@@ -117,7 +117,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Morning Run',
       'Active Burn',
       '-240',
-      AppColors.kAccentGreen,
+      AppColors.accentGreen,
     ),
     AnalyticsHistoryEntry(
       '06',
@@ -125,7 +125,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Hydration',
       'Water intake',
       '+500ml',
-      AppColors.kTextMain,
+      AppColors.textMain,
     ),
     AnalyticsHistoryEntry(
       '06',
@@ -133,7 +133,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Sleep Summary',
       '7h 25m, Restorative',
       '74',
-      AppColors.kTextMain,
+      AppColors.textMain,
     ),
   ];
 
@@ -168,9 +168,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Coming soon')));
   }
 
   void _onFabTapped() {
@@ -208,7 +208,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(milliseconds: 1200)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1200),
+      ),
     );
   }
 
@@ -234,7 +237,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final secondary = _seriesFor(_metricB);
 
     return Scaffold(
-      backgroundColor: AppColors.kBgBody,
+      backgroundColor: AppColors.bgBody,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -288,5 +291,4 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ),
     );
   }
-
 }

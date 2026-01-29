@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'planner_view_toggle.dart';
@@ -37,14 +36,7 @@ class PlannerHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Smart Planner',
-                style: GoogleFonts.dmSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMain,
-                ),
-              ),
+              Text('Smart Planner', style: AppTextStyles.heading1),
               const Icon(
                 Icons.calendar_month,
                 size: 20,

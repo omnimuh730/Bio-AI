@@ -23,7 +23,7 @@ class PlannerPantryBox extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextSecondary,
+              color: AppColors.textSecondary,
               letterSpacing: 0.5,
             ),
           ),
@@ -37,8 +37,10 @@ class PlannerPantryBox extends StatelessWidget {
                     hintStyle: GoogleFonts.inter(fontSize: 14),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -51,7 +53,7 @@ class PlannerPantryBox extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.kAccentBlue,
+                  color: AppColors.accentBlue,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.add, color: Colors.white),
@@ -65,7 +67,10 @@ class PlannerPantryBox extends StatelessWidget {
             children: pantryTags
                 .map(
                   (tag) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(20),
@@ -78,17 +83,21 @@ class PlannerPantryBox extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.kAccentBlue,
+                            color: AppColors.accentBlue,
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.close, size: 12, color: AppColors.kAccentBlue),
+                        const Icon(
+                          Icons.close,
+                          size: 12,
+                          color: AppColors.accentBlue,
+                        ),
                       ],
                     ),
                   ),
                 )
                 .toList(),
-          )
+          ),
         ],
       ),
     );

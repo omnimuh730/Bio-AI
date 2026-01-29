@@ -35,7 +35,7 @@ class PortionSelector extends StatelessWidget {
                   width: slot,
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -67,7 +67,7 @@ class PortionSelector extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : AppColors.kTextSecondary,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),

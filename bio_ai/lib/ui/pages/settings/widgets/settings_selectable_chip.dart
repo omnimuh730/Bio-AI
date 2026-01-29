@@ -6,7 +6,11 @@ class SettingsSelectableChip extends StatefulWidget {
   final String label;
   final VoidCallback onTap;
 
-  const SettingsSelectableChip({super.key, required this.label, required this.onTap});
+  const SettingsSelectableChip({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   State<SettingsSelectableChip> createState() => _SettingsSelectableChipState();
@@ -28,7 +32,7 @@ class _SettingsSelectableChipState extends State<SettingsSelectableChip> {
           color: _selected ? const Color(0x1A4B7BFF) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _selected ? AppColors.kAccentBlue : Colors.transparent,
+            color: _selected ? AppColors.accentBlue : Colors.transparent,
           ),
         ),
         child: Text(
@@ -36,7 +40,7 @@ class _SettingsSelectableChipState extends State<SettingsSelectableChip> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: _selected ? AppColors.kAccentBlue : AppColors.kTextSecondary,
+            color: _selected ? AppColors.accentBlue : AppColors.textSecondary,
           ),
         ),
       ),

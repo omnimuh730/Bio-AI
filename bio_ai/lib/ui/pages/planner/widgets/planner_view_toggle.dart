@@ -72,7 +72,7 @@ class PlannerViewToggle extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: active ? AppColors.kAccentBlue : AppColors.kTextSecondary,
+              color: active ? AppColors.accentBlue : AppColors.textSecondary,
             ),
           ),
         ),

@@ -21,7 +21,10 @@ class SettingsUnitCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(fontSize: 11, color: AppColors.kTextSecondary),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -29,7 +32,7 @@ class SettingsUnitCard extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
             ),
           ),
         ],

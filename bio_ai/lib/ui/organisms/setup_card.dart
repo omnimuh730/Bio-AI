@@ -30,7 +30,7 @@ class SetupCard extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -38,7 +38,7 @@ class SetupCard extends StatelessWidget {
                   'Complete profile, dietary rules, and device sync to unlock adaptive plans.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.kTextSecondary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -48,7 +48,7 @@ class SetupCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(

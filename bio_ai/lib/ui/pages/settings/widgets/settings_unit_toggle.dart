@@ -54,7 +54,7 @@ class SettingsUnitToggle extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: selected ? AppColors.kTextMain : AppColors.kTextSecondary,
+              color: selected ? AppColors.textMain : AppColors.textSecondary,
             ),
           ),
         ),

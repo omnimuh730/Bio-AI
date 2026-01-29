@@ -51,7 +51,7 @@ class PlannerCookView extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.kTextSecondary,
+                color: AppColors.textSecondary,
                 letterSpacing: 0.5,
               ),
             ),
@@ -70,7 +70,7 @@ class PlannerCookView extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.kTextSecondary,
+                color: AppColors.textSecondary,
                 letterSpacing: 0.5,
               ),
             ),
@@ -78,15 +78,18 @@ class PlannerCookView extends StatelessWidget {
             if (leftovers.isEmpty)
               Text(
                 'No leftovers yet. Cook a batch to save servings here.',
-                style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ...leftovers.asMap().entries.map(
-                  (entry) => PlannerLeftoverCard(
-                    item: entry.value,
-                    onLog: () => onLogLeftover(entry.key),
-                    onRemove: () => onRemoveLeftover(entry.key),
-                  ),
-                ),
+              (entry) => PlannerLeftoverCard(
+                item: entry.value,
+                onLog: () => onLogLeftover(entry.key),
+                onRemove: () => onRemoveLeftover(entry.key),
+              ),
+            ),
           ],
         ],
       ),

@@ -58,7 +58,7 @@ class PlannerSubTabs extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: active ? AppColors.kTextMain : AppColors.kTextSecondary,
+              color: active ? AppColors.textMain : AppColors.textSecondary,
             ),
           ),
         ),

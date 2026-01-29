@@ -50,7 +50,7 @@ class SettingsModalShell extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -96,7 +96,7 @@ class SettingsModalShell extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       backgroundColor: const Color(0xFFF1F5F9),
-                      foregroundColor: AppColors.kTextMain,
+                      foregroundColor: AppColors.textMain,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

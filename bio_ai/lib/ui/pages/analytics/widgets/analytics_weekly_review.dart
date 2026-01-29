@@ -30,7 +30,7 @@ class AnalyticsWeeklyReview extends StatelessWidget {
                 const Icon(
                   Icons.smart_toy_outlined,
                   size: 18,
-                  color: AppColors.kAccentBlue,
+                  color: AppColors.accentBlue,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -38,7 +38,7 @@ class AnalyticsWeeklyReview extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
               ],
@@ -55,7 +55,7 @@ class AnalyticsWeeklyReview extends StatelessWidget {
                 'Sleep quality improved by 10%. I will stop suggesting oatmeal for now.',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.kTextSecondary,
+                  color: AppColors.textSecondary,
                   height: 1.4,
                 ),
               ),

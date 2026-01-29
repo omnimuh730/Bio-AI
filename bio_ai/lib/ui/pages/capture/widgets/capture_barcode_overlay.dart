@@ -79,7 +79,7 @@ class CaptureBarcodeOverlay extends StatelessWidget {
                     onPressed: onAdd,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: AppColors.kTextMain,
+                      foregroundColor: AppColors.textMain,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -109,7 +109,7 @@ class CaptureBarcodeOverlay extends StatelessWidget {
             onPressed: onClose,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF1F5F9),
-              foregroundColor: AppColors.kTextMain,
+              foregroundColor: AppColors.textMain,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

@@ -51,7 +51,7 @@ class LogMealModal extends StatelessWidget {
               style: GoogleFonts.dmSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
             const SizedBox(height: 4),
@@ -59,7 +59,7 @@ class LogMealModal extends StatelessWidget {
               "Macros added to your daily totals.",
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: AppColors.kTextSecondary,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -70,7 +70,7 @@ class LogMealModal extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppColors.kAccentBlue, Color(0xFF2563EB)],
+                        colors: [AppColors.accentBlue, Color(0xFF2563EB)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -98,7 +98,7 @@ class LogMealModal extends StatelessWidget {
                       child: Text(
                         "Keep Browsing",
                         style: GoogleFonts.inter(
-                          color: AppColors.kTextMain,
+                          color: AppColors.textMain,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

@@ -310,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Type DELETE to confirm.',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.kTextSecondary,
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),

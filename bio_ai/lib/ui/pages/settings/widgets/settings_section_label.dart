@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class SettingsSectionLabel extends StatelessWidget {
   final String label;
@@ -16,7 +16,7 @@ class SettingsSectionLabel extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: AppColors.kTextSecondary,
+          color: AppColors.textSecondary,
           letterSpacing: 0.5,
         ),
       ),

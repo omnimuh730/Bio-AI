@@ -38,7 +38,7 @@ class QuickLogCard extends StatelessWidget {
                 'Oatmeal and berries - 320 kcal',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.kTextSecondary,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -54,7 +54,7 @@ class QuickLogCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
           ),

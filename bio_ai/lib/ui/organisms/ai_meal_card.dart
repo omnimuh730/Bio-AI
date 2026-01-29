@@ -43,7 +43,7 @@ class AIMealCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.kTextSecondary,
+                  color: AppColors.textSecondary,
                 ),
               ),
               Container(
@@ -104,7 +104,7 @@ class AIMealCard extends StatelessWidget {
                       meal['macros'],
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],

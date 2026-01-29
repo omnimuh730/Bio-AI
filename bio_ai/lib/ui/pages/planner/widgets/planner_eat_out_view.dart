@@ -28,14 +28,14 @@ class _PlannerEatOutViewState extends State<PlannerEatOutView> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.location_on, color: AppColors.kAccentGreen),
+                const Icon(Icons.location_on, color: AppColors.accentGreen),
                 const SizedBox(width: 8),
                 Text(
                   'Near 5th Avenue, NYC',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.kAccentGreen,
+                    color: AppColors.accentGreen,
                   ),
                 ),
               ],
@@ -44,7 +44,10 @@ class _PlannerEatOutViewState extends State<PlannerEatOutView> {
           const SizedBox(height: 20),
           TextField(
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search, color: AppColors.kTextSecondary),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppColors.textSecondary,
+              ),
               hintText: 'Search menu (e.g. Starbucks)',
               hintStyle: GoogleFonts.inter(fontSize: 14),
               filled: true,
@@ -61,7 +64,7 @@ class _PlannerEatOutViewState extends State<PlannerEatOutView> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextSecondary,
+              color: AppColors.textSecondary,
               letterSpacing: 0.5,
             ),
           ),

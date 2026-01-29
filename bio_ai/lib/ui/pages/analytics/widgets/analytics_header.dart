@@ -17,13 +17,13 @@ class AnalyticsHeader extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
             ),
           ),
           const Icon(
             Icons.calendar_today_outlined,
             size: 20,
-            color: AppColors.kTextMain,
+            color: AppColors.textMain,
           ),
         ],
       ),

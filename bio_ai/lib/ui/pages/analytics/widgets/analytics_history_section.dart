@@ -26,16 +26,18 @@ class AnalyticsHistorySection extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
             ),
           ),
           const SizedBox(height: 12),
           Column(
             children: history
-                .map((entry) => AnalyticsHistoryCard(
-                      entry: entry,
-                      onEdit: () => onEdit(entry),
-                    ))
+                .map(
+                  (entry) => AnalyticsHistoryCard(
+                    entry: entry,
+                    onEdit: () => onEdit(entry),
+                  ),
+                )
                 .toList(),
           ),
         ],

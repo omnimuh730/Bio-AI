@@ -28,7 +28,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 40,
               offset: const Offset(0, 20),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -43,7 +43,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -66,7 +66,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
               style: GoogleFonts.dmSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
             const SizedBox(height: 6),
@@ -74,7 +74,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
               entry.subtitle,
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: AppColors.kTextSecondary,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -97,7 +97,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.kAccentBlue,
+                      backgroundColor: AppColors.accentBlue,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -117,7 +117,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       backgroundColor: const Color(0xFFF1F5F9),
-                      foregroundColor: AppColors.kTextMain,
+                      foregroundColor: AppColors.textMain,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -130,7 +130,7 @@ class AnalyticsHistoryEditModal extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

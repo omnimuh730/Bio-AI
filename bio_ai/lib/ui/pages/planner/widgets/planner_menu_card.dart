@@ -99,7 +99,7 @@ class PlannerMenuCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.kTextMain,
+                      color: AppColors.textMain,
                     ),
                   ),
                 ),
@@ -123,7 +123,7 @@ class PlannerMenuCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.kTextSecondary,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -134,7 +134,7 @@ class PlannerMenuCard extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -143,7 +143,7 @@ class PlannerMenuCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     height: 1.4,
-                    color: AppColors.kTextSecondary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 12),

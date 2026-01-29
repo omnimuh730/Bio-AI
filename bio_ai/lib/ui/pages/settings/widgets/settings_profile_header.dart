@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class SettingsProfileHeader extends StatelessWidget {
   const SettingsProfileHeader({super.key});
@@ -71,7 +71,7 @@ class SettingsProfileHeader extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.kTextMain,
+              color: AppColors.textMain,
             ),
           ),
           const SizedBox(height: 4),
@@ -79,7 +79,7 @@ class SettingsProfileHeader extends StatelessWidget {
             'sanae@Bio AI.ai',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: AppColors.kTextSecondary,
+              color: AppColors.textSecondary,
             ),
           ),
         ],

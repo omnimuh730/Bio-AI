@@ -11,11 +11,11 @@ class DataProvider extends ChangeNotifier {
 
   // Health Data
   late HealthMetrics _todayMetrics;
-  List<HealthMetrics> _metricsHistory = [];
+  final List<HealthMetrics> _metricsHistory = [];
 
   // Meal Data
-  List<MealData> _todayMeals = [];
-  List<MealData> _mealHistory = [];
+  final List<MealData> _todayMeals = [];
+  final List<MealData> _mealHistory = [];
 
   // UI State
   bool _isLoading = false;

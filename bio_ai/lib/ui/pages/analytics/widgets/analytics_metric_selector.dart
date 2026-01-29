@@ -32,7 +32,7 @@ class AnalyticsMetricSelector extends StatelessWidget {
                 formatter(option),
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.kTextMain,
+                  color: AppColors.textMain,
                 ),
               ),
             ),

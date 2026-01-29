@@ -52,7 +52,7 @@ class CaptureQuickSwitch extends StatelessWidget {
                           style: GoogleFonts.dmSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.kTextMain,
+                            color: AppColors.textMain,
                           ),
                         ),
                         GestureDetector(

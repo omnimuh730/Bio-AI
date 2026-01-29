@@ -42,7 +42,7 @@ class PlannerLeftoverCard extends StatelessWidget {
                 style: GoogleFonts.dmSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.kTextMain,
+                  color: AppColors.textMain,
                 ),
               ),
               const SizedBox(height: 4),
@@ -50,7 +50,7 @@ class PlannerLeftoverCard extends StatelessWidget {
                 '${item.servings} servings - ${item.note}',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.kTextSecondary,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -86,7 +86,7 @@ class PlannerLeftoverCard extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: primary ? AppColors.kAccentBlue : AppColors.kTextSecondary,
+          color: primary ? AppColors.accentBlue : AppColors.textSecondary,
         ),
       ),
     );

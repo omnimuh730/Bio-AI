@@ -23,7 +23,7 @@ class SettingsGoalOption extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
         decoration: BoxDecoration(
           border: Border.all(
-            color: selected ? AppColors.kAccentBlue : const Color(0xFFE2E8F0),
+            color: selected ? AppColors.accentBlue : const Color(0xFFE2E8F0),
           ),
           borderRadius: BorderRadius.circular(12),
           color: selected ? const Color(0x0D4B7BFF) : Colors.transparent,
@@ -36,7 +36,7 @@ class SettingsGoalOption extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.kTextMain,
+                color: AppColors.textMain,
               ),
             ),
             Container(
@@ -46,7 +46,7 @@ class SettingsGoalOption extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? AppColors.kAccentBlue
+                      ? AppColors.accentBlue
                       : const Color(0xFFCBD5E1),
                   width: 2,
                 ),
@@ -55,7 +55,7 @@ class SettingsGoalOption extends StatelessWidget {
                   ? const Center(
                       child: CircleAvatar(
                         radius: 5,
-                        backgroundColor: AppColors.kAccentBlue,
+                        backgroundColor: AppColors.accentBlue,
                       ),
                     )
                   : null,

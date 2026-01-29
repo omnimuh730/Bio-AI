@@ -51,8 +51,9 @@ class CaptureTopOverlay extends StatelessWidget {
                 CaptureIconButton(icon: Icons.flash_on, onTap: onFlash),
                 const SizedBox(width: 12),
                 CaptureIconButton(
-                  icon:
-                      offlineMode ? Icons.signal_wifi_off : Icons.signal_wifi_4_bar,
+                  icon: offlineMode
+                      ? Icons.signal_wifi_off
+                      : Icons.signal_wifi_4_bar,
                   onTap: onToggleOffline,
                   active: offlineMode,
                 ),
@@ -93,7 +94,7 @@ class CaptureIconButton extends StatelessWidget {
           color: active ? const Color(0xCCF59E0B) : const Color(0x33FFFFFF),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: active ? AppColors.kTextMain : Colors.white),
+        child: Icon(icon, color: active ? AppColors.textMain : Colors.white),
       ),
     );
   }

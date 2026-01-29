@@ -35,7 +35,7 @@ class PlannerLeftoverPrompt extends StatelessWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.kTextMain,
+                    color: AppColors.textMain,
                   ),
                 ),
                 InkWell(
@@ -49,38 +49,54 @@ class PlannerLeftoverPrompt extends StatelessWidget {
                     ),
                     child: const Icon(Icons.close, size: 16),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
               'Did you cook the whole batch of $title?',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextSecondary),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _promptButton('Yes, add leftovers', onConfirm, filled: true),
+                  child: _promptButton(
+                    'Yes, add leftovers',
+                    onConfirm,
+                    filled: true,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _promptButton('No, just this meal', () => Navigator.pop(context)),
+                  child: _promptButton(
+                    'No, just this meal',
+                    () => Navigator.pop(context),
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _promptButton(String label, VoidCallback onTap, {bool filled = false}) {
+  Widget _promptButton(
+    String label,
+    VoidCallback onTap, {
+    bool filled = false,
+  }) {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        backgroundColor: filled ? AppColors.kAccentBlue : const Color(0xFFF1F5F9),
-        foregroundColor: filled ? Colors.white : AppColors.kTextMain,
+        backgroundColor: filled
+            ? AppColors.accentBlue
+            : const Color(0xFFF1F5F9),
+        foregroundColor: filled ? Colors.white : AppColors.textMain,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
