@@ -197,6 +197,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             onPressed: _openFindDevicesModal,
                             child: const Text('Scan BLE'),
                           ),
+                          ElevatedButton(
+                            onPressed: _testCapture,
+                            child: const Text('Capture'),
+                          ),
                         ],
                       ),
                     ],
@@ -241,7 +245,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const Text('Choose Plan'),
                   SettingsPlanOptions(
                     selectedPlan: _selectedPlan,
-                    onChanged: (plan) =>
+                    onPlanSelected: (plan) =>
                         setModalState(() => _selectedPlan = plan),
                   ),
                 ],
@@ -344,6 +348,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _showToast('Network OK: ${res.statusCode}');
     } catch (e) {
       _showToast('Network error: $e');
+    }
+  }
+
+  Future<void> _testCapture() async {
+    try {
+      final camera = ref.read(cameraServiceProvider);
+      await camera.initialize();
+      final file = await camera.takePhoto();
+      await ref
+          .read(visionRepositoryProvider)
+          .queuePhoto(file, meta: {'source': 'diagnostic'});
+      _showToast('Captured & queued: ${file.path}');
+    } catch (e) {
+      _showToast('Capture error: $e');
     }
   }
 
