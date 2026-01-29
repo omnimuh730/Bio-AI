@@ -22,6 +22,8 @@ class CameraService {
 
   bool get isInitialized => _controller?.value.isInitialized == true;
 
+  /// Expose the native CameraController for rendering a CameraPreview.
+  CameraController? get controller => _controller;
   Future<File> takePhoto({String? filename}) async {
     if (!isInitialized) await initialize();
     final XFile xfile = await _controller!.takePicture();
