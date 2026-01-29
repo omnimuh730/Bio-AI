@@ -52,7 +52,9 @@ class BleService {
   /// Returns true when permissions are granted or not required on the platform.
   Future<bool> ensurePermissions() async {
     try {
-      if (!Platform.isAndroid && !Platform.isIOS) return true;
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        return true;
+      }
 
       // iOS: request Bluetooth permission
       if (Platform.isIOS) {
@@ -90,24 +92,32 @@ class BleService {
   /// Return current permission status for BLE-related permissions without prompting.
   Future<PermissionStatus> permissionStatus() async {
     try {
-      if (!Platform.isAndroid && !Platform.isIOS)
+      if (!Platform.isAndroid && !Platform.isIOS) {
         return PermissionStatus.granted;
+      }
 
-      if (Platform.isIOS) return await Permission.bluetooth.status;
+      if (Platform.isIOS) {
+        return await Permission.bluetooth.status;
+      }
 
       final scan = await Permission.bluetoothScan.status;
       final connect = await Permission.bluetoothConnect.status;
       final location = await Permission.locationWhenInUse.status;
 
-      if (scan.isGranted || connect.isGranted) return PermissionStatus.granted;
+      if (scan.isGranted || connect.isGranted) {
+        return PermissionStatus.granted;
+      }
       if (scan.isPermanentlyDenied ||
           connect.isPermanentlyDenied ||
-          location.isPermanentlyDenied)
+          location.isPermanentlyDenied) {
         return PermissionStatus.permanentlyDenied;
-      if (scan.isDenied || connect.isDenied || location.isDenied)
+      }
+      if (scan.isDenied || connect.isDenied || location.isDenied) {
         return PermissionStatus.denied;
-      if (scan.isRestricted || connect.isRestricted || location.isRestricted)
+      }
+      if (scan.isRestricted || connect.isRestricted || location.isRestricted) {
         return PermissionStatus.restricted;
+      }
       return PermissionStatus.denied;
     } catch (e) {
       return PermissionStatus.denied;
