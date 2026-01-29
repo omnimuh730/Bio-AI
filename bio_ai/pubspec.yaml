@@ -17,18 +17,16 @@ dependencies:
     cupertino_icons: ^1.0.8
 
     # State management
-    flutter_riverpod: ^2.3.6
+    flutter_riverpod: any
 
     # Networking
-    dio: ^5.3.3
+    dio: any
 
     # Sensors & hardware
-    sensors_plus: ^3.0.0
-    geolocator: ^10.4.3
-    flutter_blue_plus: ^2.1.4
-    torch_light: ^0.4.4
-    camera: ^0.10.2+6
-    permission_handler: ^11.5.0
+    sensors_plus: any
+    geolocator: any
+    flutter_blue_plus: any
+    camera: any
 
 dev_dependencies:
     flutter_test:
