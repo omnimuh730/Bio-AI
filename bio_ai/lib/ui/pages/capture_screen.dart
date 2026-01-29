@@ -18,7 +18,6 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
 import 'package:dio/dio.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -392,7 +391,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
               if (item.image.isNotEmpty)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(item.image),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 180,
+                    child: Image.network(item.image, fit: BoxFit.cover),
+                  ),
                 ),
               const SizedBox(height: 8),
               Text(
@@ -860,27 +863,5 @@ class _CaptureScreenState extends State<CaptureScreen> {
         ),
       ),
     );
-  }
-
-  String? _youtubeIdFromUrl(String url) {
-    try {
-      final uri = Uri.parse(url);
-      if (uri.queryParameters.containsKey('v')) return uri.queryParameters['v'];
-      if (uri.pathSegments.isNotEmpty) return uri.pathSegments.last;
-    } catch (_) {}
-    return null;
-  }
-
-  Future<void> _openUrl(String url) async {
-    try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        _showToast('Could not open link');
-      }
-    } catch (e) {
-      _showToast('Could not open link');
-    }
   }
 }
