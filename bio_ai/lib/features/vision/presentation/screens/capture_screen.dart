@@ -19,6 +19,8 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
 import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:bio_ai/core/config.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
   const CaptureScreen({super.key});
@@ -239,6 +241,104 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     });
   }
 
+  Future<void> _searchFatSecret(String query) async {
+    try {
+      final response = await _dio.get(
+        'https://platform.fatsecret.com/rest/server.api',
+        queryParameters: {
+          'method': 'foods.search',
+          'search_expression': query,
+          'format': 'json',
+        },
+        options: Options(
+          headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
+        ),
+      );
+      final data = response.data as Map<String, dynamic>;
+      final foods = data['foods'] != null
+          ? data['foods']['food'] as List<dynamic>?
+          : null;
+      if (foods == null) {
+        setState(() {
+          _results = [];
+          _searching = false;
+        });
+        return;
+      }
+      final mapped = foods.map((f) {
+        final food = f as Map<String, dynamic>;
+        final name =
+            food['food_name'] as String? ?? food['name'] as String? ?? '';
+        final foodId =
+            food['food_id']?.toString() ?? food['id']?.toString() ?? '';
+        final desc = food['food_type'] ?? '';
+        return FoodItem(
+          name: name,
+          desc: desc,
+          cals: 0,
+          protein: 0,
+          fat: 0,
+          image: '',
+          metadata: {
+            'fatsecret_food': {'food_id': foodId, 'raw': food},
+          },
+        );
+      }).toList();
+      setState(() {
+        _results = mapped;
+        _searching = false;
+      });
+    } catch (e) {
+      setState(() {
+        _results = [];
+        _searching = false;
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>?> _fetchFatSecretByName(String name) async {
+    try {
+      final resp = await _dio.get(
+        'https://platform.fatsecret.com/rest/server.api',
+        queryParameters: {
+          'method': 'foods.search',
+          'search_expression': name,
+          'format': 'json',
+        },
+        options: Options(
+          headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
+        ),
+      );
+      final data = resp.data as Map<String, dynamic>;
+      final foods = data['foods'] != null
+          ? data['foods']['food'] as List<dynamic>?
+          : null;
+      final first = foods != null && foods.isNotEmpty ? foods.first : null;
+      final foodId = first != null
+          ? (first['food_id']?.toString() ?? first['id']?.toString())
+          : null;
+      if (foodId == null) return null;
+      final det = await _dio.get(
+        'https://platform.fatsecret.com/rest/server.api',
+        queryParameters: {
+          'method': 'food.get.v4',
+          'food_id': foodId,
+          'format': 'json',
+          'include_food_attributes': 'true',
+          'flag_default_serving': 'true',
+        },
+        options: Options(
+          headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
+        ),
+      );
+      final detData = det.data as Map<String, dynamic>;
+      final food = detData['food'] as Map<String, dynamic>?;
+      return food;
+    } catch (e) {
+      return null;
+    }
+  }
+
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -248,8 +348,62 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     );
   }
 
+  // Small Levenshtein implementation used for basic fuzzy matching (typo tolerance)
+  int _levenshtein(String s, String t) {
+    if (s == t) return 0;
+    if (s.isEmpty) return t.length;
+    if (t.isEmpty) return s.length;
+    final v0 = List<int>.generate(t.length + 1, (i) => i);
+    final v1 = List<int>.filled(t.length + 1, 0);
+    for (var i = 0; i < s.length; i++) {
+      v1[0] = i + 1;
+      for (var j = 0; j < t.length; j++) {
+        final cost = s[i] == t[j] ? 0 : 1;
+        v1[j + 1] = [
+          v1[j] + 1,
+          v0[j + 1] + 1,
+          v0[j] + cost,
+        ].reduce((a, b) => a < b ? a : b);
+      }
+      for (var j = 0; j < v0.length; j++) v0[j] = v1[j];
+    }
+    return v1[t.length];
+  }
+
+  List<FoodItem> _fuzzyLocalMatches(String query) {
+    final q = query.toLowerCase();
+    final results = <FoodItem>[];
+    for (final item in _catalog) {
+      final nameLower = item.name.toLowerCase();
+      if (nameLower.contains(q)) {
+        results.add(item);
+        continue;
+      }
+      final words = nameLower.split(RegExp(r'\s+'));
+      for (final w in words) {
+        if (w.isEmpty) continue;
+        final dist = _levenshtein(w, q);
+        final sortedW = (w.split('')..sort()).join();
+        final sortedQ = (q.split('')..sort()).join();
+        if (dist <= 1 ||
+            dist <= (w.length * 0.2).ceil() ||
+            sortedW == sortedQ) {
+          results.add(item);
+          break;
+        }
+      }
+    }
+    return results;
+  }
+
   Future<void> _searchMeals(String query) async {
     try {
+      // Prefer FatSecret if token present
+      if (fatSecretAccessToken.isNotEmpty) {
+        await _searchFatSecret(query);
+        return;
+      }
+
       final response = await _dio.get(
         'https://www.themealdb.com/api/json/v1/1/search.php',
         queryParameters: {'s': query},
@@ -257,8 +411,68 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       final data = response.data as Map<String, dynamic>;
       final meals = data['meals'] as List<dynamic>?;
       if (meals == null) {
+        // Remote returned no exact matches. Try a first-letter broad search and fuzzy-filter results from remote.
+        print('No exact meals found for "$query"; trying first-letter search');
+        final first = query.isNotEmpty ? query[0].toLowerCase() : '';
+        if (first.isNotEmpty) {
+          try {
+            final resp2 = await _dio.get(
+              'https://www.themealdb.com/api/json/v1/1/search.php',
+              queryParameters: {'f': first},
+            );
+            final data2 = resp2.data as Map<String, dynamic>;
+            final meals2 = data2['meals'] as List<dynamic>?;
+            if (meals2 != null) {
+              final candidates = meals2
+                  .map((m) => m as Map<String, dynamic>)
+                  .where((meal) {
+                    final name = (meal['strMeal'] as String? ?? '')
+                        .toLowerCase();
+                    // fuzzy by word distance
+                    final words = name.split(RegExp(r'\s+'));
+                    for (final w in words) {
+                      if (w.isEmpty) continue;
+                      final dist = _levenshtein(w, query.toLowerCase());
+                      if (dist <= 1 || dist <= (w.length * 0.2).ceil())
+                        return true;
+                    }
+                    return false;
+                  })
+                  .toList();
+              if (candidates.isNotEmpty) {
+                final mapped2 = candidates.map((meal) {
+                  final name = meal['strMeal'] as String? ?? '';
+                  final thumb = meal['strMealThumb'] as String? ?? '';
+                  final category = meal['strCategory'] as String? ?? '';
+                  final area = meal['strArea'] as String? ?? '';
+                  final desc = [
+                    if (category.isNotEmpty) category,
+                    if (area.isNotEmpty) area,
+                  ].join(' • ');
+                  return FoodItem(
+                    name: name,
+                    desc: desc,
+                    cals: 0,
+                    protein: 0,
+                    fat: 0,
+                    image: thumb,
+                    metadata: {'rawMeal': meal},
+                  );
+                }).toList();
+                setState(() {
+                  _results = mapped2;
+                  _searching = false;
+                });
+                return;
+              }
+            }
+          } catch (_) {}
+        }
+
+        // fallback to fuzzy local matches when remote fails
+        final fallback = _fuzzyLocalMatches(query);
         setState(() {
-          _results = [];
+          _results = fallback;
           _searching = false;
         });
         return;
@@ -287,12 +501,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         _results = mapped;
         _searching = false;
       });
-    } catch (e) {
-      final lower = query.toLowerCase();
+    } catch (e, st) {
+      print('Error searching meals: $e\n$st');
+      final fallback = _fuzzyLocalMatches(query);
       setState(() {
-        _results = _catalog
-            .where((item) => item.name.toLowerCase().contains(lower))
-            .toList();
+        _results = fallback;
         _searching = false;
       });
     }
@@ -300,52 +513,249 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   void _openMealModal(FoodItem item) {
     final raw = item.metadata?['rawMeal'] as Map<String, dynamic>?;
-    if (raw == null) return;
+    final fatRaw = item.metadata?['fatsecret_food'] as Map<String, dynamic>?;
+
+    final tagsRaw = (raw?['strTags'] as String?) ?? '';
+    final List<String> tags = tagsRaw.isEmpty
+        ? []
+        : tagsRaw
+              .split(',')
+              .map((s) => s.trim())
+              .where((s) => s.isNotEmpty)
+              .toList();
+
+    final youtube = (raw?['strYoutube'] as String?) ?? '';
+    final ytId = youtube.isNotEmpty ? _youtubeIdFromUrl(youtube) : null;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(item.name),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (item.image.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(item.image),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(item.name),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (item.image.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(item.image),
+                    ),
+                  const SizedBox(height: 8),
+                  if (raw != null) ...[
+                    Text(
+                      'Category: ${raw['strCategory'] ?? '-'}',
+                      style: AppTextStyles.overline,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Area: ${raw['strArea'] ?? '-'}',
+                      style: AppTextStyles.overline,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (tags.isNotEmpty) ...[
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: tags
+                          .map(
+                            (t) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(t, style: AppTextStyles.overline),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (raw != null) ...[
+                    Text('Instructions', style: AppTextStyles.label),
+                    const SizedBox(height: 4),
+                    Text(
+                      raw['strInstructions'] ?? '-',
+                      style: AppTextStyles.body,
+                    ),
+                    const SizedBox(height: 12),
+                    if (ytId != null) ...[
+                      GestureDetector(
+                        onTap: () => _openUrl(youtube),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Image.network(
+                                    'https://img.youtube.com/vi/$ytId/hqdefault.jpg',
+                                    width: 120,
+                                    height: 74,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.play_arrow,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Watch video tutorial',
+                                style: AppTextStyles.label.copyWith(
+                                  color: AppColors.accentBlue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+
+                  if (fatRaw != null) ...[
+                    const Divider(),
+                    Text('Nutrition Facts', style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 8),
+                    if (fatRaw['servings'] != null &&
+                        fatRaw['servings']['serving'] != null) ...[
+                      Text(
+                        'Serving: ${fatRaw['servings']['serving'][0]['serving_description'] ?? '-'}',
+                        style: AppTextStyles.overline,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Calories: ${fatRaw['servings']['serving'][0]['calories'] ?? '-'} kcal',
+                        style: AppTextStyles.label,
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    if (fatRaw['food_attributes'] != null) ...[
+                      Text('Attributes', style: AppTextStyles.label),
+                      const SizedBox(height: 6),
+                      if (fatRaw['food_attributes']['allergens'] != null &&
+                          fatRaw['food_attributes']['allergens']['allergen'] !=
+                              null)
+                        Wrap(
+                          spacing: 8,
+                          children: List<Widget>.from(
+                            (fatRaw['food_attributes']['allergens']['allergen']
+                                    as List)
+                                .map((a) {
+                                  final name = a['name'] ?? '';
+                                  final value = a['value'] ?? '0';
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: (value == '0')
+                                          ? const Color(0xFFDFF7E0)
+                                          : const Color(0xFFFFEDEB),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          (value == '0')
+                                              ? Icons.check_circle
+                                              : Icons.cancel,
+                                          size: 14,
+                                          color: (value == '0')
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          name,
+                                          style: AppTextStyles.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _addItem(item);
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
+              ),
+              if (fatRaw == null && fatSecretAccessToken.isNotEmpty)
+                TextButton(
+                  onPressed: () async {
+                    final f = await _fetchFatSecretByName(item.name);
+                    if (f != null) {
+                      setState(() {
+                        item.metadata?['fatsecret_food'] = f;
+                      });
+                    } else {
+                      _showToast('FatSecret details not found');
+                    }
+                  },
+                  child: const Text('Load FatSecret details'),
                 ),
-              const SizedBox(height: 8),
-              Text(
-                'Category: ${raw['strCategory'] ?? '-'}',
-                style: AppTextStyles.overline,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Area: ${raw['strArea'] ?? '-'}',
-                style: AppTextStyles.overline,
-              ),
-              const SizedBox(height: 8),
-              Text('Instructions', style: AppTextStyles.label),
-              const SizedBox(height: 4),
-              Text(raw['strInstructions'] ?? '-', style: AppTextStyles.body),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _addItem(item);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Add'),
-          ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  String? _youtubeIdFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.queryParameters.containsKey('v')) return uri.queryParameters['v'];
+      if (uri.pathSegments.isNotEmpty) return uri.pathSegments.last;
+    } catch (_) {}
+    return null;
+  }
+
+  Future<void> _openUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showToast('Could not open link');
+      }
+    } catch (e) {
+      _showToast('Could not open link');
+    }
   }
 
   double get _totalCals {

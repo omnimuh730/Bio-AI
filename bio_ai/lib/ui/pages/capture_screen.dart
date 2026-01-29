@@ -18,6 +18,7 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
 import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -221,6 +222,53 @@ class _CaptureScreenState extends State<CaptureScreen> {
     });
   }
 
+  int _levenshtein(String s, String t) {
+    if (s == t) return 0;
+    if (s.isEmpty) return t.length;
+    if (t.isEmpty) return s.length;
+    final v0 = List<int>.generate(t.length + 1, (i) => i);
+    final v1 = List<int>.filled(t.length + 1, 0);
+    for (var i = 0; i < s.length; i++) {
+      v1[0] = i + 1;
+      for (var j = 0; j < t.length; j++) {
+        final cost = s[i] == t[j] ? 0 : 1;
+        v1[j + 1] = [
+          v1[j] + 1,
+          v0[j + 1] + 1,
+          v0[j] + cost,
+        ].reduce((a, b) => a < b ? a : b);
+      }
+      for (var j = 0; j < v0.length; j++) v0[j] = v1[j];
+    }
+    return v1[t.length];
+  }
+
+  List<FoodItem> _fuzzyLocalMatches(String query) {
+    final q = query.toLowerCase();
+    final results = <FoodItem>[];
+    for (final item in _catalog) {
+      final nameLower = item.name.toLowerCase();
+      if (nameLower.contains(q)) {
+        results.add(item);
+        continue;
+      }
+      final words = nameLower.split(RegExp(r'\s+'));
+      for (final w in words) {
+        if (w.isEmpty) continue;
+        final dist = _levenshtein(w, q);
+        final sortedW = (w.split('')..sort()).join();
+        final sortedQ = (q.split('')..sort()).join();
+        if (dist <= 1 ||
+            dist <= (w.length * 0.2).ceil() ||
+            sortedW == sortedQ) {
+          results.add(item);
+          break;
+        }
+      }
+    }
+    return results;
+  }
+
   Future<void> _searchMeals(String query) async {
     try {
       final response = await _dio.get(
@@ -230,7 +278,70 @@ class _CaptureScreenState extends State<CaptureScreen> {
       final data = response.data as Map<String, dynamic>;
       final meals = data['meals'] as List<dynamic>?;
       if (meals == null) {
-        setState(() => _results = []);
+        // No exact remote matches — try a first-letter broad search then fuzzy-filter
+        print(
+          'No exact remote match for: "$query"; trying first-letter search',
+        );
+        final first = query.isNotEmpty ? query[0].toLowerCase() : '';
+        if (first.isNotEmpty) {
+          try {
+            final resp = await _dio.get(
+              'https://www.themealdb.com/api/json/v1/1/search.php',
+              queryParameters: {'f': first},
+            );
+            final data2 = resp.data as Map<String, dynamic>;
+            final meals2 = data2['meals'] as List<dynamic>?;
+            if (meals2 != null) {
+              final candidates = meals2
+                  .map((m) => m as Map<String, dynamic>)
+                  .where((meal) {
+                    final name = (meal['strMeal'] as String? ?? '')
+                        .toLowerCase();
+                    final words = name.split(RegExp(r'\s+'));
+                    for (final w in words) {
+                      if (w.isEmpty) continue;
+                      final dist = _levenshtein(w, query.toLowerCase());
+                      if (dist <= 1 || dist <= (w.length * 0.2).ceil())
+                        return true;
+                    }
+                    return false;
+                  })
+                  .toList();
+              if (candidates.isNotEmpty) {
+                final mapped2 = candidates.map((meal) {
+                  final name = meal['strMeal'] as String? ?? '';
+                  final thumb = meal['strMealThumb'] as String? ?? '';
+                  final category = meal['strCategory'] as String? ?? '';
+                  final area = meal['strArea'] as String? ?? '';
+                  final desc = [
+                    if (category.isNotEmpty) category,
+                    if (area.isNotEmpty) area,
+                  ].join(' • ');
+                  return FoodItem(
+                    name: name,
+                    desc: desc,
+                    cals: 0,
+                    protein: 0,
+                    fat: 0,
+                    image: thumb,
+                    metadata: {'rawMeal': meal},
+                  );
+                }).toList();
+                setState(() {
+                  _results = mapped2;
+                  _searching = false;
+                });
+                return;
+              }
+            }
+          } catch (_) {}
+        }
+
+        final fallback = _fuzzyLocalMatches(query);
+        setState(() {
+          _results = fallback;
+          _searching = false;
+        });
         return;
       }
       final mapped = meals.map((m) {
@@ -253,14 +364,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
           metadata: {'rawMeal': meal},
         );
       }).toList();
-      setState(() => _results = mapped);
-    } catch (e) {
-      // On error, fall back to local catalog filtered
-      final lower = query.toLowerCase();
       setState(() {
-        _results = _catalog
-            .where((item) => item.name.toLowerCase().contains(lower))
-            .toList();
+        _results = mapped;
+        _searching = false;
+      });
+    } catch (e, st) {
+      print('Error searching meals: $e\n$st');
+      final fallback = _fuzzyLocalMatches(query);
+      setState(() {
+        _results = fallback;
+        _searching = false;
       });
     }
   }
@@ -747,5 +860,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
         ),
       ),
     );
+  }
+
+  String? _youtubeIdFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.queryParameters.containsKey('v')) return uri.queryParameters['v'];
+      if (uri.pathSegments.isNotEmpty) return uri.pathSegments.last;
+    } catch (_) {}
+    return null;
+  }
+
+  Future<void> _openUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showToast('Could not open link');
+      }
+    } catch (e) {
+      _showToast('Could not open link');
+    }
   }
 }
