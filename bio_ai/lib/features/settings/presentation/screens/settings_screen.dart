@@ -380,12 +380,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _openFindDevicesModal() async {
+    if (!mounted) return;
     _showToast('Checking Bluetooth permissions...');
     try {
       final ble = ref.read(bleServiceProvider);
       final ok = await ble.ensurePermissions();
+
       await _updateBtPermission();
+      if (!mounted) return;
+
       if (!ok) {
+        if (!mounted) return;
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -397,12 +402,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               TextButton(
                 onPressed: () {
                   openAppSettings();
-                  Navigator.pop(context);
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
                 },
                 child: const Text('Open Settings'),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                },
                 child: const Text('Close'),
               ),
             ],
@@ -411,19 +422,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return;
       }
 
+      if (!mounted) return;
       _showToast('Fetching connected Bluetooth devices...');
+
       final supported = await ble.isSupported();
+      if (!mounted) return;
+
       if (!supported) {
-        _showToast('Bluetooth not supported on this device');
+        if (mounted) {
+          _showToast('Bluetooth not supported on this device');
+        }
         return;
       }
 
       final devices = await ble.connectedDeviceSummaries();
+      if (!mounted) return;
+
       if (devices.isEmpty) {
-        _showToast('No connected devices found');
+        if (mounted) {
+          _showToast('No connected devices found');
+        }
         return;
       }
 
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -438,8 +460,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: Text(d['name'] ?? 'Unknown'),
                       subtitle: Text(d['id'] ?? '-'),
                       trailing: const Text('-'),
-                      onTap: () =>
-                          _showToast('${d['name'] ?? d['id']} selected'),
+                      onTap: () {
+                        if (mounted) {
+                          _showToast('${d['name'] ?? d['id']} selected');
+                        }
+                      },
                     ),
                   )
                   .toList(),
@@ -447,14 +472,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                if (mounted) {
+                  Navigator.pop(context);
+                }
+              },
               child: const Text('Close'),
             ),
           ],
         ),
       );
     } catch (e) {
-      _showToast('Device query failed: $e');
+      if (mounted) {
+        _showToast('Device query failed: $e');
+      }
     } finally {
       // Update cached permission state in case user updated permissions during this flow
       await _updateBtPermission();
@@ -514,9 +545,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _updateBtPermission() async {
     try {
       final status = await ref.read(bleServiceProvider).permissionStatus();
-      if (mounted) setState(() => _btPermissionStatus = status);
+      if (mounted) {
+        setState(() => _btPermissionStatus = status);
+      }
     } catch (_) {
-      if (mounted) setState(() => _btPermissionStatus = null);
+      if (mounted) {
+        setState(() => _btPermissionStatus = null);
+      }
     }
   }
 
