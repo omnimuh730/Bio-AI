@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
-import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
@@ -273,31 +272,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _openFindDevicesModal() async {
-    _showToast('Scanning for nearby devices...');
+    _showToast('Fetching connected Bluetooth devices...');
     try {
-      final results = await ref.read(bleServiceProvider).scanOnce();
-      if (results.isEmpty) {
-        _showToast('No devices found');
+      final devices = await ref.read(bleServiceProvider).connectedDevices();
+      if (devices.isEmpty) {
+        _showToast('No connected devices found');
         return;
       }
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Nearby devices'),
+          title: const Text('Connected devices'),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView(
               shrinkWrap: true,
-              children: results
+              children: devices
                   .map(
-                    (r) => ListTile(
-                      title: Text(
-                        r.device.name.isNotEmpty
-                            ? r.device.name
-                            : r.device.id.id,
+                    (d) => ListTile(
+                      title: Text(d.name.isNotEmpty ? d.name : d.id.id),
+                      subtitle: Text(d.id.id),
+                      trailing: Text('-'),
+                      onTap: () => _showToast(
+                        '${d.name.isNotEmpty ? d.name : d.id.id} selected',
                       ),
-                      subtitle: Text(r.advertisementData.localName ?? ''),
-                      trailing: Text(r.rssi.toString()),
                     ),
                   )
                   .toList(),
@@ -312,7 +310,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       );
     } catch (e) {
-      _showToast('Scan failed: $e');
+      _showToast('Device query failed: $e');
     }
   }
 
