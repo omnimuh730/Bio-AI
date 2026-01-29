@@ -53,8 +53,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
     _s.mode = 'scan';
   });
 
-  void _toggleOffline() => setState(() => _s.offlineMode = !_s.offlineMode);
-
   void _toggleQuickSwitch() =>
       setState(() => _s.quickSwitchOpen = !_s.quickSwitchOpen);
 
