@@ -31,14 +31,17 @@ class FloatingNavBar extends StatelessWidget {
                 height: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(40),
-                  border: Border.all(color: Colors.white.withOpacity(0.5)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 40,
-                        offset: const Offset(0, 10))
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 40,
+                      offset: const Offset(0, 10),
+                    ),
                   ],
                 ),
                 child: Row(
@@ -67,9 +70,10 @@ class FloatingNavBar extends StatelessWidget {
                   border: Border.all(color: AppColors.kBgBody, width: 4),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5))
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
                   ],
                 ),
                 child: const Icon(Icons.add, color: Colors.white, size: 28),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -16,23 +16,15 @@ class SectionTitle extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.kTextMain,
-            ),
-          ),
+          Text(title, style: AppTextStyles.subtitle),
           if (onRefresh != null || linkText != null)
             GestureDetector(
               onTap: onRefresh,
               child: Text(
                 linkText ?? 'Refresh',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.kAccentBlue,
                 ),
               ),
             ),

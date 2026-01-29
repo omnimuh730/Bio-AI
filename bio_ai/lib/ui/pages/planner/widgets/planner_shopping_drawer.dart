@@ -33,10 +33,10 @@ class PlannerShoppingDrawer extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 30,
               offset: const Offset(0, -5),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -125,7 +125,7 @@ class PlannerShoppingDrawer extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

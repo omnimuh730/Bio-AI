@@ -15,9 +15,10 @@ class QuickLogCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -26,12 +27,20 @@ class QuickLogCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Copy Yesterday Breakfast',
-                  style: GoogleFonts.dmSans(
-                      fontSize: 15, fontWeight: FontWeight.w600)),
-              Text('Oatmeal and berries - 320 kcal',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: AppColors.kTextSecondary)),
+              Text(
+                'Copy Yesterday Breakfast',
+                style: GoogleFonts.dmSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'Oatmeal and berries - 320 kcal',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.kTextSecondary,
+                ),
+              ),
             ],
           ),
           Container(
@@ -43,9 +52,10 @@ class QuickLogCard extends StatelessWidget {
             child: Text(
               'Copy',
               style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.kTextMain),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.kTextMain,
+              ),
             ),
           ),
         ],

@@ -13,20 +13,22 @@ class WaterButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.5)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-              color: AppColors.kAccentBlue.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2))
+            color: AppColors.kAccentBlue.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Text(
         text,
         style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.kAccentBlue),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.kAccentBlue,
+        ),
       ),
     );
   }

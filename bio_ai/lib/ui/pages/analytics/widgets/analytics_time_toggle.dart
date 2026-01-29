@@ -6,7 +6,11 @@ class AnalyticsTimeToggle extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onChanged;
 
-  const AnalyticsTimeToggle({super.key, required this.selected, required this.onChanged});
+  const AnalyticsTimeToggle({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,17 +26,22 @@ class AnalyticsTimeToggle extends StatelessWidget {
               (label) => GestureDetector(
                 onTap: () => onChanged(label),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: selected == label ? Colors.white : Colors.transparent,
+                    color: selected == label
+                        ? Colors.white
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: selected == label
                         ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
-                            )
+                            ),
                           ]
                         : null,
                   ),

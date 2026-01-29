@@ -1,22 +1,26 @@
 name: bio_ai
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+    sdk: ^3.10.7
 
 dependencies:
-  flutter:
-    sdk: flutter
-  # Moved from dev_dependencies to here
-  google_fonts: ^6.1.0
-  cupertino_icons: ^1.0.8
+    flutter:
+        sdk: flutter
+    flutter_localizations:
+        sdk: flutter
+    intl: ^0.20.2
+    # Moved from dev_dependencies to here
+    google_fonts: ^6.1.0
+    cupertino_icons: ^1.0.8
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.0.0
+    flutter_test:
+        sdk: flutter
+    flutter_lints: ^3.0.0
 
 flutter:
-  uses-material-design: true
+    uses-material-design: true
+    generate: true

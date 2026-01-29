@@ -17,13 +17,16 @@ class CaptureReticle extends StatelessWidget {
           height: 250,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.5),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 0,
                 spreadRadius: 1000,
-              )
+              ),
             ],
           ),
           child: Stack(
@@ -50,7 +53,10 @@ class CaptureReticle extends StatelessWidget {
                   height: 20,
                   decoration: const BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(color: AppColors.kAccentBlue, width: 4),
+                      bottom: BorderSide(
+                        color: AppColors.kAccentBlue,
+                        width: 4,
+                      ),
                       right: BorderSide(color: AppColors.kAccentBlue, width: 4),
                     ),
                   ),
@@ -62,8 +68,10 @@ class CaptureReticle extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.kAccentBlue,
                       borderRadius: BorderRadius.circular(12),
@@ -71,9 +79,10 @@ class CaptureReticle extends StatelessWidget {
                     child: Text(
                       'AI Focus',
                       style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

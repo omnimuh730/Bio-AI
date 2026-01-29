@@ -76,11 +76,11 @@ The camera screen has a Finite State Machine (FSM):
     ```dart
     double pitch = gyro.getPitch(); // Degrees
     if (pitch > 40 && pitch < 50) {
-       overlayColor = Colors.green.withOpacity(0.3);
+       overlayColor = Colors.green.withValues(alpha: 0.3);
        shutterButton.enable();
        hapticFeedback(Light);
     } else {
-       overlayColor = Colors.red.withOpacity(0.1);
+       overlayColor = Colors.red.withValues(alpha: 0.1);
        shutterButton.disable();
     }
     ```

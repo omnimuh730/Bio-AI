@@ -30,7 +30,7 @@ class CaptureQuickSwitch extends StatelessWidget {
       child: GestureDetector(
         onTap: onClose,
         child: Container(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           padding: const EdgeInsets.all(24),
           child: Center(
             child: GestureDetector(
@@ -47,11 +47,14 @@ class CaptureQuickSwitch extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Quick Switch',
-                            style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.kTextMain)),
+                        Text(
+                          'Quick Switch',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.kTextMain,
+                          ),
+                        ),
                         GestureDetector(
                           onTap: onClose,
                           child: Container(

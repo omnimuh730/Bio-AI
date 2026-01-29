@@ -73,11 +73,7 @@ class CaptureSearchOverlay extends StatelessWidget {
                     onAddCaffeine,
                   ),
                   const SizedBox(width: 8),
-                  _impactChip(
-                    'Alcohol',
-                    const Color(0xFF8B5CF6),
-                    onAddAlcohol,
-                  ),
+                  _impactChip('Alcohol', const Color(0xFF8B5CF6), onAddAlcohol),
                 ],
               ),
               const SizedBox(height: 16),
@@ -102,7 +98,9 @@ class CaptureSearchOverlay extends StatelessWidget {
                       Text(
                         'No results found.',
                         style: GoogleFonts.inter(
-                            fontSize: 12, color: AppColors.kTextSecondary),
+                          fontSize: 12,
+                          color: AppColors.kTextSecondary,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(
@@ -111,14 +109,21 @@ class CaptureSearchOverlay extends StatelessWidget {
                           backgroundColor: AppColors.kTextMain,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           elevation: 0,
                         ),
-                        child: Text('Create Custom Food',
-                            style: GoogleFonts.inter(
-                                fontSize: 12, fontWeight: FontWeight.w700)),
+                        child: Text(
+                          'Create Custom Food',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -136,13 +141,16 @@ class CaptureSearchOverlay extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
-              fontSize: 11, fontWeight: FontWeight.w700, color: color),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
       ),
     );

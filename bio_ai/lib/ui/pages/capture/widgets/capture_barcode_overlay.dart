@@ -27,7 +27,7 @@ class CaptureBarcodeOverlay extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return Container(
-      color: Colors.black.withOpacity(0.85),
+      color: Colors.black.withValues(alpha: 0.85),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -36,7 +36,10 @@ class CaptureBarcodeOverlay extends StatelessWidget {
             height: 140,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.6), width: 2),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.6),
+                width: 2,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -50,21 +53,26 @@ class CaptureBarcodeOverlay extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               margin: const EdgeInsets.symmetric(horizontal: 24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 children: [
-                  Text(item.name,
-                      style: GoogleFonts.dmSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
+                  Text(
+                    item.name,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     '${item.cals} kcal - ${item.protein}g Protein - ${item.fat}g Fat',
                     style: GoogleFonts.inter(
-                        fontSize: 11, color: Colors.white70),
+                      fontSize: 11,
+                      color: Colors.white70,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
@@ -74,11 +82,16 @@ class CaptureBarcodeOverlay extends StatelessWidget {
                       foregroundColor: AppColors.kTextMain,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child: Text('Add Item',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, fontWeight: FontWeight.w700)),
+                    child: Text(
+                      'Add Item',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -86,8 +99,10 @@ class CaptureBarcodeOverlay extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onNotFound,
-            child: Text('Barcode not found',
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
+            child: Text(
+              'Barcode not found',
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.white70),
+            ),
           ),
           const SizedBox(height: 12),
           ElevatedButton(
@@ -97,10 +112,13 @@ class CaptureBarcodeOverlay extends StatelessWidget {
               foregroundColor: AppColors.kTextMain,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child:
-                Text('Close', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),

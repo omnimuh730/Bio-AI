@@ -30,7 +30,10 @@ class AnalyticsMetricSelector extends StatelessWidget {
               value: option,
               child: Text(
                 formatter(option),
-                style: GoogleFonts.inter(fontSize: 12, color: AppColors.kTextMain),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.kTextMain,
+                ),
               ),
             ),
           )
@@ -43,7 +46,7 @@ class AnalyticsMetricSelector extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [

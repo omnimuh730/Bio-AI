@@ -19,7 +19,11 @@ class AnalyticsCorrelationChartPainter extends CustomPainter {
     final gridPaint = Paint()
       ..color = const Color(0xFFE2E8F0)
       ..strokeWidth = 1;
-    for (final y in [size.height * 0.25, size.height * 0.5, size.height * 0.75]) {
+    for (final y in [
+      size.height * 0.25,
+      size.height * 0.5,
+      size.height * 0.75,
+    ]) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
@@ -35,7 +39,9 @@ class AnalyticsCorrelationChartPainter extends CustomPainter {
       if (values.isEmpty) {
         return Path();
       }
-      final step = values.length == 1 ? size.width : size.width / (values.length - 1);
+      final step = values.length == 1
+          ? size.width
+          : size.width / (values.length - 1);
       final path = Path();
       for (var i = 0; i < values.length; i++) {
         final x = step * i;
@@ -57,7 +63,7 @@ class AnalyticsCorrelationChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final secondaryPaint = Paint()
-      ..color = secondaryColor.withOpacity(0.6)
+      ..color = secondaryColor.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
@@ -72,8 +78,9 @@ class AnalyticsCorrelationChartPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       var distance = 0.0;
       while (distance < metric.length) {
-        final segmentLength =
-            distance + dashLength < metric.length ? dashLength : metric.length - distance;
+        final segmentLength = distance + dashLength < metric.length
+            ? dashLength
+            : metric.length - distance;
         final extract = metric.extractPath(distance, distance + segmentLength);
         canvas.drawPath(extract, paint);
         distance += dashLength + dashGap;

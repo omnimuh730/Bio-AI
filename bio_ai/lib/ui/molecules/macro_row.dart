@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 
 class MacroRow extends StatelessWidget {
   final String label;
@@ -23,16 +22,8 @@ class MacroRow extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.kTextSecondary)),
-            Text(val,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.kTextSecondary)),
+            Text(label, style: AppTextStyles.label),
+            Text(val, style: AppTextStyles.label),
           ],
         ),
         const SizedBox(height: 4),
@@ -44,7 +35,7 @@ class MacroRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           child: FractionallySizedBox(
-            widthFactor: pct,
+            widthFactor: pct.clamp(0.0, 1.0),
             alignment: Alignment.centerLeft,
             child: Container(
               decoration: BoxDecoration(

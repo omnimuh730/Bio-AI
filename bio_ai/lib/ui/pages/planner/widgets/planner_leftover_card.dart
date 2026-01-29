@@ -25,10 +25,10 @@ class PlannerLeftoverCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -67,12 +67,17 @@ class PlannerLeftoverCard extends StatelessWidget {
     );
   }
 
-  Widget _leftoverButton(String label, VoidCallback onTap, {bool primary = false}) {
+  Widget _leftoverButton(
+    String label,
+    VoidCallback onTap, {
+    bool primary = false,
+  }) {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        backgroundColor:
-            primary ? const Color(0xFFEEF2FF) : const Color(0xFFF8FAFC),
+        backgroundColor: primary
+            ? const Color(0xFFEEF2FF)
+            : const Color(0xFFF8FAFC),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

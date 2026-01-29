@@ -6,7 +6,11 @@ class SettingsUnitToggle extends StatelessWidget {
   final bool metricUnits;
   final ValueChanged<bool> onChanged;
 
-  const SettingsUnitToggle({super.key, required this.metricUnits, required this.onChanged});
+  const SettingsUnitToggle({
+    super.key,
+    required this.metricUnits,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +41,10 @@ class SettingsUnitToggle extends StatelessWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ]
                 : null,
           ),
