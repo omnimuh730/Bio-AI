@@ -10,6 +10,7 @@ import 'package:bio_ai/features/settings/presentation/screens/settings_screen.da
 import '../../capture/models/food_item.dart';
 import 'capture_analysis_sheet.dart';
 import 'capture_barcode_overlay.dart';
+import 'liquid_glass_nutrition_card.dart';
 import 'capture_bottom_controls.dart';
 import 'capture_offline_banner.dart';
 import 'capture_quick_switch.dart';
@@ -26,6 +27,7 @@ class CaptureScreenBody extends StatelessWidget {
   final bool barcodeOpen;
   final bool barcodeFound;
   final bool barcodeScanning;
+  final Map<String, dynamic>? barcodeFullData;
   final String mode;
   final List<double> portionOptions;
   final double totalCals;
@@ -64,6 +66,7 @@ class CaptureScreenBody extends StatelessWidget {
     required this.barcodeOpen,
     required this.barcodeFound,
     required this.barcodeScanning,
+    this.barcodeFullData,
     required this.mode,
     required this.portionOptions,
     required this.totalCals,
@@ -195,16 +198,37 @@ class CaptureScreenBody extends StatelessWidget {
           onTapItem: onTapItem,
           onCreateCustom: onCreateCustom,
         ),
-        CaptureBarcodeOverlay(
-          open: barcodeOpen,
-          found: barcodeFound,
-          scanning: barcodeScanning,
-          item: barcodeItem,
-          onAdd: barcodeItem != null ? () => onAddItem(barcodeItem!) : null,
-          onClose: onToggleBarcode,
-          onNotFound: () {},
-          onBarcodeDetected: onBarcodeDetected,
-        ),
+        // Barcode scanning overlay (shows when scanning)
+        if (!barcodeFound)
+          CaptureBarcodeOverlay(
+            open: barcodeOpen,
+            found: barcodeFound,
+            scanning: barcodeScanning,
+            item: barcodeItem,
+            onAdd: barcodeItem != null ? () => onAddItem(barcodeItem!) : null,
+            onClose: onToggleBarcode,
+            onNotFound: () {},
+            onBarcodeDetected: onBarcodeDetected,
+          ),
+        // Liquid glass nutrition card (shows when barcode found)
+        if (barcodeFound && barcodeFullData != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
+                child: LiquidGlassNutritionCard(
+                  foodData: barcodeFullData!,
+                  onAdd: barcodeItem != null
+                      ? () {
+                          onAddItem(barcodeItem!);
+                          onToggleBarcode();
+                        }
+                      : () {},
+                  onClose: onToggleBarcode,
+                ),
+              ),
+            ),
+          ),
         CaptureQuickSwitch(
           open: false,
           onClose: () {},

@@ -131,6 +131,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       _s.barcodeOpen = !_s.barcodeOpen;
       _s.barcodeFound = false;
       _s.barcodeItem = null;
+      _s.barcodeFullData = null; // Clear full data
       _s.barcodeScanning = true;
     });
   }
@@ -147,11 +148,32 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     final fatSecret = ref.read(fatSecretServiceProvider);
     final result = await fatSecret.lookupBarcode(barcode.rawValue!);
 
-    if (result['error'] != null || result['food'] == null) {
+    print('🔍 Barcode lookup result: $result');
+
+    // Check for error response
+    if (result['error'] != null) {
+      print('❌ Barcode lookup error: ${result['error']}');
       if (mounted) {
         setState(() {
           _s.barcodeFound = false;
           _s.barcodeScanning = false;
+          _s.barcodeOpen = false;
+        });
+        _showToast('Barcode not found in database');
+      }
+      return;
+    }
+
+    // FatSecret barcode API returns food data directly at root level
+    // Structure: {"food_id": {...}, "food": {...}}
+    final foodData = result['food'];
+    if (foodData == null) {
+      print('❌ No food data in response');
+      if (mounted) {
+        setState(() {
+          _s.barcodeFound = false;
+          _s.barcodeScanning = false;
+          _s.barcodeOpen = false;
         });
         _showToast('Barcode not found in database');
       }
@@ -159,13 +181,26 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
 
     // Parse FatSecret food response
-    final foodItem = _parseFatSecretFood(result['food']);
+    final foodItem = _parseFatSecretFood(foodData);
+    print('📦 Parsed food item: ${foodItem?.name}');
+
     if (foodItem != null && mounted) {
       setState(() {
         _s.barcodeFound = true;
         _s.barcodeItem = foodItem;
+        _s.barcodeFullData = foodData; // Store complete JSON data
         _s.barcodeScanning = false;
       });
+    } else {
+      print('❌ Failed to parse food item');
+      if (mounted) {
+        setState(() {
+          _s.barcodeFound = false;
+          _s.barcodeScanning = false;
+          _s.barcodeOpen = false;
+        });
+        _showToast('Could not parse food data');
+      }
     }
   }
 
@@ -183,11 +218,34 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   FoodItem? _parseFatSecretFood(dynamic food) {
     try {
       final name = food['food_name'] ?? food['name'] ?? 'Unknown Food';
+      final brandName = food['brand_name'] ?? '';
+      final fullName = brandName.isNotEmpty ? '$brandName $name' : name;
+
       final description = food['food_description'] ?? food['description'] ?? '';
 
-      // Parse nutrition from description (FatSecret format)
+      // Parse nutrition from description (FatSecret format) OR from servings
       double cals = 0, protein = 0, fat = 0;
-      if (description.isNotEmpty) {
+
+      // Try to get from servings first (barcode API format)
+      final servings = food['servings'];
+      if (servings != null && servings['serving'] != null) {
+        final serving = servings['serving'];
+        final firstServing = serving is List ? serving[0] : serving;
+
+        if (firstServing != null) {
+          cals =
+              double.tryParse(firstServing['calories']?.toString() ?? '0') ?? 0;
+          protein =
+              double.tryParse(firstServing['protein']?.toString() ?? '0') ?? 0;
+          fat = double.tryParse(firstServing['fat']?.toString() ?? '0') ?? 0;
+          print(
+            '✅ Parsed nutrition from servings: $cals cal, $protein g protein, $fat g fat',
+          );
+        }
+      }
+
+      // Fallback: parse from description if servings didn't work
+      if (cals == 0 && description.isNotEmpty) {
         final calMatch = RegExp(r'(\d+\.?\d*)\s*kcal').firstMatch(description);
         final proteinMatch = RegExp(
           r'Protein:\s*(\d+\.?\d*)g',
@@ -198,18 +256,23 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         if (proteinMatch != null)
           protein = double.tryParse(proteinMatch.group(1)!) ?? 0;
         if (fatMatch != null) fat = double.tryParse(fatMatch.group(1)!) ?? 0;
+        print(
+          '✅ Parsed nutrition from description: $cals cal, $protein g protein, $fat g fat',
+        );
       }
 
       return FoodItem(
-        name: name,
+        name: fullName,
         desc: description,
         cals: cals,
         protein: protein,
         fat: fat,
-        image: food['food_image'] ?? food['image'],
+        image:
+            food['food_image']?.toString() ?? food['image']?.toString() ?? '',
       );
     } catch (e) {
-      print('Error parsing FatSecret food: $e');
+      print('❌ Error parsing FatSecret food: $e');
+      print('   Food data: $food');
       return null;
     }
   }
@@ -315,6 +378,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         barcodeOpen: _s.barcodeOpen,
         barcodeFound: _s.barcodeFound,
         barcodeScanning: _s.barcodeScanning,
+        barcodeFullData: _s.barcodeFullData,
         mode: _s.mode,
         portionOptions: _s.portionOptions,
         totalCals: _totalCals,

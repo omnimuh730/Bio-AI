@@ -5,6 +5,7 @@ import os
 import time
 import base64
 import io
+import json
 import requests
 from PIL import Image
 from ..config import (
@@ -188,6 +189,16 @@ async def lookup_barcode(request: BarcodeRequest):
     )
 
     print(f"\n✅ Step 4: FatSecret API Response")
+    print(f"\n📄 FULL RAW RESPONSE DATA:")
+    print("=" * 80)
+    try:
+        # Pretty print the full JSON response
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    except Exception as e:
+        # Fallback to regular print if JSON formatting fails
+        print(f"   (JSON formatting failed: {e})")
+        print(f"   Raw data: {result}")
+    print("=" * 80)
     
     # Check for various error formats
     is_error = False
@@ -196,7 +207,7 @@ async def lookup_barcode(request: BarcodeRequest):
         if "error" in result:
             is_error = True
             error_info = result["error"]
-            print(f"   - Status: ❌ ERROR")
+            print(f"\n   - Status: ❌ ERROR")
             
             if isinstance(error_info, dict):
                 print(f"   - Error Code: {error_info.get('code', 'N/A')}")
@@ -216,7 +227,7 @@ async def lookup_barcode(request: BarcodeRequest):
                 print(f"      - FatSecret database is country-specific (region: {request.region})")
         # Check if response itself is successful
         elif "food_id" in result or "food" in result:
-            print(f"   - Status: ✅ SUCCESS")
+            print(f"\n   - Status: ✅ SUCCESS")
             if "food_id" in result:
                 food_id = result.get("food_id", {})
                 if isinstance(food_id, dict):
@@ -239,13 +250,11 @@ async def lookup_barcode(request: BarcodeRequest):
                         print(f"   - Serving: {serving.get('serving_description', 'N/A')}")
                         print(f"   - Calories: {serving.get('calories', 'N/A')} kcal")
         else:
-            print(f"   - Status: UNKNOWN")
+            print(f"\n   - Status: UNKNOWN")
             print(f"   - Response keys: {list(result.keys())}")
-            print(f"   - Full response: {result}")
     else:
-        print(f"   - Status: UNEXPECTED RESPONSE TYPE")
+        print(f"\n   - Status: UNEXPECTED RESPONSE TYPE")
         print(f"   - Response type: {type(result)}")
-        print(f"   - Response: {result}")
     
     print("=" * 80)
     print()

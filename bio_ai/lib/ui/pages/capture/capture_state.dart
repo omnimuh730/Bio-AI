@@ -26,6 +26,7 @@ class CaptureScreenStateHolder {
   bool searching = false;
 
   FoodItem? barcodeItem;
+  Map<String, dynamic>? barcodeFullData; // Store complete FatSecret response
 
   void dispose() {
     barcodeTimer?.cancel();
