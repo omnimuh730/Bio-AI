@@ -4,7 +4,9 @@ python-multipart==0.0.6
 pydantic>=2.10.0,<2.11.0
 sqlalchemy>=2.0.23,<3.0.0
 aiofiles==23.2.1
-openai>=1.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+pillow>=10.0.0
 
 # Optional heavy ML dependencies used by demos/local-detection/detect_food.py
 # Install these if you plan to run the food detection pipeline:

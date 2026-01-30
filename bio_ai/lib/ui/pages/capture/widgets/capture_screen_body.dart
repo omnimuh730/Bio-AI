@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -9,6 +10,7 @@ import 'package:bio_ai/features/settings/presentation/screens/settings_screen.da
 import '../../capture/models/food_item.dart';
 import 'capture_analysis_sheet.dart';
 import 'capture_barcode_overlay.dart';
+import 'liquid_glass_nutrition_card.dart';
 import 'capture_bottom_controls.dart';
 import 'capture_offline_banner.dart';
 import 'capture_quick_switch.dart';
@@ -24,6 +26,9 @@ class CaptureScreenBody extends StatelessWidget {
   final bool offlineMode;
   final bool barcodeOpen;
   final bool barcodeFound;
+  final bool barcodeScanning;
+  final String? barcodePendingConfirmation;
+  final Map<String, dynamic>? barcodeFullData;
   final String mode;
   final List<double> portionOptions;
   final double totalCals;
@@ -31,11 +36,16 @@ class CaptureScreenBody extends StatelessWidget {
   final double totalFat;
   final TextEditingController controller;
   final bool isSearching;
-  final FoodItem barcodeItem;
+  final FoodItem? barcodeItem;
 
   final VoidCallback onOpenSearch;
   final VoidCallback onCloseSearch;
   final VoidCallback onToggleBarcode;
+  final VoidCallback onCloseBarcodeResult;
+  final void Function(FoodItem) onAddBarcodeItem;
+  final VoidCallback onConfirmBarcode;
+  final VoidCallback onCancelBarcode;
+  final void Function(BarcodeCapture)? onBarcodeDetected;
   final VoidCallback onToggleQuickSwitch;
   final void Function(Widget) onNavigateFromQuick;
   final void Function(FoodItem) onAddItem;
@@ -60,6 +70,9 @@ class CaptureScreenBody extends StatelessWidget {
     required this.offlineMode,
     required this.barcodeOpen,
     required this.barcodeFound,
+    required this.barcodeScanning,
+    this.barcodePendingConfirmation,
+    this.barcodeFullData,
     required this.mode,
     required this.portionOptions,
     required this.totalCals,
@@ -71,6 +84,11 @@ class CaptureScreenBody extends StatelessWidget {
     required this.onOpenSearch,
     required this.onCloseSearch,
     required this.onToggleBarcode,
+    required this.onCloseBarcodeResult,
+    required this.onAddBarcodeItem,
+    required this.onConfirmBarcode,
+    required this.onCancelBarcode,
+    this.onBarcodeDetected,
     required this.onToggleQuickSwitch,
     required this.onNavigateFromQuick,
     required this.onAddItem,
@@ -190,14 +208,139 @@ class CaptureScreenBody extends StatelessWidget {
           onTapItem: onTapItem,
           onCreateCustom: onCreateCustom,
         ),
-        CaptureBarcodeOverlay(
-          open: barcodeOpen,
-          found: barcodeFound,
-          item: barcodeItem,
-          onAdd: () => onAddItem(barcodeItem),
-          onClose: onToggleBarcode,
-          onNotFound: () {},
-        ),
+        // Barcode/QR code scanning overlay (shows when scanning)
+        if (!barcodeFound && barcodePendingConfirmation == null)
+          CaptureBarcodeOverlay(
+            open: barcodeOpen,
+            found: barcodeFound,
+            scanning: barcodeScanning,
+            item: barcodeItem,
+            onAdd: barcodeItem != null ? () => onAddItem(barcodeItem!) : null,
+            onClose: onToggleBarcode,
+            onNotFound: () {},
+            onBarcodeDetected: onBarcodeDetected,
+          ),
+        // Barcode/QR code confirmation dialog
+        if (barcodePendingConfirmation != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.85),
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.qr_code_scanner,
+                        color: Colors.white,
+                        size: 64,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Code Detected',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          barcodePendingConfirmation!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontFamily: 'monospace',
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Look up this product?',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: onCancelBarcode,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.2,
+                                ),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: onConfirmBarcode,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF667EEA),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Confirm'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        // Liquid glass nutrition card (shows when barcode found)
+        if (barcodeFound && barcodeFullData != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
+                child: LiquidGlassNutritionCard(
+                  foodData: barcodeFullData!,
+                  onAdd: barcodeItem != null
+                      ? () => onAddBarcodeItem(barcodeItem!)
+                      : () {},
+                  onClose: onCloseBarcodeResult,
+                ),
+              ),
+            ),
+          ),
         CaptureQuickSwitch(
           open: false,
           onClose: () {},
