@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 from torchvision import models, transforms
 
 try:
@@ -145,6 +146,230 @@ def visualize_overlay(orig_img, patch_masks, clusters, out_path):
     cv2.imwrite(str(out_path), cv2.cvtColor(blend, cv2.COLOR_RGB2BGR))
 
 
+def draw_clustered_total_overlay(orig_img, masks, labels, parent_classes=None, out_path=None, names=None, alpha=0.6, seed=None):
+    """Create a single image where each patch/component is filled with a random color by cluster,
+    draws a contour border for each component using a darker color, and annotates each component
+    with the item name (if available via `names` and `parent_classes`) and a numeric value (area in pixels).
+
+    - masks: list of 2D uint8 masks (0/1 or 0/255) aligned with labels
+    - labels: iterable of cluster ids
+    - parent_classes: list of parent detection class ids (or None)
+    - names: mapping/list for class id -> name
+    """
+    img = orig_img.copy()
+    h, w = img.shape[:2]
+    # font scale (adaptive to image size) for label legibility
+    font_scale = max(0.35, min(0.9, h / 1200.0))
+    # deterministic or random seeding
+    if seed is None:
+        seed = int(time.time() % 1_000_000)
+    rng = np.random.RandomState(seed)
+
+    # generate distinct colors per component (avoid too-dark / too-light)
+    colors = [tuple(int(c) for c in rng.randint(30, 230, size=3)) for _ in range(len(masks))]
+
+    # fill colored overlay according to cluster label
+    overlay = img.copy()
+    for i, (m, lbl) in enumerate(zip(masks, labels)):
+        mask_bool = (m > 0)
+        if not mask_bool.any():
+            continue
+        color = np.array(colors[i], dtype=np.uint8)
+        overlay = np.where(np.stack([mask_bool]*3, axis=-1), (overlay * (1 - alpha) + color * alpha).astype(np.uint8), overlay)
+
+    # draw contours and labels
+    canvas = overlay.copy()
+    for i, (m, lbl) in enumerate(zip(masks, labels)):
+        mask_u8 = (m > 0).astype('uint8') * 255
+        if mask_u8.sum() == 0:
+            continue
+        contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        border_color = tuple(max(0, c - 40) for c in colors[i])
+        cv2.drawContours(canvas, contours, -1, border_color, thickness=2)
+
+        # compute label placement using largest contour bounding box (more stable than centroid)
+        if contours:
+            largest = max(contours, key=lambda c: cv2.contourArea(c))
+            rx, ry, rw, rh = cv2.boundingRect(largest)
+            # place label near the top-left inside bounding box with margin
+            cx = rx + 4
+            cy = ry + int(font_scale * 16) + 4
+        else:
+            M = cv2.moments(mask_u8)
+            if M['m00'] != 0:
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
+            else:
+                ys, xs = np.where(mask_u8 > 0)
+                if len(xs) == 0:
+                    cx, cy = 8, 8
+                else:
+                    cx = int(xs.mean())
+                    cy = int(ys.mean())
+
+        # build label text
+        area = int((m > 0).sum())
+        name = None
+        if parent_classes is not None:
+            try:
+                pc = parent_classes[i]
+                if pc is not None and names is not None:
+                    try:
+                        name = names[pc]
+                    except Exception:
+                        try:
+                            name = names.get(pc, None)
+                        except Exception:
+                            name = None
+            except Exception:
+                name = None
+        if name is None:
+            label = f"c{int(lbl)} {area}"
+        else:
+            label = f"{name} {area}"
+
+        # draw label background and text
+        ((tw, th), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 2)
+        # ensure label box is inside image; prefer top-left anchored placement
+        x0 = max(0, cx)
+        y0 = max(0, cy - th - 2)
+        x1 = min(w, x0 + tw + 8)
+        y1 = min(h, y0 + th + 8)
+        cv2.rectangle(canvas, (x0, y0), (x1, y1), border_color, -1)
+        cv2.putText(canvas, label, (x0 + 4, y1 - 4), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 2, cv2.LINE_AA)
+
+    # write result (ensure BGR for cv2)
+    if out_path is not None:
+        cv2.imwrite(str(out_path), cv2.cvtColor(canvas, cv2.COLOR_RGB2BGR))
+    return canvas
+
+
+def draw_instance_overlay(res, orig_img, out_path, names=None, stylize=False, title_text=None):
+    """Draw instance masks, bounding boxes, and labels from a YOLOv8 result.
+    - res: a single result object from ultralytics (res = results[0])
+    - orig_img: RGB image np.ndarray
+    - names: list or dict mapping class_id->name (model.names)
+    - stylize: if True, add a red bottom banner with title text
+    """
+    img = orig_img.copy()
+    h, w = img.shape[:2]
+    # convert to BGR for OpenCV drawing
+    canvas = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    cmap = plt.get_cmap('tab20')
+
+    # extract masks if available
+    masks = []
+    if hasattr(res, 'masks') and res.masks is not None:
+        if hasattr(res.masks, 'data'):
+            md = res.masks.data.cpu().numpy()
+            for i in range(md.shape[0]):
+                masks.append((md[i] > 0.5).astype('uint8'))
+        else:
+            try:
+                md = np.array(res.masks)
+                for m in md:
+                    masks.append((m > 0.5).astype('uint8'))
+            except Exception:
+                masks = []
+
+    # boxes and confidences
+    boxes = []
+    confs = []
+    classes = []
+    if hasattr(res, 'boxes') and res.boxes is not None:
+        data = res.boxes.data.cpu().numpy()
+        for row in data:
+            x1, y1, x2, y2 = map(int, row[:4])
+            conf = float(row[4]) if row.shape[0] > 4 else 0.0
+            cls = int(row[5]) if row.shape[0] > 5 else 0
+            boxes.append((x1, y1, x2, y2))
+            confs.append(conf)
+            classes.append(cls)
+
+    # helper to resolve class name
+    def _get_name(cls_id):
+        if names is None:
+            return str(cls_id)
+        try:
+            # list-like
+            return names[cls_id]
+        except Exception:
+            try:
+                return names.get(cls_id, str(cls_id))
+            except Exception:
+                return str(cls_id)
+
+    # for each box, try to find the best overlapping mask (if masks exist)
+    for i, box in enumerate(boxes):
+        x1, y1, x2, y2 = box
+        color = tuple(int(255 * c) for c in cmap(i % 20)[:3])
+        matched_mask = None
+        if len(masks) > 0:
+            if len(masks) == len(boxes):
+                matched_mask = masks[i]
+            else:
+                # find mask with largest overlap area inside box
+                best_a = 0
+                best_m = None
+                for m in masks:
+                    # compute overlap
+                    yy1 = max(0, y1)
+                    yy2 = min(h, y2)
+                    xx1 = max(0, x1)
+                    xx2 = min(w, x2)
+                    if yy2 <= yy1 or xx2 <= xx1:
+                        continue
+                    sub = m[yy1:yy2, xx1:xx2]
+                    a = int(sub.sum())
+                    if a > best_a:
+                        best_a = a
+                        best_m = m
+                if best_a > 0:
+                    matched_mask = best_m
+        # draw mask fill if available
+        if matched_mask is not None:
+            m = matched_mask
+            mask_bool = (m > 0)
+            colored = np.zeros_like(canvas, dtype=np.uint8)
+            colored[:, :] = color
+            alpha = 0.45
+            mask3 = np.stack([mask_bool] * 3, axis=-1)
+            canvas = np.where(mask3, (canvas * (1 - alpha) + np.array(color) * alpha).astype(np.uint8), canvas)
+        # draw box
+        cv2.rectangle(canvas, (x1, y1), (x2, y2), color, 2)
+        # label
+        cls_id = classes[i] if i < len(classes) else -1
+        conf = confs[i] if i < len(confs) else 0.0
+        name = _get_name(cls_id)
+        label = f"{name} {conf:.2f}"
+        ((tw, th), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+        # background rectangle for label (slightly above box)
+        y0 = max(0, y1 - th - 6)
+        cv2.rectangle(canvas, (x1, y0), (x1 + tw + 8, y0 + th + 6), color, -1)
+        cv2.putText(canvas, label, (x1 + 4, y0 + th + 1), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+
+    # if there are masks with no boxes, draw them as well
+    if len(masks) > len(boxes):
+        start = len(boxes)
+        for i in range(start, len(masks)):
+            color = tuple(int(255 * c) for c in cmap(i % 20)[:3])
+            m = masks[i]
+            mask_bool = (m > 0)
+            canvas = np.where(np.stack([mask_bool] * 3, axis=-1), (canvas * 0.55 + np.array(color) * 0.45).astype(np.uint8), canvas)
+
+    # optional stylized bottom banner
+    if stylize:
+        banner_h = max(40, int(h * 0.08))
+        cv2.rectangle(canvas, (0, h - banner_h), (w, h), (200, 30, 30), -1)  # red banner
+        if title_text is None:
+            title_text = "YOLOv8 Object Detection + Instance Segmentation"
+        ((tw, th), _) = cv2.getTextSize(title_text, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)
+        cv2.putText(canvas, title_text, ((w - tw) // 2, h - banner_h // 2 + th // 2), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
+
+    cv2.imwrite(str(out_path), canvas)
+
+
+
 def run(args):
     img_path = Path(args.image)
     assert img_path.exists(), f"Image not found: {img_path}"
@@ -153,7 +378,9 @@ def run(args):
     img_bgr = cv2.imread(str(img_path))
     img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-    device = 'cuda' if torch.cuda.is_available() and not args.force_cpu else 'cpu'
+    t_start = time.time()
+
+    device = 'cuda' if torch.cuda.is_available() and not args.force_cpu else 'cpu' 
 
     model = load_model(device)
 
@@ -164,6 +391,13 @@ def run(args):
         print("No results from model")
         return
     res = results[0]
+
+    # write a detection overlay image (masks + boxes + labels)
+    try:
+        draw_instance_overlay(res, img, outroot / 'detection_overlay.png', names=getattr(model, 'names', None), stylize=args.stylize, title_text=args.title_text)
+        print(f"Wrote detection overlay to {outroot / 'detection_overlay.png'}")
+    except Exception as e:
+        print("Failed to draw detection overlay:", e)
 
     # Get masks
     masks = []
@@ -196,18 +430,78 @@ def run(args):
 
     print(f"Found {len(masks)} top-level masks / boxes")
 
-    # break masks into small components
-    area_min = args.area_min
-    comp_list = []
+    # Attempt to associate each top-level mask with a detection class id (if available)
+    mask_classes = [-1] * len(masks)
+    if hasattr(res, 'boxes') and res.boxes is not None:
+        box_data = res.boxes.data.cpu().numpy()
+        # classes may be available in column 5
+        box_classes = [int(row[5]) if row.shape[0] > 5 else -1 for row in box_data]
+        # if lengths match, assume 1:1 mapping
+        if len(box_classes) == len(masks):
+            mask_classes = box_classes
+        else:
+            # match by overlap between mask and each box
+            h_img, w_img = img.shape[:2]
+            for mi, m in enumerate(masks):
+                best_cls = -1
+                best_area = 0
+                for bi, row in enumerate(box_data):
+                    x1, y1, x2, y2 = map(int, row[:4])
+                    yy1 = max(0, y1); yy2 = min(h_img, y2)
+                    xx1 = max(0, x1); xx2 = min(w_img, x2)
+                    if yy2 <= yy1 or xx2 <= xx1:
+                        continue
+                    sub = m[yy1:yy2, xx1:xx2]
+                    a = int(sub.sum())
+                    if a > best_area:
+                        best_area = a
+                        best_cls = int(row[5]) if row.shape[0] > 5 else -1
+                mask_classes[mi] = best_cls
+
+    # collect all components (no area filtering yet) so we can compute area distribution
+    all_comps = []
     for mi, m in enumerate(masks):
-        comps = masks_to_components(m.astype('uint8'), area_min=area_min)
-        print(f"Mask {mi}: {len(comps)} components >= area {area_min}")
+        comps = masks_to_components(m.astype('uint8'), area_min=0)
+        print(f"Mask {mi}: {len(comps)} components (no area filter)")
         for c in comps:
             c['parent_mask_idx'] = mi
-            comp_list.append(c)
+            all_comps.append(c)
+
+    if len(all_comps) == 0:
+        print("No components found in masks.")
+        return
+
+    # analyze areas and optionally auto-select area threshold
+    areas = np.array([c['area'] for c in all_comps])
+    ensure_dir(outroot)
+    try:
+        plt.figure(figsize=(6, 4))
+        plt.hist(areas, bins=args.hist_bins, color='C0', alpha=0.9)
+        plt.xlabel('Component area (pixels)')
+        plt.ylabel('Count')
+        plt.title('Component area distribution')
+        plt.tight_layout()
+        plt.savefig(outroot / 'area_hist.png')
+        plt.close()
+        print(f"Wrote area histogram to {outroot / 'area_hist.png'}")
+    except Exception as e:
+        print("Failed to write area histogram:", e)
+
+    suggested_area = int(max(1, np.percentile(areas, args.area_quantile * 100)))
+    print(f"Area stats: min={areas.min()}, median={np.median(areas)}, max={areas.max()}, suggested area (quantile {args.area_quantile})={suggested_area}")
+
+    if args.auto_area:
+        area_min = suggested_area
+        print(f"Auto-area enabled: using area_min={area_min}")
+    else:
+        area_min = args.area_min
+        print(f"Using area_min={area_min}")
+
+    comp_list = [c for c in all_comps if c['area'] >= area_min]
+    print(f"Kept {len(comp_list)} components >= area {area_min}")
 
     if len(comp_list) == 0:
-        print("No components found with the given area_min. Try decreasing --area-min.")
+        print("No components left after applying area_min. Try decreasing --area-min or use --auto-area.")
         return
 
     # prepare embedder
@@ -225,13 +519,49 @@ def run(args):
         else:
             crop_for_embed = crop
         emb = embed(crop_for_embed)
-        patches.append({'crop': crop, 'emb': emb, 'bbox': bbox, 'bbox_padded': bbox_padded, 'area': comp['area'], 'parent': comp['parent_mask_idx']})
+        patches.append({'crop': crop, 'emb': emb, 'bbox': bbox, 'bbox_padded': bbox_padded, 'area': comp['area'], 'parent': comp['parent_mask_idx'], 'mask_full': comp['mask']})
 
-    print(f"Extracted {len(patches)} patches; running KMeans (k={args.k}) ...")
+    print(f"Extracted {len(patches)} patches; computing embeddings matrix ...")
     X = np.stack([p['emb'] for p in patches], axis=0)
-    k = min(args.k, len(patches))
-    kmeans = KMeans(n_clusters=k, random_state=0).fit(X)
-    labels = kmeans.labels_
+    n_samples = X.shape[0]
+    if n_samples < 2:
+        print("Not enough patches for clustering (need >=2). Assigning single cluster 0 to all patches.")
+        labels = np.zeros(n_samples, dtype=int)
+        k = 1
+    else:
+        if args.auto_k:
+            k_max = min(args.k_max, n_samples)
+            k_range = range(2, max(2, k_max) + 1)
+            sil_scores = []
+            print(f"Auto-k: evaluating k in {list(k_range)} ...")
+            for kk in k_range:
+                km = KMeans(n_clusters=kk, random_state=0).fit(X)
+                try:
+                    ss = silhouette_score(X, km.labels_)
+                except Exception:
+                    ss = -1.0
+                sil_scores.append(ss)
+            best_idx = int(np.argmax(sil_scores))
+            best_k = list(k_range)[best_idx]
+            k = best_k
+            print(f"Auto-k selected k={k} (best silhouette={sil_scores[best_idx]:.4f})")
+            try:
+                plt.figure(figsize=(6, 4))
+                plt.plot(list(k_range), sil_scores, marker='o', label='silhouette')
+                plt.xlabel('k')
+                plt.ylabel('silhouette score')
+                plt.title('Silhouette vs k')
+                plt.grid(True)
+                plt.tight_layout()
+                plt.savefig(outroot / 'silhouette.png')
+                plt.close()
+                print(f"Wrote silhouette plot to {outroot / 'silhouette.png'}")
+            except Exception as e:
+                print("Failed to write silhouette plot:", e)
+        else:
+            k = min(args.k, n_samples)
+        kmeans = KMeans(n_clusters=k, random_state=0).fit(X)
+        labels = kmeans.labels_
 
     # save patches and CSV
     rows = []
@@ -247,13 +577,8 @@ def run(args):
             cv2.imwrite(str(fname), cv2.cvtColor(crop, cv2.COLOR_RGB2BGR))
         x1, y1, x2, y2 = p['bbox']
         rows.append({'patch_id': idx, 'file': str(fname.name), 'cluster': int(lbl), 'area': int(p['area']), 'bbox': f"{x1},{y1},{x2},{y2}", 'parent_mask': int(p['parent'])})
-        # build a mask to draw overlay using the padded bbox so the assignment matches crop size
-        mask_full = np.zeros(img.shape[:2], dtype='uint8')
-        x1p, y1p, x2p, y2p = p.get('bbox_padded', p['bbox'])
-        if p['crop'].shape[-1] == 4:
-            mask_full[y1p:y2p, x1p:x2p] = (p['crop'][:, :, 3] > 0).astype('uint8') * 255
-        else:
-            mask_full[y1p:y2p, x1p:x2p] = (p['crop'][:, :, 0] > 0).astype('uint8') * 255
+        # use original full-size component mask to avoid any spatial shift
+        mask_full = (p['mask_full'] > 0).astype('uint8') * 255
         patch_masks_rgb.append(mask_full)
 
     df = pd.DataFrame(rows)
@@ -266,8 +591,19 @@ def run(args):
         img_rgb = img.copy()
         visualize_overlay(img_rgb, masks_bool, labels, outroot / 'overlay.png')
         print(f"Wrote overlay to {outroot / 'overlay.png'} and patches to {outroot}")
+
+        # also produce a single total colored overlay showing clusters, borders and labels
+        try:
+            parent_classes = [mask_classes[p['parent']] if (p.get('parent') is not None and p['parent'] < len(mask_classes)) else -1 for p in patches]
+            draw_clustered_total_overlay(img_rgb, masks_bool, labels, parent_classes=parent_classes, out_path=outroot / 'overlay_total.jpg', names=getattr(model, 'names', None), alpha=0.6, seed=None)
+            print(f"Wrote total clustered overlay to {outroot / 'overlay_total.jpg'}")
+        except Exception as e:
+            print("Failed to create total clustered overlay:", e)
     except Exception as e:
         print("Failed to create overlay:", e)
+
+    elapsed = time.time() - t_start
+    print(f"Total processing time: {elapsed:.2f} s")
 
     print("Done.")
 
@@ -282,5 +618,17 @@ if __name__ == '__main__':
     parser.add_argument('--imgsz', type=int, default=1280, help='YOLO input image size')
     parser.add_argument('--output-dir', type=str, default='results', help='Results directory')
     parser.add_argument('--force-cpu', action='store_true', help='Force CPU even when CUDA is available')
+
+    # Auto-selection options
+    parser.add_argument('--auto-area', action='store_true', help='Automatically suggest and use area-min based on component area quantile')
+    parser.add_argument('--area-quantile', type=float, default=0.05, help='Quantile used to suggest area-min when --auto-area is used (0-1)')
+    parser.add_argument('--hist-bins', type=int, default=50, help='Number of bins for the area histogram')
+
+    parser.add_argument('--auto-k', action='store_true', help='Automatically choose k with silhouette score')
+    parser.add_argument('--k-max', type=int, default=10, help='Maximum k to consider when using --auto-k')
+
+    parser.add_argument('--stylize', action='store_true', help='Add a stylized bottom banner and title to the detection overlay')
+    parser.add_argument('--title-text', type=str, default=None, help='Custom title text for stylized overlay')
+
     args = parser.parse_args()
     run(args)
