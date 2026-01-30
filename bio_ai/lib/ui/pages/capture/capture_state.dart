@@ -11,6 +11,7 @@ class CaptureScreenStateHolder {
   bool offlineMode = false;
   bool barcodeOpen = false;
   bool barcodeFound = false;
+  bool barcodeScanning = false;
   bool quickSwitchOpen = false;
 
   String mode = 'scan';
@@ -24,15 +25,7 @@ class CaptureScreenStateHolder {
   Timer? searchDebounce;
   bool searching = false;
 
-  final FoodItem barcodeItem = FoodItem(
-    name: 'Blueberry Protein Bar',
-    desc: 'Packaged Snack - 220 kcal',
-    cals: 220,
-    protein: 12,
-    fat: 9,
-    image:
-        'https://images.unsplash.com/photo-1543339318-b43dc53e19e6?auto=format&fit=crop&w=150&q=80',
-  );
+  FoodItem? barcodeItem;
 
   void dispose() {
     barcodeTimer?.cancel();

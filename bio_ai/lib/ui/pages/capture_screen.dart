@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/ui/pages/capture/models/food_item.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/meal_detail_modal.dart';
@@ -25,27 +26,54 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   Future<void> _captureAndUpload() async {
     final cam = ref.read(cameraServiceProvider);
+    final fatSecret = ref.read(fatSecretServiceProvider);
     try {
       if (!cam.isInitialized) await cam.initialize();
       final file = await cam.takePhoto();
 
-      final dio = Dio();
-      final fileName = p.basename(file.path);
-      final formData = FormData.fromMap({
-        'pitch': 0.0,
-        'file': await MultipartFile.fromFile(file.path, filename: fileName),
-      });
-
-      final resp = await dio.post(
-        '$backendBaseUrl/api/vision/upload',
-        data: formData,
-      );
-
-      final uploadedFile = resp.data['file'];
+      // Show processing indicator
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload started: $uploadedFile')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Analyzing image...')));
+      }
+
+      // Upload and recognize using FatSecret API
+      final result = await fatSecret.uploadAndRecognize(file.path);
+
+      if (result['error'] != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Recognition failed: ${result['error']}')),
+          );
+        }
+        return;
+      }
+
+      // Parse recognition results
+      final recognition = result['recognition'];
+      if (recognition != null && recognition['foods'] != null) {
+        final foods = recognition['foods'] as List;
+        if (foods.isNotEmpty) {
+          // Convert FatSecret response to FoodItem and add
+          for (var food in foods.take(3)) {
+            final item = _parseFatSecretFood(food);
+            if (item != null) {
+              _addItem(item);
+            }
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Found ${foods.length} food items!')),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No food detected in image')),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -102,11 +130,41 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     setState(() {
       _s.barcodeOpen = !_s.barcodeOpen;
       _s.barcodeFound = false;
+      _s.barcodeItem = null;
+      _s.barcodeScanning = true;
     });
-    _s.barcodeTimer?.cancel();
-    if (_s.barcodeOpen) {
-      _s.barcodeTimer = Timer(const Duration(milliseconds: 800), () {
-        if (mounted) setState(() => _s.barcodeFound = true);
+  }
+
+  Future<void> _handleBarcodeDetected(BarcodeCapture capture) async {
+    if (_s.barcodeFound || !_s.barcodeOpen) return;
+
+    final barcode = capture.barcodes.firstOrNull;
+    if (barcode == null || barcode.rawValue == null) return;
+
+    setState(() => _s.barcodeScanning = false);
+
+    // Look up barcode via FatSecret API
+    final fatSecret = ref.read(fatSecretServiceProvider);
+    final result = await fatSecret.lookupBarcode(barcode.rawValue!);
+
+    if (result['error'] != null || result['food'] == null) {
+      if (mounted) {
+        setState(() {
+          _s.barcodeFound = false;
+          _s.barcodeScanning = false;
+        });
+        _showToast('Barcode not found in database');
+      }
+      return;
+    }
+
+    // Parse FatSecret food response
+    final foodItem = _parseFatSecretFood(result['food']);
+    if (foodItem != null && mounted) {
+      setState(() {
+        _s.barcodeFound = true;
+        _s.barcodeItem = foodItem;
+        _s.barcodeScanning = false;
       });
     }
   }
@@ -120,6 +178,40 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   void _removeItem(int index) {
     setState(() => _s.items.removeAt(index));
     _showToast('Item removed');
+  }
+
+  FoodItem? _parseFatSecretFood(dynamic food) {
+    try {
+      final name = food['food_name'] ?? food['name'] ?? 'Unknown Food';
+      final description = food['food_description'] ?? food['description'] ?? '';
+
+      // Parse nutrition from description (FatSecret format)
+      double cals = 0, protein = 0, fat = 0;
+      if (description.isNotEmpty) {
+        final calMatch = RegExp(r'(\d+\.?\d*)\s*kcal').firstMatch(description);
+        final proteinMatch = RegExp(
+          r'Protein:\s*(\d+\.?\d*)g',
+        ).firstMatch(description);
+        final fatMatch = RegExp(r'Fat:\s*(\d+\.?\d*)g').firstMatch(description);
+
+        if (calMatch != null) cals = double.tryParse(calMatch.group(1)!) ?? 0;
+        if (proteinMatch != null)
+          protein = double.tryParse(proteinMatch.group(1)!) ?? 0;
+        if (fatMatch != null) fat = double.tryParse(fatMatch.group(1)!) ?? 0;
+      }
+
+      return FoodItem(
+        name: name,
+        desc: description,
+        cals: cals,
+        protein: protein,
+        fat: fat,
+        image: food['food_image'] ?? food['image'],
+      );
+    } catch (e) {
+      print('Error parsing FatSecret food: $e');
+      return null;
+    }
   }
 
   void _filterSearch(String query) {
@@ -143,6 +235,29 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     });
 
     _s.searchDebounce = Timer(const Duration(seconds: 1), () async {
+      // Use FatSecret API for search
+      final fatSecret = ref.read(fatSecretServiceProvider);
+      final result = await fatSecret.searchFood(q);
+
+      if (result['error'] == null && result['foods'] != null) {
+        final foodsData = result['foods'];
+        final foodList = foodsData['food'] as List?;
+        if (foodList != null) {
+          final items = foodList
+              .map((f) => _parseFatSecretFood(f))
+              .whereType<FoodItem>()
+              .toList();
+          if (mounted) {
+            setState(() {
+              _s.results = items;
+              _s.searching = false;
+            });
+          }
+          return;
+        }
+      }
+
+      // Fallback to local search
       final res = await _s.searchService.search(q);
       if (mounted) {
         setState(() {
@@ -199,6 +314,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         offlineMode: _s.offlineMode,
         barcodeOpen: _s.barcodeOpen,
         barcodeFound: _s.barcodeFound,
+        barcodeScanning: _s.barcodeScanning,
         mode: _s.mode,
         portionOptions: _s.portionOptions,
         totalCals: _totalCals,
@@ -210,6 +326,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         onOpenSearch: _openSearch,
         onCloseSearch: _closeSearch,
         onToggleBarcode: _toggleBarcode,
+        onBarcodeDetected: _handleBarcodeDetected,
         onToggleQuickSwitch: _toggleQuickSwitch,
         onNavigateFromQuick: _navigateFromQuick,
         onAddItem: _addItem,

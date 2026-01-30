@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -24,6 +25,7 @@ class CaptureScreenBody extends StatelessWidget {
   final bool offlineMode;
   final bool barcodeOpen;
   final bool barcodeFound;
+  final bool barcodeScanning;
   final String mode;
   final List<double> portionOptions;
   final double totalCals;
@@ -31,11 +33,12 @@ class CaptureScreenBody extends StatelessWidget {
   final double totalFat;
   final TextEditingController controller;
   final bool isSearching;
-  final FoodItem barcodeItem;
+  final FoodItem? barcodeItem;
 
   final VoidCallback onOpenSearch;
   final VoidCallback onCloseSearch;
   final VoidCallback onToggleBarcode;
+  final void Function(BarcodeCapture)? onBarcodeDetected;
   final VoidCallback onToggleQuickSwitch;
   final void Function(Widget) onNavigateFromQuick;
   final void Function(FoodItem) onAddItem;
@@ -60,6 +63,7 @@ class CaptureScreenBody extends StatelessWidget {
     required this.offlineMode,
     required this.barcodeOpen,
     required this.barcodeFound,
+    required this.barcodeScanning,
     required this.mode,
     required this.portionOptions,
     required this.totalCals,
@@ -71,6 +75,7 @@ class CaptureScreenBody extends StatelessWidget {
     required this.onOpenSearch,
     required this.onCloseSearch,
     required this.onToggleBarcode,
+    this.onBarcodeDetected,
     required this.onToggleQuickSwitch,
     required this.onNavigateFromQuick,
     required this.onAddItem,
@@ -193,10 +198,12 @@ class CaptureScreenBody extends StatelessWidget {
         CaptureBarcodeOverlay(
           open: barcodeOpen,
           found: barcodeFound,
+          scanning: barcodeScanning,
           item: barcodeItem,
-          onAdd: () => onAddItem(barcodeItem),
+          onAdd: barcodeItem != null ? () => onAddItem(barcodeItem!) : null,
           onClose: onToggleBarcode,
           onNotFound: () {},
+          onBarcodeDetected: onBarcodeDetected,
         ),
         CaptureQuickSwitch(
           open: false,
