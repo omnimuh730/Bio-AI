@@ -45,7 +45,6 @@ final cameraServiceProvider = Provider((ref) => CameraService());
 final cameraInitProvider = FutureProvider<void>(
   (ref) => ref.read(cameraServiceProvider).initialize(),
 );
-
 // Example stream provider for device pitch (from accelerometer)
 final pitchProvider = StreamProvider<double>(
   (ref) => ref.read(sensorsServiceProvider).pitchDegrees,

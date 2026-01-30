@@ -37,7 +37,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       });
 
       final resp = await dio.post(
-        '${backendBaseUrl}/api/vision/upload',
+        '$backendBaseUrl/api/vision/upload',
         data: formData,
       );
 
