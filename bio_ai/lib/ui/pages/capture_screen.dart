@@ -154,8 +154,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   Future<void> _handleBarcodeDetected(BarcodeCapture capture) async {
     if (_s.barcodeFound ||
         !_s.barcodeOpen ||
-        _s.barcodePendingConfirmation != null)
+        _s.barcodePendingConfirmation != null) {
       return;
+    }
 
     final barcode = capture.barcodes.firstOrNull;
     if (barcode == null || barcode.rawValue == null) return;
@@ -175,11 +176,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     final fatSecret = ref.read(fatSecretServiceProvider);
     final result = await fatSecret.lookupBarcode(barcodeValue);
 
-    print('🔍 Barcode lookup result: $result');
-
     // Check for error response
     if (result['error'] != null) {
-      print('❌ Barcode lookup error: ${result['error']}');
       if (mounted) {
         setState(() {
           _s.barcodeFound = false;
@@ -196,7 +194,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     // Structure: {"food_id": {...}, "food": {...}}
     final foodData = result['food'];
     if (foodData == null) {
-      print('❌ No food data in response');
       if (mounted) {
         setState(() {
           _s.barcodeFound = false;
@@ -211,7 +208,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
     // Parse FatSecret food response
     final foodItem = _parseFatSecretFood(foodData);
-    print('📦 Parsed food item: ${foodItem?.name}');
 
     if (foodItem != null && mounted) {
       setState(() {
@@ -222,7 +218,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         _s.barcodePendingConfirmation = null;
       });
     } else {
-      print('❌ Failed to parse food item');
       if (mounted) {
         setState(() {
           _s.barcodeFound = false;
@@ -276,9 +271,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
           protein =
               double.tryParse(firstServing['protein']?.toString() ?? '0') ?? 0;
           fat = double.tryParse(firstServing['fat']?.toString() ?? '0') ?? 0;
-          print(
-            '✅ Parsed nutrition from servings: $cals cal, $protein g protein, $fat g fat',
-          );
         }
       }
 
@@ -291,12 +283,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         final fatMatch = RegExp(r'Fat:\s*(\d+\.?\d*)g').firstMatch(description);
 
         if (calMatch != null) cals = double.tryParse(calMatch.group(1)!) ?? 0;
-        if (proteinMatch != null)
+        if (proteinMatch != null) {
           protein = double.tryParse(proteinMatch.group(1)!) ?? 0;
-        if (fatMatch != null) fat = double.tryParse(fatMatch.group(1)!) ?? 0;
-        print(
-          '✅ Parsed nutrition from description: $cals cal, $protein g protein, $fat g fat',
-        );
+        }
+        if (fatMatch != null) {
+          fat = double.tryParse(fatMatch.group(1)!) ?? 0;
+        }
       }
 
       return FoodItem(
@@ -309,8 +301,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             food['food_image']?.toString() ?? food['image']?.toString() ?? '',
       );
     } catch (e) {
-      print('❌ Error parsing FatSecret food: $e');
-      print('   Food data: $food');
       return null;
     }
   }

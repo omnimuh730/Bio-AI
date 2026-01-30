@@ -28,7 +28,6 @@ class FatSecretService {
       );
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      print('FatSecret search error: $e');
       return {'error': e.toString()};
     }
   }
@@ -45,7 +44,6 @@ class FatSecretService {
       );
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      print('FatSecret barcode lookup error: $e');
       return {'error': e.toString()};
     }
   }
@@ -63,7 +61,6 @@ class FatSecretService {
       final response = await _dio.post('/recognize', data: formData);
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      print('FatSecret image recognition error: $e');
       return {'error': e.toString()};
     }
   }
@@ -81,7 +78,6 @@ class FatSecretService {
       final response = await _dio.post('/upload', data: formData);
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      print('FatSecret upload error: $e');
       return {'error': e.toString()};
     }
   }
@@ -95,7 +91,6 @@ class FatSecretService {
       );
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      print('FatSecret autocomplete error: $e');
       return {'error': e.toString()};
     }
   }
@@ -106,7 +101,6 @@ class FatSecretService {
       final response = await _dio.get('/health');
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      print('FatSecret health check error: $e');
       return {'ok': false, 'error': e.toString()};
     }
   }

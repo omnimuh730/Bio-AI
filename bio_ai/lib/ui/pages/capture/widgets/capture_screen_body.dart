@@ -246,7 +246,7 @@ class CaptureScreenBody extends StatelessWidget {
                         size: 64,
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'Code Detected',
                         style: TextStyle(
                           color: Colors.white,
@@ -266,7 +266,7 @@ class CaptureScreenBody extends StatelessWidget {
                         ),
                         child: Text(
                           barcodePendingConfirmation!,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontFamily: 'monospace',
@@ -275,7 +275,7 @@ class CaptureScreenBody extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text(
+                      const Text(
                         'Look up this product?',
                         style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),

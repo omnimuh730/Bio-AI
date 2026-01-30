@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
@@ -280,61 +281,7 @@ class LiquidGlassNutritionCard extends StatelessWidget {
 
                     _buildGlassContainer(
                       child: Column(
-                        children: [
-                          _buildNutrientRow(
-                            'Saturated Fat',
-                            primaryServing['saturated_fat'],
-                            'g',
-                          ),
-                          _buildNutrientRow(
-                            'Polyunsaturated Fat',
-                            primaryServing['polyunsaturated_fat'],
-                            'g',
-                          ),
-                          _buildNutrientRow(
-                            'Monounsaturated Fat',
-                            primaryServing['monounsaturated_fat'],
-                            'g',
-                          ),
-                          _buildNutrientRow(
-                            'Trans Fat',
-                            primaryServing['trans_fat'],
-                            'g',
-                          ),
-                          const Divider(color: Colors.white24, height: 24),
-                          _buildNutrientRow(
-                            'Cholesterol',
-                            primaryServing['cholesterol'],
-                            'mg',
-                          ),
-                          _buildNutrientRow(
-                            'Sodium',
-                            primaryServing['sodium'],
-                            'mg',
-                          ),
-                          _buildNutrientRow(
-                            'Potassium',
-                            primaryServing['potassium'],
-                            'mg',
-                          ),
-                          const Divider(color: Colors.white24, height: 24),
-                          _buildNutrientRow(
-                            'Fiber',
-                            primaryServing['fiber'],
-                            'g',
-                          ),
-                          _buildNutrientRow(
-                            'Sugar',
-                            primaryServing['sugar'],
-                            'g',
-                          ),
-                          if (primaryServing['calcium'] != null)
-                            _buildNutrientRow(
-                              'Calcium',
-                              primaryServing['calcium'],
-                              'mg',
-                            ),
-                        ],
+                        children: _buildAllNutrients(context, primaryServing),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -476,7 +423,7 @@ class LiquidGlassNutritionCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${value}$unit',
+            '$value$unit',
             style: AppTextStyles.label.copyWith(
               color: Colors.white,
               fontSize: 14,
@@ -486,5 +433,59 @@ class LiquidGlassNutritionCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildAllNutrients(
+    BuildContext context,
+    Map<String, dynamic> serving,
+  ) {
+    final List<Widget> widgets = [];
+
+    // Keys already shown in main UI
+    final excludeKeys = {
+      'calories',
+      'protein',
+      'carbohydrate',
+      'fat',
+      'serving_description',
+      'serving_id',
+      'serving_url',
+      'number_of_units',
+    };
+
+    // Iterate over every key in the serving and show it dynamically
+    serving.forEach((key, value) {
+      if (excludeKeys.contains(key)) return;
+
+      final label = key
+          .split('_')
+          .map(
+            (w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
+          )
+          .join(' ');
+
+      String displayValue;
+      if (value == null) {
+        displayValue = '';
+      } else if (value is List) {
+        // Concise summary for lists
+        displayValue = 'List (${value.length})';
+      } else if (value is Map) {
+        displayValue = 'Object';
+      } else {
+        displayValue = value.toString();
+      }
+
+      widgets.add(_buildNutrientRow(label, displayValue, ''));
+    });
+
+    return widgets.isEmpty
+        ? [
+            const Text(
+              'No detailed nutrition data available',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ]
+        : widgets;
   }
 }
