@@ -6,7 +6,7 @@ import time
 import io
 from PIL import Image # Requires: pip install Pillow
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # Requires: pip install python-dotenv
 
 
 app = Flask(__name__)
