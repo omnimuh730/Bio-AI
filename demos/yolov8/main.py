@@ -242,10 +242,14 @@ def draw_clustered_total_overlay(orig_img, masks, labels, parent_classes=None, o
         if parent_classes is not None:
             pc = parent_classes[i]
             if pc != -1 and names is not None:
-                try: 
-                    cls_name = names[pc] 
+                try:
+                    if isinstance(names, dict):
+                        cls_name = names.get(pc, f"class_{pc}")
+                    else:
+                        cls_name = names[pc]
                     name = f"{cls_name} (c{lbl})"
-                except: pass
+                except Exception:
+                    pass
         
         label_text = f"{name} {area}px"
 
@@ -348,6 +352,33 @@ def run(args):
     masks_bool = detections.mask
     boxes = detections.xyxy
     class_ids = detections.class_id
+
+    def resolve_class_names(model_obj, dets):
+        # Prefer explicit class-name sources if available
+        for attr in ("class_names", "classes", "names"):
+            if hasattr(model_obj, attr):
+                names = getattr(model_obj, attr)
+                if isinstance(names, (list, tuple, dict)) and len(names) > 0:
+                    return names
+        if hasattr(dets, "class_names"):
+            names = getattr(dets, "class_names")
+            if isinstance(names, (list, tuple, dict)) and len(names) > 0:
+                return names
+        if hasattr(dets, "metadata") and isinstance(dets.metadata, dict):
+            names = dets.metadata.get("class_names")
+            if isinstance(names, (list, tuple, dict)) and len(names) > 0:
+                return names
+        if hasattr(dets, "data") and isinstance(dets.data, dict):
+            names = dets.data.get("class_names")
+            if isinstance(names, (list, tuple, dict)) and len(names) > 0:
+                return names
+        return None
+
+    class_names = resolve_class_names(model, detections)
+    if class_names is not None:
+        print("Using model class names for overlay labels.")
+    else:
+        print("No class-name mapping available; overlay will use cluster IDs only.")
     
     # If no masks found (model run in detection-only mode?), fallback to box-masks
     if masks_bool is None:
@@ -480,13 +511,26 @@ def run(args):
         cv2.imwrite(str(fname), out_crop)
         
         x1, y1, x2, y2 = p['bbox']
+        parent_class_id = int(class_ids[p['parent']]) if p['parent'] < len(class_ids) else -1
+        if class_names is None or parent_class_id == -1:
+            parent_class_name = None
+        else:
+            try:
+                if isinstance(class_names, dict):
+                    parent_class_name = class_names.get(parent_class_id, f"class_{parent_class_id}")
+                else:
+                    parent_class_name = class_names[parent_class_id]
+            except Exception:
+                parent_class_name = None
         rows.append({
             'patch_id': idx, 
             'file': str(fname.name), 
             'cluster': int(lbl), 
             'area': int(p['area']), 
             'bbox': f"{x1},{y1},{x2},{y2}", 
-            'parent_mask': int(p['parent'])
+            'parent_mask': int(p['parent']),
+            'parent_class_id': parent_class_id,
+            'parent_class_name': parent_class_name
         })
         mask_full = (p['mask_full'] > 0).astype('uint8') * 255
         patch_masks_rgb.append(mask_full)
@@ -516,7 +560,7 @@ def run(args):
                 img_rgb, masks_bool_list, labels, 
                 parent_classes=parent_classes, 
                 out_path=outroot / 'overlay_total.jpg', 
-                names=None, # pass dict if you have custom classes
+                names=class_names, # pass dict if you have custom classes
                 alpha=0.6
             )
             print(f"Wrote total clustered overlay to {outroot / 'overlay_total.jpg'}")
