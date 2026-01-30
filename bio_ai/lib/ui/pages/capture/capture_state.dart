@@ -27,6 +27,7 @@ class CaptureScreenStateHolder {
 
   FoodItem? barcodeItem;
   Map<String, dynamic>? barcodeFullData; // Store complete FatSecret response
+  String? barcodePendingConfirmation; // Barcode waiting for user confirmation
 
   void dispose() {
     barcodeTimer?.cancel();

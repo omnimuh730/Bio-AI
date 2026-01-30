@@ -48,6 +48,12 @@ class _CaptureBarcodeOverlayState extends State<CaptureBarcodeOverlay> {
       _initializeScanner();
     } else if (!widget.open && oldWidget.open) {
       _disposeScanner();
+    } else if (widget.open && widget.scanning && !oldWidget.scanning) {
+      // Reinitialize scanner when returning to scanning mode
+      _initializeScanner();
+    } else if (widget.open && !widget.scanning && oldWidget.scanning) {
+      // Dispose scanner when leaving scanning mode
+      _disposeScanner();
     }
   }
 

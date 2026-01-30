@@ -87,17 +87,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   @override
   void initState() {
     super.initState();
-    // Seed items & results from local catalog in the service
-    if (_s.searchService.catalog.isNotEmpty) {
-      final seed = _s.searchService.catalog.firstWhere(
-        (item) => item.name == 'Ribeye Steak',
-        orElse: () => _s.searchService.catalog.first,
-      );
-      _s.items.add(seed);
-      _s.results = List<FoodItem>.from(_s.searchService.catalog);
-    } else {
-      _s.results = [];
-    }
+    // Initialize with empty items list
+    _s.results = _s.searchService.catalog.isNotEmpty
+        ? List<FoodItem>.from(_s.searchService.catalog)
+        : [];
   }
 
   @override
@@ -132,21 +125,55 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       _s.barcodeFound = false;
       _s.barcodeItem = null;
       _s.barcodeFullData = null; // Clear full data
+      _s.barcodePendingConfirmation = null;
       _s.barcodeScanning = true;
     });
   }
 
+  void _closeBarcodeResult() {
+    setState(() {
+      _s.barcodeFound = false;
+      _s.barcodeItem = null;
+      _s.barcodeFullData = null;
+      _s.barcodeScanning = true; // Re-enable scanning
+    });
+  }
+
+  void _addBarcodeItemAndClose(FoodItem item) {
+    _addItem(item);
+    // Close barcode mode completely after adding
+    setState(() {
+      _s.barcodeOpen = false;
+      _s.barcodeFound = false;
+      _s.barcodeItem = null;
+      _s.barcodeFullData = null;
+      _s.barcodeScanning = false;
+    });
+  }
+
   Future<void> _handleBarcodeDetected(BarcodeCapture capture) async {
-    if (_s.barcodeFound || !_s.barcodeOpen) return;
+    if (_s.barcodeFound ||
+        !_s.barcodeOpen ||
+        _s.barcodePendingConfirmation != null)
+      return;
 
     final barcode = capture.barcodes.firstOrNull;
     if (barcode == null || barcode.rawValue == null) return;
 
-    setState(() => _s.barcodeScanning = false);
+    // Stop scanning and show confirmation
+    setState(() {
+      _s.barcodeScanning = false;
+      _s.barcodePendingConfirmation = barcode.rawValue!;
+    });
+  }
+
+  Future<void> _confirmBarcodeLookup() async {
+    final barcodeValue = _s.barcodePendingConfirmation;
+    if (barcodeValue == null) return;
 
     // Look up barcode via FatSecret API
     final fatSecret = ref.read(fatSecretServiceProvider);
-    final result = await fatSecret.lookupBarcode(barcode.rawValue!);
+    final result = await fatSecret.lookupBarcode(barcodeValue);
 
     print('🔍 Barcode lookup result: $result');
 
@@ -157,6 +184,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         setState(() {
           _s.barcodeFound = false;
           _s.barcodeScanning = false;
+          _s.barcodePendingConfirmation = null;
           _s.barcodeOpen = false;
         });
         _showToast('Barcode not found in database');
@@ -173,6 +201,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         setState(() {
           _s.barcodeFound = false;
           _s.barcodeScanning = false;
+          _s.barcodePendingConfirmation = null;
           _s.barcodeOpen = false;
         });
         _showToast('Barcode not found in database');
@@ -190,6 +219,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         _s.barcodeItem = foodItem;
         _s.barcodeFullData = foodData; // Store complete JSON data
         _s.barcodeScanning = false;
+        _s.barcodePendingConfirmation = null;
       });
     } else {
       print('❌ Failed to parse food item');
@@ -197,11 +227,19 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         setState(() {
           _s.barcodeFound = false;
           _s.barcodeScanning = false;
+          _s.barcodePendingConfirmation = null;
           _s.barcodeOpen = false;
         });
         _showToast('Could not parse food data');
       }
     }
+  }
+
+  void _cancelBarcodeLookup() {
+    setState(() {
+      _s.barcodePendingConfirmation = null;
+      _s.barcodeScanning = true; // Resume scanning
+    });
   }
 
   void _addItem(FoodItem item) {
@@ -378,6 +416,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         barcodeOpen: _s.barcodeOpen,
         barcodeFound: _s.barcodeFound,
         barcodeScanning: _s.barcodeScanning,
+        barcodePendingConfirmation: _s.barcodePendingConfirmation,
         barcodeFullData: _s.barcodeFullData,
         mode: _s.mode,
         portionOptions: _s.portionOptions,
@@ -390,6 +429,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         onOpenSearch: _openSearch,
         onCloseSearch: _closeSearch,
         onToggleBarcode: _toggleBarcode,
+        onCloseBarcodeResult: _closeBarcodeResult,
+        onAddBarcodeItem: _addBarcodeItemAndClose,
+        onConfirmBarcode: _confirmBarcodeLookup,
+        onCancelBarcode: _cancelBarcodeLookup,
         onBarcodeDetected: _handleBarcodeDetected,
         onToggleQuickSwitch: _toggleQuickSwitch,
         onNavigateFromQuick: _navigateFromQuick,
