@@ -2,3 +2,8 @@
 app/__pycache__/
 app/routers/__pycache__/
 bio_ai_server.db
+models/
+uploads/
+Extracted_ingredients/
+.env/
+*.log

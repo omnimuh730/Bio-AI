@@ -1,0 +1,10 @@
+# ML & vision dependencies for demos/local-detection
+opencv-python
+pillow
+ultralytics
+transformers
+qwen-vl-utils
+accelerate
+
+# torch is installed separately because platform-specific wheels are recommended
+# Use the helper script or the start.bat to install the appropriate torch wheel (CPU or CUDA).

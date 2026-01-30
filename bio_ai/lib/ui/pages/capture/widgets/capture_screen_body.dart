@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:camera/camera.dart';
 import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -47,6 +48,9 @@ class CaptureScreenBody extends StatelessWidget {
   final void Function(String) onQueryChanged;
   final void Function(FoodItem) onTapItem;
 
+  /// Optional callback invoked when shutter is pressed in scan mode.
+  final Future<void> Function()? onCapturePhoto;
+
   const CaptureScreenBody({
     super.key,
     required this.items,
@@ -78,21 +82,47 @@ class CaptureScreenBody extends StatelessWidget {
     required this.onAddAlcohol,
     required this.onQueryChanged,
     required this.onTapItem,
+    this.onCapturePhoto,
   });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(
-                'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+        Consumer(
+          builder: (context, ref, child) {
+            final camInit = ref.watch(cameraInitProvider);
+            return camInit.when(
+              data: (_) {
+                final cam = ref.read(cameraServiceProvider);
+                if (cam.controller != null && cam.isInitialized) {
+                  return CameraPreview(cam.controller!);
+                }
+                // fallback to static background until controller is ready
+                return Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+                    ),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-              fit: BoxFit.cover,
-            ),
-          ),
+            );
+          },
         ),
         CaptureTopOverlay(
           onClose: () => Navigator.pushReplacement(
@@ -122,6 +152,8 @@ class CaptureScreenBody extends StatelessWidget {
               onToggleBarcode();
               return;
             }
+            // default: capture photo
+            if (onCapturePhoto != null) onCapturePhoto!();
           },
         ),
         if (sheetOpen && !searchOpen)

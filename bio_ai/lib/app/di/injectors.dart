@@ -41,6 +41,10 @@ final visionRepositoryProvider = Provider<VisionRepositoryImpl>(
 );
 final cameraServiceProvider = Provider((ref) => CameraService());
 
+// Future provider to initialize the camera once (used by UI)
+final cameraInitProvider = FutureProvider<void>(
+  (ref) => ref.read(cameraServiceProvider).initialize(),
+);
 // Example stream provider for device pitch (from accelerometer)
 final pitchProvider = StreamProvider<double>(
   (ref) => ref.read(sensorsServiceProvider).pitchDegrees,
