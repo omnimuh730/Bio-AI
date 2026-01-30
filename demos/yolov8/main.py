@@ -31,6 +31,7 @@ from torchvision import models, transforms
 
 try:
 	from ultralytics import YOLO
+	from ultralytics.utils.ops import scale_masks
 except Exception as e:
 	print("Error importing ultralytics YOLO:", e)
 	print("Please install with: pip install ultralytics")
@@ -146,108 +147,104 @@ def visualize_overlay(orig_img, patch_masks, clusters, out_path):
 	cv2.imwrite(str(out_path), cv2.cvtColor(blend, cv2.COLOR_RGB2BGR))
 
 
-def draw_clustered_total_overlay(orig_img, masks, labels, parent_classes=None, out_path=None, names=None, alpha=0.6, seed=None):
-	"""Create a single image where each patch/component is filled with a random color by cluster,
-	draws a contour border for each component using a darker color, and annotates each component
-	with the item name (if available via `names` and `parent_classes`) and a numeric value (area in pixels).
-
-	- masks: list of 2D uint8 masks (0/1 or 0/255) aligned with labels
-	- labels: iterable of cluster ids
-	- parent_classes: list of parent detection class ids (or None)
-	- names: mapping/list for class id -> name
+def draw_clustered_total_overlay(orig_img, masks, labels, parent_classes=None, out_path=None, names=None, alpha=0.5, seed=None):
+	"""
+	Improved visualization:
+	1. Colors patches by Cluster ID (not random per patch).
+	2. Only draws text labels if the patch area is significant.
 	"""
 	img = orig_img.copy()
 	h, w = img.shape[:2]
-	# font scale (adaptive to image size) for label legibility
-	font_scale = max(0.35, min(0.9, h / 1200.0))
-	# deterministic or random seeding
-	if seed is None:
-		seed = int(time.time() % 1_000_000)
-	rng = np.random.RandomState(seed)
+	
+	# Generate a fixed palette for clusters (up to 30 distinct colors)
+	np.random.seed(42)
+	cluster_palette = [tuple(int(c) for c in np.random.randint(50, 255, size=3)) for _ in range(max(labels) + 1)]
 
-	# generate distinct colors per component (avoid too-dark / too-light)
-	colors = [tuple(int(c) for c in rng.randint(30, 230, size=3)) for _ in range(len(masks))]
-
-	# fill colored overlay according to cluster label
+	# 1. Draw the color fills first
 	overlay = img.copy()
 	for i, (m, lbl) in enumerate(zip(masks, labels)):
+		if m.sum() == 0: continue
+		
+		color = cluster_palette[lbl] # Use cluster color
 		mask_bool = (m > 0)
-		if not mask_bool.any():
-			continue
-		color = np.array(colors[i], dtype=np.uint8)
-		overlay = np.where(np.stack([mask_bool]*3, axis=-1), (overlay * (1 - alpha) + color * alpha).astype(np.uint8), overlay)
+		
+		# Apply color overlay
+		overlay = np.where(
+			np.stack([mask_bool] * 3, axis=-1),
+			(overlay * (1 - alpha) + np.array(color) * alpha).astype(np.uint8),
+			overlay
+		)
+	
+	# Blend overlay back onto base image
+	canvas = overlay
 
-	# draw contours and labels
-	canvas = overlay.copy()
+	# 2. Draw contours and Labels (Filtered)
+	# Only label areas larger than 0.5% of the total image pixels to reduce clutter
+	min_label_area = (h * w) * 0.005  
+
 	for i, (m, lbl) in enumerate(zip(masks, labels)):
-		mask_u8 = (m > 0).astype('uint8') * 255
-		if mask_u8.sum() == 0:
-			continue
-		contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-		border_color = tuple(max(0, c - 40) for c in colors[i])
-		cv2.drawContours(canvas, contours, -1, border_color, thickness=2)
-
-		# compute label placement using largest contour bounding box (more stable than centroid)
-		if contours:
-			largest = max(contours, key=lambda c: cv2.contourArea(c))
-			rx, ry, rw, rh = cv2.boundingRect(largest)
-			# place label near the top-left inside bounding box with margin
-			cx = rx + 4
-			cy = ry + int(font_scale * 16) + 4
-		else:
-			M = cv2.moments(mask_u8)
-			if M['m00'] != 0:
-				cx = int(M['m10'] / M['m00'])
-				cy = int(M['m01'] / M['m00'])
-			else:
-				ys, xs = np.where(mask_u8 > 0)
-				if len(xs) == 0:
-					cx, cy = 8, 8
-				else:
-					cx = int(xs.mean())
-					cy = int(ys.mean())
-
-		# build label text
 		area = int((m > 0).sum())
-		name = None
+		if area == 0: continue
+
+		# Use cluster color for border
+		color = cluster_palette[lbl]
+		border_color = tuple(max(0, c - 60) for c in color) # Darker version of cluster color
+
+		# Find contours
+		contours, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+		cv2.drawContours(canvas, contours, -1, border_color, thickness=1)
+
+		# SKIP LABELING if too small
+		if area < min_label_area:
+			continue
+
+		# --- Label Logic ---
+		# Determine Name
+		name = f"Cluster {lbl}"
 		if parent_classes is not None:
-			try:
-				pc = parent_classes[i]
-				if pc is not None and names is not None:
-					try:
-						name = names[pc]
-					except Exception:
-						try:
-							name = names.get(pc, None)
-						except Exception:
-							name = None
-			except Exception:
-				name = None
-		if name is None:
-			label = f"c{int(lbl)} {area}"
-		else:
-			label = f"{name} {area}"
+			pc = parent_classes[i]
+			if pc != -1 and names is not None:
+				# Try to get class name
+				try: 
+					cls_name = names[pc] 
+					name = f"{cls_name} (c{lbl})"
+				except: pass
+		
+		label_text = f"{name} {area}px"
 
-		# draw label background and text
-		((tw, th), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 2)
-		# ensure label box is inside image; prefer top-left anchored placement
-		x0 = max(0, cx)
-		y0 = max(0, cy - th - 2)
-		x1 = min(w, x0 + tw + 8)
-		y1 = min(h, y0 + th + 8)
-		cv2.rectangle(canvas, (x0, y0), (x1, y1), border_color, -1)
-		cv2.putText(canvas, label, (x0 + 4, y1 - 4), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 2, cv2.LINE_AA)
+		# Find best place for label
+		if contours:
+			largest = max(contours, key=cv2.contourArea)
+			x, y, rw, rh = cv2.boundingRect(largest)
+			
+			# adaptive font scale based on patch width, not image width
+			font_scale = max(0.4, min(0.8, rw / 200.0))
+			
+			((tw, th), _) = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 1)
+			
+			# Center label in bbox
+			cx = x + (rw // 2) - (tw // 2)
+			cy = y + (rh // 2) + (th // 2)
+			
+			# Clamp to image
+			cx = max(0, min(w - tw, cx))
+			cy = max(th, min(h, cy))
 
-	# write result (ensure BGR for cv2)
+			# Draw label background
+			cv2.rectangle(canvas, (cx - 2, cy - th - 4), (cx + tw + 2, cy + 4), border_color, -1)
+			cv2.putText(canvas, label_text, (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1, cv2.LINE_AA)
+
 	if out_path is not None:
 		cv2.imwrite(str(out_path), cv2.cvtColor(canvas, cv2.COLOR_RGB2BGR))
+	
 	return canvas
 
 
-def draw_instance_overlay(res, orig_img, out_path, names=None, stylize=False, title_text=None):
+def draw_instance_overlay(res, orig_img, out_path, masks=None, names=None, stylize=False, title_text=None):
 	"""Draw instance masks, bounding boxes, and labels from a YOLOv8 result.
 	- res: a single result object from ultralytics (res = results[0])
 	- orig_img: RGB image np.ndarray
+	- masks: Optional list of binary masks (scaled to orig_img). If None, tries to extract from res (may fail if not scaled).
 	- names: list or dict mapping class_id->name (model.names)
 	- stylize: if True, add a red bottom banner with title text
 	"""
@@ -257,20 +254,21 @@ def draw_instance_overlay(res, orig_img, out_path, names=None, stylize=False, ti
 	canvas = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 	cmap = plt.get_cmap('tab20')
 
-	# extract masks if available
-	masks = []
-	if hasattr(res, 'masks') and res.masks is not None:
-		if hasattr(res.masks, 'data'):
-			md = res.masks.data.cpu().numpy()
-			for i in range(md.shape[0]):
-				masks.append((md[i] > 0.5).astype('uint8'))
-		else:
-			try:
-				md = np.array(res.masks)
-				for m in md:
-					masks.append((m > 0.5).astype('uint8'))
-			except Exception:
-				masks = []
+	# extract masks if NOT provided
+	if masks is None:
+		masks = []
+		if hasattr(res, 'masks') and res.masks is not None:
+			if hasattr(res.masks, 'data'):
+				md = res.masks.data.cpu().numpy()
+				for i in range(md.shape[0]):
+					masks.append((md[i] > 0.5).astype('uint8'))
+			else:
+				try:
+					md = np.array(res.masks)
+					for m in md:
+						masks.append((m > 0.5).astype('uint8'))
+				except Exception:
+					masks = []
 
 	# boxes and confidences
 	boxes = []
@@ -369,7 +367,6 @@ def draw_instance_overlay(res, orig_img, out_path, names=None, stylize=False, ti
 	cv2.imwrite(str(out_path), canvas)
 
 
-
 def run(args):
 	img_path = Path(args.image)
 	assert img_path.exists(), f"Image not found: {img_path}"
@@ -392,20 +389,24 @@ def run(args):
 		return
 	res = results[0]
 
-	# write a detection overlay image (masks + boxes + labels)
-	try:
-		draw_instance_overlay(res, img, outroot / 'detection_overlay.png', names=getattr(model, 'names', None), stylize=args.stylize, title_text=args.title_text)
-		print(f"Wrote detection overlay to {outroot / 'detection_overlay.png'}")
-	except Exception as e:
-		print("Failed to draw detection overlay:", e)
-
-	# Get masks
+	# --- 1. Extract and Scale Masks Correctly ---
 	masks = []
 	if hasattr(res, 'masks') and res.masks is not None:
-		# ultralytics Mask type may have .data or .masks
 		if hasattr(res.masks, 'data'):
-			md = res.masks.data  # tensor (n, h, w)
-			md = md.cpu().numpy()
+			md_tensor = res.masks.data
+			
+			# FIX: scale_masks expects (N, 1, H, W) or (N, H, W) depending on version.
+			# If we get (N, H, W), we unsqueeze to (N, 1, H, W) to be safe for unpacking.
+			if md_tensor.ndim == 3:
+				md_tensor = md_tensor.unsqueeze(1) # (N, 1, H, W)
+
+			# Scale masks from inference size (padded) back to original image size
+			md_tensor = scale_masks(md_tensor, res.orig_shape)
+			
+			# Squeeze back to (N, H, W)
+			md_tensor = md_tensor.squeeze(1)
+			
+			md = md_tensor.cpu().numpy()
 			for i in range(md.shape[0]):
 				masks.append((md[i] > 0.5).astype('uint8'))
 		elif isinstance(res.masks, (list, tuple, np.ndarray)):
@@ -418,7 +419,8 @@ def run(args):
 					masks.append((m > 0.5).astype('uint8'))
 			except Exception:
 				print("Could not parse masks from result; falling back to boxes.")
-	# fallback: use boxes
+
+	# fallback: use boxes if no masks found
 	if len(masks) == 0 and hasattr(res, 'boxes') and res.boxes is not None:
 		print("No masks found, using bounding boxes as coarse masks.")
 		for box in res.boxes.data.cpu().numpy():
@@ -429,6 +431,19 @@ def run(args):
 			masks.append(mask)
 
 	print(f"Found {len(masks)} top-level masks / boxes")
+
+	# --- 2. Draw Detection Overlay (using Scaled Masks) ---
+	try:
+		draw_instance_overlay(res, img, outroot / 'detection_overlay.png', 
+							  masks=masks,  # Pass the scaled masks here
+							  names=getattr(model, 'names', None), 
+							  stylize=args.stylize, 
+							  title_text=args.title_text)
+		print(f"Wrote detection overlay to {outroot / 'detection_overlay.png'}")
+	except Exception as e:
+		print("Failed to draw detection overlay:", e)
+		import traceback
+		traceback.print_exc()
 
 	# Attempt to associate each top-level mask with a detection class id (if available)
 	mask_classes = [-1] * len(masks)
@@ -462,7 +477,7 @@ def run(args):
 	all_comps = []
 	for mi, m in enumerate(masks):
 		comps = masks_to_components(m.astype('uint8'), area_min=0)
-		print(f"Mask {mi}: {len(comps)} components (no area filter)")
+		# print(f"Mask {mi}: {len(comps)} components (no area filter)")
 		for c in comps:
 			c['parent_mask_idx'] = mi
 			all_comps.append(c)
@@ -599,6 +614,8 @@ def run(args):
 			print(f"Wrote total clustered overlay to {outroot / 'overlay_total.jpg'}")
 		except Exception as e:
 			print("Failed to create total clustered overlay:", e)
+			import traceback
+			traceback.print_exc()
 	except Exception as e:
 		print("Failed to create overlay:", e)
 
