@@ -123,9 +123,9 @@ class _CaptureBarcodeOverlayState extends State<CaptureBarcodeOverlay> {
           const SizedBox(height: 16),
           Text(
             widget.found
-                ? 'Barcode detected'
+                ? 'Code detected'
                 : widget.scanning
-                ? 'Scanning barcode...'
+                ? 'Scan barcode or QR code...'
                 : 'Looking up...',
             style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
           ),

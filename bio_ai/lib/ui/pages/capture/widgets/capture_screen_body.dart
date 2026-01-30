@@ -208,7 +208,7 @@ class CaptureScreenBody extends StatelessWidget {
           onTapItem: onTapItem,
           onCreateCustom: onCreateCustom,
         ),
-        // Barcode scanning overlay (shows when scanning)
+        // Barcode/QR code scanning overlay (shows when scanning)
         if (!barcodeFound && barcodePendingConfirmation == null)
           CaptureBarcodeOverlay(
             open: barcodeOpen,
@@ -220,7 +220,7 @@ class CaptureScreenBody extends StatelessWidget {
             onNotFound: () {},
             onBarcodeDetected: onBarcodeDetected,
           ),
-        // Barcode confirmation dialog
+        // Barcode/QR code confirmation dialog
         if (barcodePendingConfirmation != null)
           Positioned.fill(
             child: Container(
@@ -247,7 +247,7 @@ class CaptureScreenBody extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Barcode Detected',
+                        'Code Detected',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,

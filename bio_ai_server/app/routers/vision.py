@@ -68,8 +68,15 @@ def fatsecret_request(method: str, params: dict):
     # Remove empty params
     final_params = {k: v for k, v in final_params.items() if v is not None and v != ""}
 
+    print(f"📡 FatSecret API Request:")
+    print(f"   - URL: {FATSECRET_BASE_URL}")
+    print(f"   - Method: {method}")
+    print(f"   - Params: {final_params}")
+
     try:
         res = requests.get(FATSECRET_BASE_URL, headers=headers, params=final_params)
+        print(f"   - Response Status: {res.status_code}")
+        print(f"   - Response URL: {res.url}")
         if res.status_code != 200:
             return {"error": f"API Error {res.status_code}", "details": res.text}
         return res.json()
@@ -168,6 +175,27 @@ async def lookup_barcode(request: BarcodeRequest):
         conversion_applied = True
         print(f"   - Original: {original_code!r}")
         print(f"   - Converted: {code!r} (experimental)")
+    elif len(code) > 13:
+        # Handle 14+ digit barcodes (strip leading zeros to get to 13 or 12 digits)
+        print(f"   - Format detected: {len(code)}-digit code (longer than standard)")
+        print(f"   - Strategy: Strip leading zeros to reach EAN-13 (13) or UPC-A (12)")
+        
+        # Try to strip leading zeros to get to 13 digits
+        stripped_code = code.lstrip('0')
+        if len(stripped_code) <= 13:
+            # Pad back to exactly 13 digits if needed
+            code = stripped_code.zfill(13)
+            conversion_applied = True
+            print(f"   - Stripped leading zeros")
+            print(f"   - Original: {original_code!r}")
+            print(f"   - Converted to EAN-13: {code!r}")
+        else:
+            # If still longer than 13, try to take rightmost 13 digits
+            code = code[-13:]
+            conversion_applied = True
+            print(f"   - Taking rightmost 13 digits")
+            print(f"   - Original: {original_code!r}")
+            print(f"   - Converted: {code!r}")
     else:
         print(f"   - Format: Unknown ({len(code)} digits)")
         print(f"   - Supported formats: UPC-A(12), EAN-13(13), EAN-8(8), UPC-E(6)")
