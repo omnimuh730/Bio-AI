@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-import 'package:path/path.dart' as p;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/ui/pages/capture/models/food_item.dart';
@@ -11,7 +9,6 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_screen_body.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/custom_food_dialog.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/log_dialog.dart';
 import 'package:bio_ai/ui/pages/capture/capture_state.dart';
-import 'package:bio_ai/core/config.dart';
 import 'package:bio_ai/app/di/injectors.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
