@@ -1,15 +1,15 @@
 from fastapi import FastAPI
-from .routers import router as api_router
-from .database import init_db
-from .config import DEBUG
+from app.routers import router as api_router
+from app.database import init_db
+from app.config import DEBUG
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Bio AI BFF (dev)")
-
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app):
     init_db()
+    yield
 
+app = FastAPI(title="Bio AI BFF (dev)", lifespan=lifespan)
 
 app.include_router(api_router, prefix="/api")
 

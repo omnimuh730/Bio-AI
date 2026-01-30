@@ -10,21 +10,37 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
 import traceback
+import time
+from contextlib import contextmanager
 
 # Small helper for consistent, flushed logs
 def p(msg):
     print(f"[detect] {msg}", flush=True)
 
+@contextmanager
+def timed_step(name):
+    start = time.perf_counter()
+    p(f"⏱ START: {name}")
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        p(f"⏱ DONE: {name} — {elapsed:.2f}s")
+
 
 # --- CONFIGURATION ---
 PIXELS_PER_CM = 38.0
-FONT_SIZE = 14
+FONT_SIZE = 10
 OUTPUT_FOLDER = "Extracted_Ingredients"
 JSON_OUTPUT_FILE = "nutrition_report.json"
 
+# Prefer server-local model weights directory when available
+MODEL_DIR = Path(__file__).parent / "models"
+SAM_WEIGHTS = MODEL_DIR / "FastSAM-x.pt" if (MODEL_DIR / "FastSAM-x.pt").exists() else "FastSAM-x.pt"
+
 # --- FINE TUNING PARAMETERS ---
-CONF_THRESHOLD = 0.05
-IOU_THRESHOLD = 0.3
+CONF_THRESHOLD = 0.2
+IOU_THRESHOLD = 0.5
 RETINA_MASKS = True
 
 # --- AI MODEL CONFIG ---
@@ -265,6 +281,214 @@ class NutrientScanner:
 
 
     
+
+def process_and_extract(image_path):
+    output_dir = Path(OUTPUT_FOLDER)
+    output_dir.mkdir(exist_ok=True)
+
+    # Clean old files
+    for f in output_dir.glob("*.png"): f.unlink()
+    for f in output_dir.glob("*.jpg"): f.unlink()
+    for f in output_dir.glob("*.json"): f.unlink()
+
+    p(f"⏳ Processing Image: {image_path}")
+    start_time = time.perf_counter()
+
+    # 1. Load Image
+    original_cv2 = cv2.imread(image_path)
+    if original_cv2 is None:
+        p("Error loading image.")
+        return
+
+    composite_image = original_cv2.copy()
+    img_h, img_w = original_cv2.shape[:2]
+    original_pil = Image.fromarray(cv2.cvtColor(original_cv2, cv2.COLOR_BGR2RGB))
+
+    # 2. Get Depth Map
+    try:
+        with timed_step("Depth estimation"):
+            depth_map = get_depth_map(original_pil)
+            depth_map_resized = cv2.resize(depth_map, (img_w, img_h))
+    except Exception as e:
+        p(f"Depth estimation failed: {e}")
+        return
+
+    # 3. Run SAM / FastSAM
+    p(f"⏳ Running Segmentation (Conf: {CONF_THRESHOLD}, IoU: {IOU_THRESHOLD})...")
+    p(f"Using SAM weights: {SAM_WEIGHTS}")
+
+    masks_data = None
+    model = None
+    results = None
+
+    try:
+        sam_weight_name = str(SAM_WEIGHTS).lower()
+        # If FastSAM weights requested, use fastsam package
+        if "fastsam" in sam_weight_name or "fast-sam" in sam_weight_name or sam_weight_name.endswith('.pt') and 'fast' in os.path.basename(sam_weight_name):
+            try:
+                from fastsam import FastSAM
+            except Exception:
+                p("FastSAM weights requested but `fastsam` package is not installed.")
+                p("Install with: pip install fastsam or git+https://github.com/yang-song/fastsam.git")
+                raise
+
+            with timed_step("FastSAM segmentation"):
+                p("Loading FastSAM model...")
+                model = FastSAM(str(SAM_WEIGHTS))
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                # Predict; try a few common argument names for compatibility
+                try:
+                    fs_results = model.predict(original_cv2, device=device, retina_masks=RETINA_MASKS)
+                except TypeError:
+                    fs_results = model.predict(original_cv2, device=device)
+
+                # Extract masks robustly
+                fast_masks = None
+                if hasattr(fs_results, 'masks'):
+                    fast_masks = fs_results.masks
+                elif isinstance(fs_results, dict) and 'masks' in fs_results:
+                    fast_masks = fs_results['masks']
+                elif isinstance(fs_results, (list, tuple)) and len(fs_results) > 0 and hasattr(fs_results[0], 'masks'):
+                    fast_masks = fs_results[0].masks
+
+                if fast_masks is None:
+                    # Try common attribute names
+                    if hasattr(fs_results, 'segmentation'):
+                        fast_masks = fs_results.segmentation
+
+                # Convert to numpy (N, H, W) uint8
+                if fast_masks is None:
+                    raise RuntimeError('Could not extract masks from FastSAM results')
+
+                if isinstance(fast_masks, torch.Tensor):
+                    masks_data = fast_masks.cpu().numpy().astype('uint8')
+                elif isinstance(fast_masks, np.ndarray):
+                    masks_data = fast_masks.astype('uint8')
+                else:
+                    # assume iterable of masks
+                    masks_data = np.stack([np.array(m, dtype='uint8') for m in fast_masks], axis=0)
+
+        else:
+            with timed_step("SAM segmentation"):
+                model = SAM(str(SAM_WEIGHTS))
+                results = model(image_path, retina_masks=RETINA_MASKS, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False)
+
+            if not results or not getattr(results[0], 'masks', None):
+                p("❌ No objects detected.")
+                return
+
+            masks_data = results[0].masks.data.cpu().numpy().astype('uint8')
+
+    except Exception as e:
+        p(f"SAM segmentation failed: {e}")
+        p(traceback.format_exc())
+        return
+
+    if masks_data is None or masks_data.size == 0:
+        p("❌ No masks extracted.")
+        return
+
+    p(f"✅ Found {masks_data.shape[0]} mask(s).")
+
+    # Clean up models to free memory
+    try:
+        if 'model' in locals() and model is not None:
+            del model
+        if 'results' in locals() and results is not None:
+            del results
+        gc.collect()
+        torch.cuda.empty_cache()
+    except Exception:
+        pass
+
+    # --- Accumulator for the "Rest" item ---
+    total_mask_accumulator = np.zeros((img_h, img_w), dtype=np.uint8)
+
+    items = []
+
+    count = 0
+    p(f"✅ Extracting items...")
+
+    for i, mask in enumerate(masks_data):
+        with timed_step(f"Item {i+1} processing"):
+            # --- Filter Noise ---
+            mask_area_pixels = mask.sum()
+            total_pixels = img_w * img_h
+
+            if mask_area_pixels < (total_pixels * 0.0001) or mask_area_pixels > (total_pixels * 0.9):
+                p(f"Skipping item {i+1}: area {mask_area_pixels} px")
+                continue
+
+            total_mask_accumulator = np.maximum(total_mask_accumulator, mask)
+
+            # Update Composite Image
+            color = np.random.randint(0, 255, (3,), dtype=np.uint8).tolist()
+            colored_layer = np.zeros_like(original_cv2, dtype=np.uint8)
+            colored_layer[mask == 1] = color
+
+            mask_indices = mask == 1
+            composite_image[mask_indices] = cv2.addWeighted(
+                composite_image[mask_indices], 0.6, 
+                colored_layer[mask_indices], 0.4, 
+                0
+            )
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(composite_image, contours, -1, color, 2)
+
+            # Save and collect data
+            item_data = save_single_item(
+                mask, original_pil, depth_map_resized, img_w, img_h, 
+                output_dir, 
+                f"item_{count+1}.png", 
+                f"Item {count+1}"
+            )
+            if item_data:
+                items.append(item_data)
+
+            count += 1
+
+    # --- PROCESS THE REST (BACKGROUND) ---
+    p("⏳ Calculating the 'Rest'...")
+    rest_mask = 1 - total_mask_accumulator
+
+    with timed_step("Background / Rest"):
+        if rest_mask.sum() > 0:
+            rest_data = save_single_item(
+                rest_mask, original_pil, depth_map_resized, img_w, img_h,
+                output_dir,
+                f"item_rest.png",
+                "Background / Rest"
+            )
+            if rest_data:
+                items.append(rest_data)
+
+    # Apply grey overlay to rest area in composite
+    grey_layer = np.full_like(original_cv2, 100, dtype=np.uint8)
+    rest_indices = rest_mask == 1
+    composite_image[rest_indices] = cv2.addWeighted(
+        composite_image[rest_indices], 0.7,
+        grey_layer[rest_indices], 0.3,
+        0
+    )
+
+    # Save Total Image
+    with timed_step("Save composite image"):
+        total_image_path = output_dir / "TOTAL_SUMMARY.jpg"
+        cv2.imwrite(str(total_image_path), composite_image)
+        p(f"   -> Saved Composite Image: {total_image_path}")
+
+    # Save simple JSON report with volumes/areas
+    json_path = output_dir / JSON_OUTPUT_FILE
+    try:
+        with timed_step("Write JSON report"):
+            with open(json_path, 'w') as f:
+                json.dump(items, f, indent=4)
+        p(f"✨ COMPLETE! Physics data saved to: {json_path}")
+    except Exception as e:
+        p(f"Failed to write JSON report: {e}")
+
+    total_elapsed = time.perf_counter() - start_time
+    p(f"⏱ TOTAL processing time: {total_elapsed:.2f}s")
 
 def main():
     parser = argparse.ArgumentParser()

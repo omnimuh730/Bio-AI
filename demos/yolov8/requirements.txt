@@ -1,0 +1,9 @@
+ultralytics>=8.0.0
+torch>=1.12
+torchvision>=0.13
+opencv-python
+scikit-learn
+scikit-image
+numpy
+matplotlib
+pandas
