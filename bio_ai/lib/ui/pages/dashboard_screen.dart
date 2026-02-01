@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../data/mock_data.dart';
-import '../atoms/section_title.dart';
-import '../molecules/header_profile.dart';
-import '../organisms/ai_meal_card.dart';
-import '../organisms/daily_progress_card.dart';
-import '../organisms/floating_nav_bar.dart';
-import '../organisms/hydration_card.dart';
-import '../organisms/log_meal_modal.dart';
-import '../organisms/quick_log_card.dart';
-import '../organisms/setup_card.dart';
-import '../organisms/vitals_grid.dart';
+
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_setupcard.dart';
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_dailyprocess.dart';
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_vitals.dart';
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_headerprofile.dart';
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_aimeal.dart';
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_hydration.dart';
+import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_quicklog.dart';
+
+import 'package:bio_ai/ui/pages/dashboard/dashboard_helper.dart';
+import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
+
 import 'analytics_screen.dart';
 import 'settings_screen.dart';
 import 'capture_screen.dart';

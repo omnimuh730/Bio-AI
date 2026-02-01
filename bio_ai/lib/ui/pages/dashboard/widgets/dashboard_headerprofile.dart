@@ -1,9 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:bio_ai/core/localization/app_localizations.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
+
+import 'package:bio_ai/core/localization/app_localizations.dart';
 import 'package:bio_ai/core/theme/app_spacing_borders_shadows.dart';
 import 'package:bio_ai/data/providers/data_provider.dart';
+
+class SectionTitle extends StatelessWidget {
+  final String title;
+  final VoidCallback? onRefresh;
+  final String? linkText;
+
+  const SectionTitle(this.title, {super.key, this.onRefresh, this.linkText});
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: AppTextStyles.subtitle),
+          if (onRefresh != null || linkText != null)
+            GestureDetector(
+              onTap: onRefresh,
+              child: Text(
+                linkText ?? localizations.refresh,
+                style: AppTextStyles.label,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 class HeaderProfile extends StatelessWidget {
   final DataProvider? dataProvider;
@@ -14,7 +46,6 @@ class HeaderProfile extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
 
-    // Get user name from data provider or use default
     final userName = dataProvider?.userProfile.name ?? 'Dekomori';
 
     return Padding(

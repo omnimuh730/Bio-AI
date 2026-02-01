@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
-import '../../core/localization/app_localizations.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+
+import 'package:bio_ai/core/localization/app_localizations.dart';
 
 class AIMealCard extends StatelessWidget {
   final Map<String, dynamic> meal;
@@ -24,7 +25,6 @@ class AIMealCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.1)),
-
         boxShadow: [
           BoxShadow(
             color: AppColors.accentBlue.withValues(alpha: 0.1),
@@ -35,7 +35,6 @@ class AIMealCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -65,7 +64,6 @@ class AIMealCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Body
           Row(
             children: [
               ClipRRect(
@@ -93,7 +91,6 @@ class AIMealCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Accordion
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
@@ -136,7 +133,6 @@ class AIMealCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Buttons
           Row(
             children: [
               GestureDetector(
@@ -162,10 +158,7 @@ class AIMealCard extends StatelessWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          AppColors.accentBlue,
-                          Color(0xFF2563EB),
-                        ], // Slight gradient
+                        colors: [AppColors.accentBlue, Color(0xFF2563EB)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),

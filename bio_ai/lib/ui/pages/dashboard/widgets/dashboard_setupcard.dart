@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
+
 import 'package:bio_ai/core/localization/app_localizations.dart';
 
 class SetupCard extends StatelessWidget {

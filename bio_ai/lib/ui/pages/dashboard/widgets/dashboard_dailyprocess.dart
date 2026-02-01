@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../core/localization/app_localizations.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
-import '../../core/theme/app_spacing_borders_shadows.dart';
-import '../../data/providers/data_provider.dart';
-import '../molecules/macro_row.dart';
+import 'package:bio_ai/core/localization/app_localizations.dart';
+import 'package:bio_ai/core/theme/app_spacing_borders_shadows.dart';
+import 'package:bio_ai/data/providers/data_provider.dart';
 
 class DailyProgressCard extends StatelessWidget {
   final DataProvider? dataProvider;
@@ -15,7 +14,6 @@ class DailyProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
 
-    // Get data from provider or use mock values
     final metrics = dataProvider?.todayMetrics;
     final goals = dataProvider?.dailyGoals;
 
@@ -34,7 +32,6 @@ class DailyProgressCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Circular Ring
           SizedBox(
             width: 80,
             height: 80,
@@ -66,7 +63,6 @@ class DailyProgressCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 20),
-          // Macros
           Expanded(
             child: Column(
               children: [
@@ -98,6 +94,55 @@ class DailyProgressCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class MacroRow extends StatelessWidget {
+  final String label;
+  final String val;
+  final double pct;
+  final Color color;
+
+  const MacroRow({
+    super.key,
+    required this.label,
+    required this.val,
+    required this.pct,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: AppTextStyles.label),
+            Text(val, style: AppTextStyles.label),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Container(
+          height: 6,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: FractionallySizedBox(
+            widthFactor: pct.clamp(0.0, 1.0),
+            alignment: Alignment.centerLeft,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
