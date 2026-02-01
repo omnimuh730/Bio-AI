@@ -1,16 +1,15 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
 import 'package:bio_ai/ui/pages/capture/capture_models.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_analysis_sheet.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_confirmation_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_result_overlay.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_bottom_controls.dart';
-import 'package:bio_ai/ui/pages/capture/widgets/capture_nutrition_card.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_camera_background.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_offline_banner.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_quick_switch.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
@@ -106,40 +105,7 @@ class CaptureScreenBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Consumer(
-          builder: (context, ref, child) {
-            final camInit = ref.watch(cameraInitProvider);
-            return camInit.when(
-              data: (_) {
-                final cam = ref.read(cameraServiceProvider);
-                if (cam.controller != null && cam.isInitialized) {
-                  return CameraPreview(cam.controller!);
-                }
-                return Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-                    ),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
+        const CaptureCameraBackground(),
         CaptureTopOverlay(
           onClose: () => Navigator.pushReplacement(
             context,
@@ -217,123 +183,19 @@ class CaptureScreenBody extends StatelessWidget {
             onBarcodeDetected: onBarcodeDetected,
           ),
         if (barcodePendingConfirmation != null)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.85),
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.all(32),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.qr_code_scanner,
-                        color: Colors.white,
-                        size: 64,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Code Detected',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          barcodePendingConfirmation!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontFamily: 'monospace',
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Look up this product?',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: onCancelBarcode,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white.withValues(
-                                  alpha: 0.2,
-                                ),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text('Cancel'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: onConfirmBarcode,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF667EEA),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text('Confirm'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          CaptureBarcodeConfirmationOverlay(
+            code: barcodePendingConfirmation!,
+            onCancel: onCancelBarcode,
+            onConfirm: onConfirmBarcode,
           ),
         if (barcodeFound && barcodeFullData != null)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.7),
-              child: Center(
-                child: LiquidGlassNutritionCard(
-                  foodData: barcodeFullData!,
-                  onAdd: barcodeItem != null
-                      ? () => onAddBarcodeItem(barcodeItem!)
-                      : () {},
-                  onClose: onCloseBarcodeResult,
-                ),
-              ),
-            ),
+          CaptureBarcodeResultOverlay(
+            foodData: barcodeFullData!,
+            item: barcodeItem,
+            onAdd: barcodeItem != null
+                ? () => onAddBarcodeItem(barcodeItem!)
+                : () {},
+            onClose: onCloseBarcodeResult,
           ),
         CaptureQuickSwitch(
           open: false,
