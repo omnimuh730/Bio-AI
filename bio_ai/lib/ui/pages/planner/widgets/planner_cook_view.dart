@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
-import '../models/planner_leftover_item.dart';
-import '../models/planner_recipe_item.dart';
+import '../planner_state.dart';
 import 'planner_leftover_card.dart';
 import 'planner_pantry_box.dart';
 import 'planner_recipe_card.dart';

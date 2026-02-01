@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../capture/models/food_item.dart';
-import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:bio_ai/core/theme/app_text_styles.dart';
+import 'package:bio_ai/ui/pages/capture/capture_models.dart';
 
 class MealDetailModal extends StatefulWidget {
   final FoodItem item;
-  final Future<Map<String, dynamic>?> Function(String)
-  loadFatSecret; // name -> details
+  final Future<Map<String, dynamic>?> Function(String) loadFatSecret;
 
   const MealDetailModal({
     super.key,

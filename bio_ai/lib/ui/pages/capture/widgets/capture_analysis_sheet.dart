@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
-import '../models/food_item.dart';
-import 'food_card.dart';
+import 'package:bio_ai/ui/pages/capture/capture_models.dart';
 
 class CaptureAnalysisSheet extends StatelessWidget {
   final bool open;
@@ -172,6 +171,157 @@ class CaptureAnalysisSheet extends StatelessWidget {
       child: Text(
         label,
         style: AppTextStyles.labelSmall.copyWith(color: AppColors.accentBlue),
+      ),
+    );
+  }
+}
+
+class FoodCard extends StatelessWidget {
+  final FoodItem item;
+  final VoidCallback onRemove;
+  final ValueChanged<int> onPortionChanged;
+
+  const FoodCard({
+    super.key,
+    required this.item,
+    required this.onRemove,
+    required this.onPortionChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              item.image,
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: AppTextStyles.title.copyWith(
+                    color: AppColors.textMain,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.desc,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                PortionSelector(
+                  selectedIndex: item.portionIndex,
+                  onChanged: onPortionChanged,
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(
+              Icons.remove_circle_outline,
+              color: Color(0xFFCBD5E1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PortionSelector extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+
+  const PortionSelector({
+    super.key,
+    required this.selectedIndex,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final slot = width / 3;
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 200),
+                left: slot * selectedIndex,
+                top: 0,
+                bottom: 0,
+                child: Container(
+                  width: slot,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.textMain,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  _portionOption('Small', 0),
+                  _portionOption('Med', 1),
+                  _portionOption('Large', 2),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _portionOption(String label, int index) {
+    final isSelected = selectedIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(index),
+        child: Container(
+          alignment: Alignment.center,
+          height: 32,
+          child: Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:bio_ai/core/platform_services/flashlight/torch_service.dart';
 import 'package:bio_ai/core/platform_services/network/network_service.dart';
 import 'package:bio_ai/core/platform_services/camera/camera_service.dart';
 import 'package:bio_ai/core/platform_services/offline/offline_queue_service.dart';
+import 'package:bio_ai/core/platform_services/fatsecret/fatsecret_service.dart';
 import 'package:bio_ai/features/vision/data/repositories/vision_repository_impl.dart';
 
 final sensorsServiceProvider = Provider((ref) => SensorsService());
@@ -40,6 +41,7 @@ final visionRepositoryProvider = Provider<VisionRepositoryImpl>(
   ),
 );
 final cameraServiceProvider = Provider((ref) => CameraService());
+final fatSecretServiceProvider = Provider((ref) => FatSecretService());
 
 // Future provider to initialize the camera once (used by UI)
 final cameraInitProvider = FutureProvider<void>(

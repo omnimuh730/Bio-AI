@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:camera/camera.dart';
-import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
-import '../../capture/models/food_item.dart';
-import 'capture_analysis_sheet.dart';
-import 'capture_barcode_overlay.dart';
-import 'capture_bottom_controls.dart';
-import 'capture_offline_banner.dart';
-import 'capture_quick_switch.dart';
-import 'capture_reticle.dart';
-import 'capture_search_overlay.dart';
-import 'capture_top_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/capture_models.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_analysis_sheet.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_confirmation_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_barcode_result_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_bottom_controls.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_camera_background.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_offline_banner.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_quick_switch.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_search_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/pitch_indicator.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class CaptureScreenBody extends StatelessWidget {
   final List<FoodItem> items;
@@ -24,6 +26,9 @@ class CaptureScreenBody extends StatelessWidget {
   final bool offlineMode;
   final bool barcodeOpen;
   final bool barcodeFound;
+  final bool barcodeScanning;
+  final String? barcodePendingConfirmation;
+  final Map<String, dynamic>? barcodeFullData;
   final String mode;
   final List<double> portionOptions;
   final double totalCals;
@@ -31,11 +36,16 @@ class CaptureScreenBody extends StatelessWidget {
   final double totalFat;
   final TextEditingController controller;
   final bool isSearching;
-  final FoodItem barcodeItem;
+  final FoodItem? barcodeItem;
 
   final VoidCallback onOpenSearch;
   final VoidCallback onCloseSearch;
   final VoidCallback onToggleBarcode;
+  final VoidCallback onCloseBarcodeResult;
+  final void Function(FoodItem) onAddBarcodeItem;
+  final VoidCallback onConfirmBarcode;
+  final VoidCallback onCancelBarcode;
+  final void Function(BarcodeCapture)? onBarcodeDetected;
   final VoidCallback onToggleQuickSwitch;
   final void Function(Widget) onNavigateFromQuick;
   final void Function(FoodItem) onAddItem;
@@ -47,8 +57,6 @@ class CaptureScreenBody extends StatelessWidget {
   final VoidCallback onAddAlcohol;
   final void Function(String) onQueryChanged;
   final void Function(FoodItem) onTapItem;
-
-  /// Optional callback invoked when shutter is pressed in scan mode.
   final Future<void> Function()? onCapturePhoto;
 
   const CaptureScreenBody({
@@ -60,6 +68,9 @@ class CaptureScreenBody extends StatelessWidget {
     required this.offlineMode,
     required this.barcodeOpen,
     required this.barcodeFound,
+    required this.barcodeScanning,
+    this.barcodePendingConfirmation,
+    this.barcodeFullData,
     required this.mode,
     required this.portionOptions,
     required this.totalCals,
@@ -71,6 +82,11 @@ class CaptureScreenBody extends StatelessWidget {
     required this.onOpenSearch,
     required this.onCloseSearch,
     required this.onToggleBarcode,
+    required this.onCloseBarcodeResult,
+    required this.onAddBarcodeItem,
+    required this.onConfirmBarcode,
+    required this.onCancelBarcode,
+    this.onBarcodeDetected,
     required this.onToggleQuickSwitch,
     required this.onNavigateFromQuick,
     required this.onAddItem,
@@ -89,41 +105,7 @@ class CaptureScreenBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Consumer(
-          builder: (context, ref, child) {
-            final camInit = ref.watch(cameraInitProvider);
-            return camInit.when(
-              data: (_) {
-                final cam = ref.read(cameraServiceProvider);
-                if (cam.controller != null && cam.isInitialized) {
-                  return CameraPreview(cam.controller!);
-                }
-                // fallback to static background until controller is ready
-                return Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-                    ),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
+        const CaptureCameraBackground(),
         CaptureTopOverlay(
           onClose: () => Navigator.pushReplacement(
             context,
@@ -152,7 +134,6 @@ class CaptureScreenBody extends StatelessWidget {
               onToggleBarcode();
               return;
             }
-            // default: capture photo
             if (onCapturePhoto != null) onCapturePhoto!();
           },
         ),
@@ -190,14 +171,32 @@ class CaptureScreenBody extends StatelessWidget {
           onTapItem: onTapItem,
           onCreateCustom: onCreateCustom,
         ),
-        CaptureBarcodeOverlay(
-          open: barcodeOpen,
-          found: barcodeFound,
-          item: barcodeItem,
-          onAdd: () => onAddItem(barcodeItem),
-          onClose: onToggleBarcode,
-          onNotFound: () {},
-        ),
+        if (!barcodeFound && barcodePendingConfirmation == null)
+          CaptureBarcodeOverlay(
+            open: barcodeOpen,
+            found: barcodeFound,
+            scanning: barcodeScanning,
+            item: barcodeItem,
+            onAdd: barcodeItem != null ? () => onAddItem(barcodeItem!) : null,
+            onClose: onToggleBarcode,
+            onNotFound: () {},
+            onBarcodeDetected: onBarcodeDetected,
+          ),
+        if (barcodePendingConfirmation != null)
+          CaptureBarcodeConfirmationOverlay(
+            code: barcodePendingConfirmation!,
+            onCancel: onCancelBarcode,
+            onConfirm: onConfirmBarcode,
+          ),
+        if (barcodeFound && barcodeFullData != null)
+          CaptureBarcodeResultOverlay(
+            foodData: barcodeFullData!,
+            item: barcodeItem,
+            onAdd: barcodeItem != null
+                ? () => onAddBarcodeItem(barcodeItem!)
+                : () {},
+            onClose: onCloseBarcodeResult,
+          ),
         CaptureQuickSwitch(
           open: false,
           onClose: () {},
@@ -206,37 +205,8 @@ class CaptureScreenBody extends StatelessWidget {
           onAnalytics: () => onNavigateFromQuick(const AnalyticsScreen()),
           onSettings: () => onNavigateFromQuick(const SettingsScreen()),
         ),
-        // Small debug / guidance overlay showing device pitch (gyro)
-        const Positioned(top: 40, right: 16, child: _PitchIndicator()),
+        const Positioned(top: 40, right: 16, child: PitchIndicator()),
       ],
-    );
-  }
-}
-
-class _PitchIndicator extends ConsumerWidget {
-  const _PitchIndicator();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pitchAsync = ref.watch(pitchProvider);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: pitchAsync.when(
-        data: (val) => Text(
-          'Pitch: ${val.toStringAsFixed(2)}',
-          style: const TextStyle(color: Colors.white),
-        ),
-        loading: () => const SizedBox(
-          width: 60,
-          height: 14,
-          child: LinearProgressIndicator(),
-        ),
-        error: (e, st) =>
-            const Text('Pitch: —', style: TextStyle(color: Colors.white)),
-      ),
     );
   }
 }

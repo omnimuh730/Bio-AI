@@ -3,19 +3,24 @@ import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
+
+import 'package:bio_ai/ui/pages/settings/widgets/settings_profile.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_device.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_preference.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_diatery.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_diagnostics.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_goal.dart';
+import 'package:bio_ai/ui/pages/settings/widgets/settings_account.dart';
+
+import 'package:bio_ai/ui/pages/settings/settings_helper.dart';
+
+import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
+
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_account_section.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_device_section.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_dietary_section.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_goal_section.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_preference_section.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_profile_header.dart';
-import 'package:bio_ai/ui/pages/settings/widgets/settings_diagnostics_section.dart';
 import 'settings/settings_state.dart';
-import 'settings/settings_helpers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
