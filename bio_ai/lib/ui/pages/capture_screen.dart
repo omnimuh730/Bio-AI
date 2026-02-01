@@ -2,19 +2,20 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:bio_ai/app/di/injectors.dart';
-import 'package:bio_ai/core/config.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:bio_ai/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
+import 'package:bio_ai/ui/pages/capture/capture_helpers.dart';
+import 'package:bio_ai/ui/pages/capture/capture_models.dart';
+import 'package:bio_ai/ui/pages/capture/capture_state.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
   const CaptureScreen({super.key});
@@ -59,7 +60,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         if (foods.isNotEmpty) {
           // Convert FatSecret response to FoodItem and add
           for (var food in foods.take(3)) {
-            final item = _parseFatSecretFood(food);
+            final item = parseFatSecretFood(food);
             if (item != null) {
               _addItem(item);
             }
@@ -209,7 +210,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
 
     // Parse FatSecret food response
-    final foodItem = _parseFatSecretFood(foodData);
+    final foodItem = parseFatSecretFood(foodData);
 
     if (foodItem != null && mounted) {
       setState(() {
@@ -250,63 +251,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     _showToast('Item removed');
   }
 
-  FoodItem? _parseFatSecretFood(dynamic food) {
-    try {
-      final name = food['food_name'] ?? food['name'] ?? 'Unknown Food';
-      final brandName = food['brand_name'] ?? '';
-      final fullName = brandName.isNotEmpty ? '$brandName $name' : name;
-
-      final description = food['food_description'] ?? food['description'] ?? '';
-
-      // Parse nutrition from description (FatSecret format) OR from servings
-      double cals = 0, protein = 0, fat = 0;
-
-      // Try to get from servings first (barcode API format)
-      final servings = food['servings'];
-      if (servings != null && servings['serving'] != null) {
-        final serving = servings['serving'];
-        final firstServing = serving is List ? serving[0] : serving;
-
-        if (firstServing != null) {
-          cals =
-              double.tryParse(firstServing['calories']?.toString() ?? '0') ?? 0;
-          protein =
-              double.tryParse(firstServing['protein']?.toString() ?? '0') ?? 0;
-          fat = double.tryParse(firstServing['fat']?.toString() ?? '0') ?? 0;
-        }
-      }
-
-      // Fallback: parse from description if servings didn't work
-      if (cals == 0 && description.isNotEmpty) {
-        final calMatch = RegExp(r'(\d+\.?\d*)\s*kcal').firstMatch(description);
-        final proteinMatch = RegExp(
-          r'Protein:\s*(\d+\.?\d*)g',
-        ).firstMatch(description);
-        final fatMatch = RegExp(r'Fat:\s*(\d+\.?\d*)g').firstMatch(description);
-
-        if (calMatch != null) cals = double.tryParse(calMatch.group(1)!) ?? 0;
-        if (proteinMatch != null) {
-          protein = double.tryParse(proteinMatch.group(1)!) ?? 0;
-        }
-        if (fatMatch != null) {
-          fat = double.tryParse(fatMatch.group(1)!) ?? 0;
-        }
-      }
-
-      return FoodItem(
-        name: fullName,
-        desc: description,
-        cals: cals,
-        protein: protein,
-        fat: fat,
-        image:
-            food['food_image']?.toString() ?? food['image']?.toString() ?? '',
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
   void _filterSearch(String query) {
     _s.searchDebounce?.cancel();
     final q = query.trim();
@@ -337,7 +281,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         final foodList = foodsData['food'] as List?;
         if (foodList != null) {
           final items = foodList
-              .map((f) => _parseFatSecretFood(f))
+              .map((f) => parseFatSecretFood(f))
               .whereType<FoodItem>()
               .toList();
           if (mounted) {
@@ -478,323 +422,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       context,
       MaterialPageRoute(builder: (context) => screen),
     );
-  }
-}
-
-class FoodItem {
-  final String name;
-  final String desc;
-  final double cals;
-  final double protein;
-  final double fat;
-  final String image;
-  final String? impact;
-  final Map<String, dynamic>? metadata;
-  int portionIndex;
-
-  FoodItem({
-    required this.name,
-    required this.desc,
-    required this.cals,
-    required this.protein,
-    required this.fat,
-    required this.image,
-    this.impact,
-    this.metadata,
-    this.portionIndex = 1,
-  });
-}
-
-class FoodSearchService {
-  final Dio _dio;
-
-  FoodSearchService([Dio? dio]) : _dio = dio ?? Dio();
-
-  final List<FoodItem> catalog = [
-    FoodItem(
-      name: 'Ribeye Steak',
-      desc: 'Grilled steak',
-      cals: 700,
-      protein: 62,
-      fat: 48,
-      image:
-          'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Blueberry Protein Bar',
-      desc: 'Packaged Snack - 220 kcal',
-      cals: 220,
-      protein: 12,
-      fat: 9,
-      image:
-          'https://images.unsplash.com/photo-1543339318-b43dc53e19e6?auto=format&fit=crop&w=150&q=80',
-    ),
-    FoodItem(
-      name: 'Avocado Toast',
-      desc: 'Breakfast - 320 kcal',
-      cals: 320,
-      protein: 8,
-      fat: 20,
-      image:
-          'https://images.unsplash.com/photo-1551183053-1a9c2f2c4d04?auto=format&fit=crop&w=150&q=80',
-    ),
-  ];
-
-  Future<List<FoodItem>> search(String query) async {
-    final q = query.trim();
-    if (q.isEmpty) return List<FoodItem>.from(catalog);
-
-    try {
-      if (fatSecretAccessToken.isNotEmpty) {
-        return await _searchFatSecret(q);
-      }
-
-      final response = await _dio.get(
-        'https://www.themealdb.com/api/json/v1/1/search.php',
-        queryParameters: {'s': q},
-      );
-      final data = response.data as Map<String, dynamic>;
-      final meals = data['meals'] as List<dynamic>?;
-      if (meals == null) {
-        final first = q[0].toLowerCase();
-        final resp = await _dio.get(
-          'https://www.themealdb.com/api/json/v1/1/search.php',
-          queryParameters: {'f': first},
-        );
-        final data2 = resp.data as Map<String, dynamic>;
-        final meals2 = data2['meals'] as List<dynamic>?;
-        if (meals2 != null && meals2.isNotEmpty) {
-          final candidates = meals2.cast<Map<String, dynamic>>();
-          final mapped = candidates
-              .where(
-                (meal) =>
-                    _matchesByFuzzyWords(meal['strMeal'] as String? ?? '', q),
-              )
-              .map(
-                (meal) => FoodItem(
-                  name: meal['strMeal'] as String? ?? '',
-                  desc: [
-                    if ((meal['strCategory'] as String?)?.isNotEmpty ?? false)
-                      meal['strCategory'] as String,
-                    if ((meal['strArea'] as String?)?.isNotEmpty ?? false)
-                      meal['strArea'] as String,
-                  ].join(' • '),
-                  cals: 0,
-                  protein: 0,
-                  fat: 0,
-                  image: meal['strMealThumb'] as String? ?? '',
-                  metadata: {'rawMeal': meal},
-                ),
-              )
-              .toList();
-          if (mapped.isNotEmpty) return mapped;
-        }
-
-        return _fuzzyLocalMatches(q);
-      }
-
-      final mapped = meals.cast<Map<String, dynamic>>().map((meal) {
-        return FoodItem(
-          name: meal['strMeal'] as String? ?? '',
-          desc: [
-            if ((meal['strCategory'] as String?)?.isNotEmpty ?? false)
-              meal['strCategory'] as String,
-            if ((meal['strArea'] as String?)?.isNotEmpty ?? false)
-              meal['strArea'] as String,
-          ].join(' • '),
-          cals: 0,
-          protein: 0,
-          fat: 0,
-          image: meal['strMealThumb'] as String? ?? '',
-          metadata: {'rawMeal': meal},
-        );
-      }).toList();
-
-      return mapped;
-    } catch (e) {
-      return _fuzzyLocalMatches(q);
-    }
-  }
-
-  bool _matchesByFuzzyWords(String name, String query) {
-    final words = name.toLowerCase().split(RegExp(r'\s+'));
-    final q = query.toLowerCase();
-    for (final w in words) {
-      if (w.isEmpty) continue;
-      final d = _levenshtein(w, q);
-      if (d <= 1 || d <= (w.length * 0.2).ceil()) return true;
-    }
-    return false;
-  }
-
-  int _levenshtein(String s, String t) {
-    if (s == t) return 0;
-    if (s.isEmpty) return t.length;
-    if (t.isEmpty) return s.length;
-    final v0 = List<int>.generate(t.length + 1, (i) => i);
-    final v1 = List<int>.filled(t.length + 1, 0);
-    for (var i = 0; i < s.length; i++) {
-      v1[0] = i + 1;
-      for (var j = 0; j < t.length; j++) {
-        final cost = s[i] == t[j] ? 0 : 1;
-        v1[j + 1] = [
-          v1[j] + 1,
-          v0[j + 1] + 1,
-          v0[j] + cost,
-        ].reduce((a, b) => a < b ? a : b);
-      }
-      for (var j = 0; j < v0.length; j++) {
-        v0[j] = v1[j];
-      }
-    }
-    return v1[t.length];
-  }
-
-  List<FoodItem> _fuzzyLocalMatches(String query) {
-    final q = query.toLowerCase();
-    final results = <FoodItem>[];
-    for (final item in catalog) {
-      final nameLower = item.name.toLowerCase();
-      if (nameLower.contains(q)) {
-        results.add(item);
-        continue;
-      }
-      final words = nameLower.split(RegExp(r'\s+'));
-      for (final w in words) {
-        if (w.isEmpty) continue;
-        final dist = _levenshtein(w, q);
-        final sortedW = (w.split('')..sort()).join();
-        final sortedQ = (q.split('')..sort()).join();
-        if (dist <= 1 ||
-            dist <= (w.length * 0.2).ceil() ||
-            sortedW == sortedQ) {
-          results.add(item);
-          break;
-        }
-      }
-    }
-    return results;
-  }
-
-  Future<List<FoodItem>> _searchFatSecret(String query) async {
-    if (fatSecretAccessToken.isEmpty) return [];
-    try {
-      final resp = await _dio.get(
-        'https://platform.fatsecret.com/rest/server.api',
-        queryParameters: {
-          'method': 'foods.search',
-          'search_expression': query,
-          'format': 'json',
-        },
-        options: Options(
-          headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
-        ),
-      );
-      final data = resp.data as Map<String, dynamic>;
-      final foods = data['foods'] != null
-          ? data['foods']['food'] as List<dynamic>?
-          : null;
-      if (foods == null || foods.isEmpty) return [];
-      final mapped = foods.cast<Map<String, dynamic>>().map((food) {
-        final name =
-            food['food_name'] as String? ?? food['name'] as String? ?? '';
-        final foodId =
-            food['food_id']?.toString() ?? food['id']?.toString() ?? '';
-        final desc = food['food_type'] ?? '';
-        return FoodItem(
-          name: name,
-          desc: desc,
-          cals: 0,
-          protein: 0,
-          fat: 0,
-          image: '',
-          metadata: {
-            'fatsecret_food': {'food_id': foodId, 'raw': food},
-          },
-        );
-      }).toList();
-      return mapped;
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<Map<String, dynamic>?> fetchFatSecretByName(String name) async {
-    if (fatSecretAccessToken.isEmpty) return null;
-    try {
-      final resp = await _dio.get(
-        'https://platform.fatsecret.com/rest/server.api',
-        queryParameters: {
-          'method': 'foods.search',
-          'search_expression': name,
-          'format': 'json',
-        },
-        options: Options(
-          headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
-        ),
-      );
-      final data = resp.data as Map<String, dynamic>;
-      final foods = data['foods'] != null
-          ? data['foods']['food'] as List<dynamic>?
-          : null;
-      final first = foods != null && foods.isNotEmpty
-          ? foods.first as Map<String, dynamic>
-          : null;
-      final foodId = first != null
-          ? (first['food_id']?.toString() ?? first['id']?.toString())
-          : null;
-      if (foodId == null) return null;
-      final det = await _dio.get(
-        'https://platform.fatsecret.com/rest/server.api',
-        queryParameters: {
-          'method': 'food.get.v4',
-          'food_id': foodId,
-          'format': 'json',
-          'include_food_attributes': 'true',
-          'flag_default_serving': 'true',
-        },
-        options: Options(
-          headers: {'Authorization': 'Bearer $fatSecretAccessToken'},
-        ),
-      );
-      final detData = det.data as Map<String, dynamic>;
-      return detData['food'] as Map<String, dynamic>?;
-    } catch (_) {
-      return null;
-    }
-  }
-}
-
-class CaptureScreenStateHolder {
-  final TextEditingController searchController = TextEditingController();
-
-  bool sheetOpen = false;
-  bool searchOpen = false;
-  bool offlineMode = false;
-  bool barcodeOpen = false;
-  bool barcodeFound = false;
-  bool barcodeScanning = false;
-  bool quickSwitchOpen = false;
-
-  String mode = 'scan';
-  final List<double> portionOptions = [0.75, 1.0, 1.5];
-  final List<FoodItem> items = [];
-  List<FoodItem> results = [];
-
-  Timer? barcodeTimer;
-
-  final FoodSearchService searchService = FoodSearchService();
-  Timer? searchDebounce;
-  bool searching = false;
-
-  FoodItem? barcodeItem;
-  Map<String, dynamic>? barcodeFullData;
-  String? barcodePendingConfirmation;
-
-  void dispose() {
-    barcodeTimer?.cancel();
-    searchDebounce?.cancel();
-    searchController.dispose();
   }
 }
 
@@ -2870,198 +2497,6 @@ class _PitchIndicator extends ConsumerWidget {
       ),
     );
   }
-}
-
-Future<void> showLogDialog(
-  BuildContext context, {
-  required VoidCallback onViewDiary,
-  required VoidCallback onClose,
-}) {
-  return showDialog<void>(
-    context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Meal Logged', style: AppTextStyles.dmSans16Bold),
-            const SizedBox(height: 12),
-            Text(
-              'Your meal was added to the diary.',
-              style: AppTextStyles.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      onViewDiary();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentBlue,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text('View Diary', style: AppTextStyles.button),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      onClose();
-                    },
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      foregroundColor: AppColors.textMain,
-                    ),
-                    child: Text('Back Home', style: AppTextStyles.button),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Future<FoodItem?> showCustomFoodDialog(
-  BuildContext context, {
-  String initialName = '',
-}) {
-  final nameController = TextEditingController(text: initialName);
-  final calController = TextEditingController();
-  final proteinController = TextEditingController();
-  final fatController = TextEditingController();
-
-  return showDialog<FoodItem>(
-    context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Create Custom Food',
-                      style: AppTextStyles.dmSans16Bold,
-                    ),
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, size: 16),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _modalInput('Name', nameController),
-                _modalInput(
-                  'Calories',
-                  calController,
-                  keyboard: TextInputType.number,
-                ),
-                _modalInput(
-                  'Protein',
-                  proteinController,
-                  keyboard: TextInputType.number,
-                ),
-                _modalInput(
-                  'Fat',
-                  fatController,
-                  keyboard: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final name = nameController.text.trim();
-                          final calories =
-                              double.tryParse(calController.text) ?? 0;
-                          if (name.isEmpty || calories <= 0) return;
-                          final custom = FoodItem(
-                            name: name,
-                            desc: 'Custom - ${calories.round()} kcal',
-                            cals: calories,
-                            protein:
-                                double.tryParse(proteinController.text) ?? 0,
-                            fat: double.tryParse(fatController.text) ?? 0,
-                            image:
-                                'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=150&q=80',
-                          );
-                          Navigator.pop(context, custom);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.textMain,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text('Save', style: AppTextStyles.button),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFFF1F5F9),
-                          foregroundColor: AppColors.textMain,
-                        ),
-                        child: Text('Cancel', style: AppTextStyles.button),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    ),
-  );
-}
-
-Widget _modalInput(
-  String label,
-  TextEditingController controller, {
-  TextInputType keyboard = TextInputType.text,
-}) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: TextField(
-      controller: controller,
-      keyboardType: keyboard,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-      ),
-    ),
-  );
 }
 
 class MealDetailModal extends StatefulWidget {
