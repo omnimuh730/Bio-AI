@@ -14,10 +14,10 @@ import 'package:bio_ai/ui/pages/dashboard/widgets/dashboard_quicklog.dart';
 import 'package:bio_ai/ui/pages/dashboard/dashboard_helper.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
 
-import 'analytics_screen.dart';
-import 'settings_screen.dart';
-import 'capture_screen.dart';
-import 'planner_screen.dart';
+import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
+import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
+import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
