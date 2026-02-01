@@ -7,21 +7,26 @@ import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/ui/pages/capture/capture_helpers.dart';
 import 'package:bio_ai/ui/pages/capture/capture_models.dart';
 import 'package:bio_ai/ui/pages/capture/capture_state.dart';
-import 'package:bio_ai/ui/pages/capture/widgets/meal_detail_modal.dart';
 
 class CaptureScreenController {
   final WidgetRef ref;
   final CaptureScreenStateHolder state;
-  final BuildContext context;
   final void Function(VoidCallback) setState;
   final bool Function() isMounted;
+  final void Function(String message) showSnackBar;
+  final Future<FoodItem?> Function(FoodItem item) showMealDetailModal;
+  final Future<FoodItem?> Function(String initialName) showCustomFoodDialog;
+  final Future<void> Function(VoidCallback onViewDiary) showLogDialog;
 
   CaptureScreenController({
     required this.ref,
     required this.state,
-    required this.context,
     required this.setState,
     required this.isMounted,
+    required this.showSnackBar,
+    required this.showMealDetailModal,
+    required this.showCustomFoodDialog,
+    required this.showLogDialog,
   });
 
   void openSheet() => setState(() => state.sheetOpen = true);
@@ -66,12 +71,12 @@ class CaptureScreenController {
   void addItem(FoodItem item) {
     setState(() => state.items.add(item));
     openSheet();
-    showToast('Added ${item.name}');
+    showSnackBar('Added ${item.name}');
   }
 
   void removeItem(int index) {
     setState(() => state.items.removeAt(index));
-    showToast('Item removed');
+    showSnackBar('Item removed');
   }
 
   void addBarcodeItemAndClose(FoodItem item) {
@@ -93,18 +98,14 @@ class CaptureScreenController {
       final file = await cam.takePhoto();
 
       if (isMounted()) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Analyzing image...')));
+        showSnackBar('Analyzing image...');
       }
 
       final result = await fatSecret.uploadAndRecognize(file.path);
 
       if (result['error'] != null) {
         if (isMounted()) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Recognition failed: ${result['error']}')),
-          );
+          showSnackBar('Recognition failed: ${result['error']}');
         }
         return;
       }
@@ -120,23 +121,17 @@ class CaptureScreenController {
             }
           }
           if (isMounted()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Found ${foods.length} food items!')),
-            );
+            showSnackBar('Found ${foods.length} food items!');
           }
         } else {
           if (isMounted()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No food detected in image')),
-            );
+            showSnackBar('No food detected in image');
           }
         }
       }
     } catch (e) {
       if (isMounted()) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Capture/upload failed: $e')));
+        showSnackBar('Capture/upload failed: $e');
       }
     }
   }
@@ -172,7 +167,7 @@ class CaptureScreenController {
           state.barcodePendingConfirmation = null;
           state.barcodeOpen = false;
         });
-        showToast('Barcode not found in database');
+        showSnackBar('Barcode not found in database');
       }
       return;
     }
@@ -186,7 +181,7 @@ class CaptureScreenController {
           state.barcodePendingConfirmation = null;
           state.barcodeOpen = false;
         });
-        showToast('Barcode not found in database');
+        showSnackBar('Barcode not found in database');
       }
       return;
     }
@@ -209,7 +204,7 @@ class CaptureScreenController {
           state.barcodePendingConfirmation = null;
           state.barcodeOpen = false;
         });
-        showToast('Could not parse food data');
+        showSnackBar('Could not parse food data');
       }
     }
   }
@@ -273,21 +268,12 @@ class CaptureScreenController {
   }
 
   Future<void> openMealModal(FoodItem item) async {
-    final added = await showDialog<FoodItem?>(
-      context: context,
-      builder: (_) => MealDetailModal(
-        item: item,
-        loadFatSecret: state.searchService.fetchFatSecretByName,
-      ),
-    );
+    final added = await showMealDetailModal(item);
     if (added != null) addItem(added);
   }
 
   Future<void> createCustomFood() async {
-    final custom = await showCustomFoodDialog(
-      context,
-      initialName: state.searchController.text,
-    );
+    final custom = await showCustomFoodDialog(state.searchController.text);
     if (custom != null) {
       addItem(custom);
       state.searchController.clear();
@@ -297,19 +283,10 @@ class CaptureScreenController {
 
   void logMeal({required VoidCallback onViewDiary}) {
     if (state.offlineMode) {
-      showToast('Saved offline. Upload queued.');
+      showSnackBar('Saved offline. Upload queued.');
       closeSheet();
       return;
     }
-    showLogDialog(context, onViewDiary: onViewDiary, onClose: closeSheet);
-  }
-
-  void showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(milliseconds: 1200),
-      ),
-    );
+    showLogDialog(onViewDiary);
   }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:bio_ai/app/di/injectors.dart';
 import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:bio_ai/ui/pages/capture/capture_helpers.dart';
 import 'package:bio_ai/ui/pages/capture/capture_models.dart';
 import 'package:bio_ai/ui/pages/capture/capture_state.dart';
 import 'package:bio_ai/ui/pages/capture/capture_controller.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_screen_body.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/meal_detail_modal.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
   const CaptureScreen({super.key});
@@ -20,9 +21,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   CaptureScreenController get _controller => CaptureScreenController(
     ref: ref,
     state: _s,
-    context: context,
     setState: setState,
     isMounted: () => mounted,
+    showSnackBar: _showSnackBar,
+    showMealDetailModal: _showMealDetailModal,
+    showCustomFoodDialog: _showCustomFoodDialog,
+    showLogDialog: _showLogDialog,
   );
 
   @override
@@ -53,6 +57,37 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     0.0,
     (p, e) => p + e.fat * _s.portionOptions[e.portionIndex],
   );
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1200),
+      ),
+    );
+  }
+
+  Future<FoodItem?> _showMealDetailModal(FoodItem item) {
+    return showDialog<FoodItem?>(
+      context: context,
+      builder: (_) => MealDetailModal(
+        item: item,
+        loadFatSecret: _s.searchService.fetchFatSecretByName,
+      ),
+    );
+  }
+
+  Future<FoodItem?> _showCustomFoodDialog(String initialName) {
+    return showCustomFoodDialog(context, initialName: initialName);
+  }
+
+  Future<void> _showLogDialog(VoidCallback onViewDiary) {
+    return showLogDialog(
+      context,
+      onViewDiary: onViewDiary,
+      onClose: _controller.closeSheet,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
