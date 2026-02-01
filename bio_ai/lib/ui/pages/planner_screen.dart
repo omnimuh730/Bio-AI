@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
-import 'analytics_screen.dart';
-import 'capture_screen.dart';
-import 'dashboard_screen.dart';
-import 'settings_screen.dart';
+import 'planner/planner_helper.dart';
+import 'planner/planner_state.dart';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
@@ -15,101 +13,34 @@ class PlannerScreen extends StatefulWidget {
 }
 
 class _PlannerScreenState extends State<PlannerScreen> {
-  bool _cookView = true;
-  String _cookTab = 'pantry';
-  bool _drawerExpanded = false;
-  int _shoppingCount = 3;
-  String? _activeRecipe;
-  final Set<String> _addedRecipes = {};
-
-  final List<String> _pantryTags = ['Chicken Breast', 'Spinach', 'Rice'];
-  final List<PlannerRecipeItem> _recipes = const [
-    PlannerRecipeItem(
-      keyId: 'power',
-      title: 'Power Chicken Bowl',
-      minutes: '20m',
-      calories: '520 kcal',
-      missing: 'Missing: Lemon',
-      image:
-          'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=150&q=80',
-      meta: '20 min - 520 kcal',
-      ingredients: 'Chicken breast, spinach, rice, lemon, olive oil',
-      steps:
-          'Sear chicken, steam rice, saute spinach, finish with lemon and olive oil.',
-      batchServings: 4,
-    ),
-    PlannerRecipeItem(
-      keyId: 'keto',
-      title: 'Green Keto Salad',
-      minutes: '10m',
-      calories: '340 kcal',
-      missing: 'Pantry Ready',
-      image:
-          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80',
-      meta: '10 min - 340 kcal',
-      ingredients: 'Kale, avocado, cucumber, olive oil, pumpkin seeds',
-      steps:
-          'Chop greens, toss with avocado and cucumber, dress with olive oil, top seeds.',
-      batchServings: 2,
-    ),
-  ];
-
-  final List<PlannerLeftoverItem> _leftovers = [
-    PlannerLeftoverItem('Power Chicken Bowl', 3, 'Cooked today'),
-    PlannerLeftoverItem('Green Keto Salad', 1, 'Cooked yesterday'),
-  ];
+  final PlannerStateHolder _s = PlannerStateHolder();
 
   void _onNavTapped(int index) {
-    if (index == 1) {
-      return;
-    }
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
-      return;
-    }
-    if (index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SettingsScreen()),
-      );
-    }
+    onPlannerNavTapped(context, index);
   }
 
   void _onFabTapped() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const CaptureScreen()),
-    );
+    onPlannerFabTapped(context);
   }
 
   void _toggleDrawer() {
-    setState(() => _drawerExpanded = !_drawerExpanded);
+    setState(() => _s.drawerExpanded = !_s.drawerExpanded);
   }
 
   void _switchCookTab(String tab) {
-    setState(() => _cookTab = tab);
+    setState(() => _s.cookTab = tab);
   }
 
   void _openRecipe(PlannerRecipeItem recipe) {
-    _activeRecipe = recipe.keyId;
+    _s.activeRecipe = recipe.keyId;
     showDialog(
       context: context,
       builder: (context) => PlannerRecipeModal(
         recipe: recipe,
         onCooked: _openLeftoverPrompt,
         onAddMissing: () {
-          setState(() => _shoppingCount += 1);
-          _showToast('Added missing items');
+          setState(() => _s.shoppingCount += 1);
+          showPlannerToast(context, 'Added missing items');
           Navigator.pop(context);
         },
       ),
@@ -117,7 +48,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
   }
 
   void _openLeftoverPrompt() {
-    final recipe = _recipes.firstWhere((item) => item.keyId == _activeRecipe);
+    final recipe = _s.recipes.firstWhere(
+      (item) => item.keyId == _s.activeRecipe,
+    );
     showDialog(
       context: context,
       builder: (context) => PlannerLeftoverPrompt(
@@ -126,15 +59,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
           final servings = recipe.batchServings;
           final left = servings > 1 ? servings - 1 : 1;
           setState(() {
-            _leftovers.insert(
+            _s.leftovers.insert(
               0,
               PlannerLeftoverItem(recipe.title, left, 'Cooked today'),
             );
-            _cookTab = 'leftovers';
+            _s.cookTab = 'leftovers';
           });
           Navigator.pop(context);
           Navigator.pop(context);
-          _showToast('Leftovers added');
+          showPlannerToast(context, 'Leftovers added');
         },
       ),
     );
@@ -142,43 +75,34 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   void _logLeftover(int index) {
     setState(() {
-      _leftovers[index].servings -= 1;
-      if (_leftovers[index].servings <= 0) {
-        _leftovers.removeAt(index);
+      _s.leftovers[index].servings -= 1;
+      if (_s.leftovers[index].servings <= 0) {
+        _s.leftovers.removeAt(index);
       }
     });
-    _showToast('Leftover logged');
+    showPlannerToast(context, 'Leftover logged');
   }
 
   void _removeLeftover(int index) {
-    setState(() => _leftovers.removeAt(index));
-    _showToast('Leftover removed');
+    setState(() => _s.leftovers.removeAt(index));
+    showPlannerToast(context, 'Leftover removed');
   }
 
   void _addToShoppingList(PlannerRecipeItem recipe) {
-    final alreadyAdded = _addedRecipes.contains(recipe.keyId);
+    final alreadyAdded = _s.addedRecipes.contains(recipe.keyId);
     if (alreadyAdded) {
-      _showToast('Already in shopping list');
+      showPlannerToast(context, 'Already in shopping list');
       return;
     }
     if (recipe.missing == 'Pantry Ready') {
-      _showToast('Already in pantry');
+      showPlannerToast(context, 'Already in pantry');
       return;
     }
     setState(() {
-      _addedRecipes.add(recipe.keyId);
-      _shoppingCount += 1;
+      _s.addedRecipes.add(recipe.keyId);
+      _s.shoppingCount += 1;
     });
-    _showToast('Added to shopping list');
-  }
-
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(milliseconds: 1200),
-      ),
-    );
+    showPlannerToast(context, 'Added to shopping list');
   }
 
   void _showExportModal() {
@@ -201,18 +125,18 @@ class _PlannerScreenState extends State<PlannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 PlannerHeader(
-                  cookView: _cookView,
-                  onCook: () => setState(() => _cookView = true),
-                  onEatOut: () => setState(() => _cookView = false),
+                  cookView: _s.cookView,
+                  onCook: () => setState(() => _s.cookView = true),
+                  onEatOut: () => setState(() => _s.cookView = false),
                 ),
-                _cookView
+                _s.cookView
                     ? PlannerCookView(
-                        cookTab: _cookTab,
+                        cookTab: _s.cookTab,
                         onTabChanged: _switchCookTab,
-                        pantryTags: _pantryTags,
-                        recipes: _recipes,
-                        leftovers: _leftovers,
-                        addedRecipeIds: _addedRecipes,
+                        pantryTags: _s.pantryTags,
+                        recipes: _s.recipes,
+                        leftovers: _s.leftovers,
+                        addedRecipeIds: _s.addedRecipes,
                         onOpenRecipe: _openRecipe,
                         onAddToShop: _addToShoppingList,
                         onLogLeftover: _logLeftover,
@@ -224,9 +148,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
             ),
           ),
           PlannerShoppingDrawer(
-            expanded: _drawerExpanded,
+            expanded: _s.drawerExpanded,
             onToggle: _toggleDrawer,
-            shoppingCount: _shoppingCount,
+            shoppingCount: _s.shoppingCount,
             onExport: _showExportModal,
           ),
           Positioned(
@@ -245,40 +169,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
       ),
     );
   }
-}
-
-class PlannerLeftoverItem {
-  final String title;
-  int servings;
-  final String note;
-
-  PlannerLeftoverItem(this.title, this.servings, this.note);
-}
-
-class PlannerRecipeItem {
-  final String keyId;
-  final String title;
-  final String minutes;
-  final String calories;
-  final String missing;
-  final String image;
-  final String meta;
-  final String ingredients;
-  final String steps;
-  final int batchServings;
-
-  const PlannerRecipeItem({
-    required this.keyId,
-    required this.title,
-    required this.minutes,
-    required this.calories,
-    required this.missing,
-    required this.image,
-    required this.meta,
-    required this.ingredients,
-    required this.steps,
-    required this.batchServings,
-  });
 }
 
 class PlannerHeader extends StatelessWidget {
