@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'models/device_state.dart';
+
+class DeviceState {
+  final String label;
+  bool connected;
+  String lastSync;
+
+  DeviceState(this.label, this.connected, this.lastSync);
+}
 
 class SettingsStateHolder {
   final Map<String, DeviceState> devices = {
