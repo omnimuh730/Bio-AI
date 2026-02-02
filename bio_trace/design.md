@@ -1,3 +1,4 @@
+```mermaid
 flowchart TD
 %% ==========================================
 %% STYLING
@@ -99,3 +100,5 @@ classDef alert fill:#d63031,stroke:#fff,stroke-width:2px,color:#fff
 
     note_traces -.- TEMPO
     note_metrics -.- PROM
+
+```
