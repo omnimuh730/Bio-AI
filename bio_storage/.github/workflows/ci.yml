@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "feat/*", "feat/**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+        - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run linter (ruff)
+      run: |
+        ruff . --select F,E,W
+    - name: Run tests
+      env:
+        MONGODB_URI: mongodb://127.0.0.1:27017
+        MONGO_DB_NAME: bio_storage_db
+      run: |
+        pytest -q
