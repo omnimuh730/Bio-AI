@@ -37,3 +37,11 @@ s3:
 reconcile:
   enabled: true
   schedule: "0 3 * * *" # daily 03:00 UTC
+
+secrets:
+  create: false
+  mongodb:
+    uri: ""
+  s3:
+    accessKey: ""
+    secretKey: ""
