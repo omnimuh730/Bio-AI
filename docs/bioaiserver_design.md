@@ -5,9 +5,8 @@ direction TB
     %% ==========================================
     %% 1. ENTRY POINTS & SECURITY
     %% ==========================================
-    namespace Entry_Layer {
-        class API_Gateway {
-            <<FastAPI App>>
+    class API_Gateway {
+            <<FastAPI_App>>
             +Middleware_CORS()
             +Middleware_GZip()
             +Middleware_OTel_Tracing()
@@ -19,13 +18,11 @@ direction TB
             +validate_jwt(token)
             +extract_user_context()
         }
-    }
 
     %% ==========================================
     %% 2. AGGREGATION LOGIC (THE "GLUE")
     %% ==========================================
-    namespace Orchestration_Layer {
-        class Dashboard_Aggregator {
+    class Dashboard_Aggregator {
             <<Service>>
             +get_home_screen_data()
             %% Fetches Profile + Food Logs + Health Metrics + Daily Plan
@@ -43,37 +40,34 @@ direction TB
             +process_batch_metrics()
             %% Validates data -> Pushes to Worker Queue -> Updates Cache
         }
-    }
 
     %% ==========================================
     %% 3. INFRASTRUCTURE ADAPTERS (OUTBOUND)
     %% ==========================================
-    namespace Adapters {
-        class Nexus_Client {
-            <<gRPC / HTTP>>
+    class Nexus_Client {
+            <<gRPC_HTTP>>
             +get_user_profile()
             +get_food_logs_today()
             +upsert_health_metrics()
         }
 
         class Inference_Client {
-            <<Async HTTP>>
+            <<Async_HTTP>>
             +request_meal_recommendation()
             +get_vision_result()
         }
 
         class Worker_Producer {
-            <<Redis Streams / SQS>>
+            <<Redis_Streams_SQS>>
             +enqueue_job("calc_energy_score")
             +enqueue_job("normalize_health_data")
         }
 
         class Cache_Manager {
-            <<Redis Client>>
+            <<Redis_Client>>
             +get_dashboard_json(user_id)
-            +set_dashboard_json(user_id, data, ttl=300s)
+            +set_dashboard_json(user_id, data, ttl: 300s)
         }
-    }
 
     %% ==========================================
     %% 4. EXTERNAL DEPENDENCIES (FROM MONOREPO)
@@ -128,12 +122,12 @@ direction TB
     Health_Sync_Manager --> Cache_Manager : Update UI State Immediately
 
     %% Infrastructure Connections
-    Adapters --> Redis_Cache : Read/Write
-    Adapters --> Bio_Nexus : CRUD Operations
-    Adapters --> Bio_Worker : Async Tasks
+    Cache_Manager --> Redis_Cache : Read/Write
+    Nexus_Client --> Bio_Nexus : CRUD Operations
+    Worker_Producer --> Bio_Worker : Async Tasks
 
     %% Notes
-    note for Dashboard_Aggregator - Aggregator Pattern:<br>1 Mobile Request = 1 BFF Response.<br>Prevents 'Chatty' Mobile Apps."
-    note for Worker_Producer "Write-Behind Pattern:<br>Health data is acknowledged immediately,<br>but processed asynchronously to save battery."
-    note for Auth_Guard "Stateless Verification:<br>Verifies RS256 Signature locally.<br>No network call to Bio_Auth."
+    note for Dashboard_Aggregator "Aggregator Pattern:\n1 Mobile Request = 1 BFF Response.\nPrevents 'Chatty' Mobile Apps."
+    note for Worker_Producer "Write-Behind Pattern:\nHealth data is acknowledged immediately,\nbut processed asynchronously to save battery."
+    note for Auth_Guard "Stateless Verification:\nVerifies RS256 Signature locally.\nNo network call to Bio_Auth."
 ```
