@@ -25,9 +25,9 @@ spec:
                                 key: uri
                       - name: MONGODB_URI
                         valueFrom:
-                            secretKeyRef:
-                                name: mongo-secret
-                                key: uri
+                        secretKeyRef:
+                            name: mongo-secret
+                            key: uri
                   readinessProbe:
                       exec:
                           command:

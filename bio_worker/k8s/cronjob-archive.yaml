@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    name: bio-worker-archive
+spec:
+    schedule: "0 3 * * *" # daily at 03:00 UTC
+    concurrencyPolicy: Forbid
+    jobTemplate:
+        spec:
+            template:
+                spec:
+                    containers:
+                        - name: archive-runner
+                          image: your-registry/bio-worker:latest
+                          command: ["python", "-u", "app/cli.py"]
+                          env:
+                              - name: MONGODB_URI
+                                valueFrom:
+                                    secretKeyRef:
+                                        name: mongo-secret
+                                        key: uri
+                              - name: MONGO_DB_NAME
+                                value: "bio_nexus_db"
+                              - name: S3_ENDPOINT_URL
+                                valueFrom:
+                                    configMapKeyRef:
+                                        name: bio-nexus-config
+                                        key: S3_ENDPOINT_URL
+                              - name: AWS_ACCESS_KEY_ID
+                                valueFrom:
+                                    secretKeyRef:
+                                        name: s3-credentials
+                                        key: access_key
+                              - name: AWS_SECRET_ACCESS_KEY
+                                valueFrom:
+                                    secretKeyRef:
+                                        name: s3-credentials
+                                        key: secret_key
+                    restartPolicy: OnFailure
