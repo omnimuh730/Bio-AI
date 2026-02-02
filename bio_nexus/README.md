@@ -4,13 +4,14 @@ Lightweight FastAPI microservice that provides data persistence and query capabi
 
 Run locally (development)
 
+- The `dev` environment uses mock data, local services, and hot-reload. Services communicate via `localhost`/internal docker network.
 - Fill `.env` with MONGODB_URI and MONGO_DB_NAME, or use `docker-compose` (recommended)
 - Start local stack (docker)
 
 ```bash
 cd bio_nexus
 docker-compose up --build
-# service available at http://localhost:8000
+# service available at http://localhost:8000 (ENV=dev)
 ```
 
 Run in Kubernetes (staging/prod)

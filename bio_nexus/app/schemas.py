@@ -20,7 +20,7 @@ class VisionResult(BaseModel):
     gyro_pitch_degrees: Optional[float] = None
     lighting_lux: Optional[int] = None
     ai_confidence_score: Optional[float] = None
-    detected_items: Optional[list] = []
+    detected_items: Optional[list] = None
 
 # Food log
 class FoodLogCreate(BaseModel):

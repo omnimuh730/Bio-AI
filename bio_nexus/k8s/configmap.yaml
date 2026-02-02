@@ -6,3 +6,5 @@ data:
     APP_NAME: "bio_nexus"
     LOG_LEVEL: "info"
     MONGO_DB_NAME: "bio_nexus_db"
+    # ENV can be 'dev' (local with mock data), 'stage' (virtual prod with ingress/NGINX), or 'prod' (real production)
+    ENV: "prod"
