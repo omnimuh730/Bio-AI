@@ -1,9 +1,58 @@
+# BioTrace — Telemetry & Observability Spec 📡
+
+**Purpose & Scope (MongoDB Time-Series Update)**
+
+BioTrace defines how telemetry is generated, collected, stored, and acted upon across our ecosystem. **As of Feb 2026**, telemetry metadata (ingestion logs, archival events, processing lag) is stored in **MongoDB time-series collections** rather than separate systems.
+
+**Architecture & Components**
+
+- **Sources:** Mobile (Flutter), BFF (FastAPI), Nexus (Database), and AI Engine (GPU jobs)
+- **Collector:** OpenTelemetry Collector (otlp/gRPC receivers, batching, sampling)
+- **Time-Series Storage:** MongoDB Atlas Time-Series collections (system metrics, ingestion telemetry)
+- **Logs:** Loki (application logs, error traces)
+- **Metrics:** Prometheus/Mimir (business metrics: API latency, inference confidence, model drift)
+- **Traces:** Tempo (distributed traces across services)
+- **Visualization/Alerting:** Grafana + Alertmanager (routes to PagerDuty/Slack)
+
+**Key Configuration & Best Practices**
+
+- **Time-Series Collections in MongoDB:** Use for system telemetry (ingestion lag, DB IOPS, archival status). Configure with `timeField: 'timestamp'` and `metaField: 'metadata'`.
+- **Batching & Retry:** Configure the collector with batching and retry policies to smooth bursts and avoid data loss.
+- **Sampling:** Apply tail-based or adaptive sampling on high-volume spans from the AI Engine while keeping error traces unsampled.
+- **Redaction:** Use processors to redact PII before shipping to third-party storage.
+- **Retention & Downsampling:** Run periodic downsampling jobs that write aggregated metrics to lower-resolution collections in MongoDB (e.g., 1m → 1h aggregates).
+
+**Operational RUNBOOK (short)**
+
+- If no telemetry from a service: check SDK initialization, network connectivity to OTEL_COL, and collector logs.
+- If high alert noise: verify sampling policies and refine alert thresholds (use anomaly detection for dynamic baselines).
+- If Prometheus scrape failure: check scrape target configs and firewall rules; ensure Node Exporter / exporters are healthy.
+
+**Retention & Scaling**
+
+- Logs (Loki): retain 7-30 days depending on environment; apply compaction for long-tail storage.
+- Metrics (Prometheus/Mimir): short-term high-resolution (15d) + downsampled long-term (90d).
+- Traces (Tempo): keep full traces for 30 days and index high-value traces for longer.
+
+**Deploy & Local Debug Tips**
+
+- Run OTel Collector locally with a dev config that points to local Grafana and Prometheus containers.
+- Use `otel-cli` or `otelcol` in debug mode to validate trace propagation.
+
+**Environment Variables / Configs**
+
+- OTEL_COLLECTOR_CONFIG (path or endpoint)
+- GRAFANA_URL
+- PROMETHEUS_SCRAPE_CONFIG
+- LOKI_WRITE_URL
+
+## Diagram
+
 ```mermaid
 flowchart TD
 %% ==========================================
 %% STYLING
 %% ==========================================
-classDef app fill:#1e1e1e,stroke:#00e676,stroke-width:2px,color:#fff
 classDef infra fill:#2d3436,stroke:#74b9ff,stroke-width:2px,color:#fff
 classDef otel fill:#e17055,stroke:#fff,stroke-width:2px,color:#fff
 classDef db fill:#636e72,stroke:#fff,stroke-width:1px,color:#fff
