@@ -1,58 +1,93 @@
 name: CI
 
 on:
-    push:
-        branches: ["main", "feat/*", "feat/**"]
-    pull_request:
-        branches: ["main"]
+  push:
+    branches: [ "main", "feat/*", "feat/**" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-    test-and-lint:
-        runs-on: ubuntu-latest
-        services:
-            mongo:
-                image: mongo:6.0
-                ports:
-                    - 27017:27017
-                options: >-
-                    --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
-        steps:
-            - uses: actions/checkout@v4
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: 3.11
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r requirements.txt
-            - name: Run linter (ruff)
-              run: |
-                  ruff . --select F,E,W
-            - name: Run tests
-              env:
-                  MONGODB_URI: mongodb://127.0.0.1:27017
-                  MONGO_DB_NAME: bio_nexus_db
-              run: |
-                  pytest -q
-            - name: Build Docker image (optional)
-              run: |
-                  docker build -t bio-nexus:ci .
+  test-and-lint:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+        - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r bio_nexus/requirements.txt
+        pip install -r bio_worker/requirements.txt
+    - name: Run linter (ruff)
+      run: |
+        ruff . --select F,E,W
+    - name: Run tests
+      env:
+        MONGODB_URI: mongodb://127.0.0.1:27017
+        MONGO_DB_NAME: bio_nexus_db
+      run: |
+        pytest -q
+    - name: Build Docker image (optional)
+      run: |
+        docker build -t bio-nexus:ci .
 
-    publish-image:
-        needs: test-and-lint
-        runs-on: ubuntu-latest
-        if: "github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != ''"
-        steps:
-            - uses: actions/checkout@v4
-            - name: Log in to Docker Hub
-              uses: docker/login-action@v2
-              with:
-                  registry: docker.io
-                  username: ${{ secrets.DOCKERHUB_USERNAME }}
-                  password: ${{ secrets.DOCKERHUB_TOKEN }}
-            - name: Build and push
-              uses: docker/build-push-action@v4
-              with:
-                  push: true
-                  tags: ${{ secrets.DOCKERHUB_USERNAME }}/bio-nexus:latest
+  publish-image:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    if: "github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != ''"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        registry: docker.io
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/bio-nexus:latest
+
+  integration:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+        - 27017:27017
+      redis:
+        image: redis:7
+        ports:
+        - 6379:6379
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r bio_nexus/requirements.txt
+        pip install -r bio_worker/requirements.txt
+    - name: Start worker in background
+      run: |
+        MONGODB_URI="mongodb://127.0.0.1:27017" REDIS_URL="redis://127.0.0.1:6379/0" python -u bio_worker/app/main.py &
+        sleep 5
+    - name: Run integration tests
+      env:
+        MONGODB_URI: mongodb://127.0.0.1:27017
+        MONGO_DB_NAME: bio_nexus_db
+      run: |
+        pytest -q bio_worker/tests/integration/test_e2e_worker.py
