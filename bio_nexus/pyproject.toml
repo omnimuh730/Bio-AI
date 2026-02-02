@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "bio_nexus"
+version = "0.1.0"
+description = "BioNexus microservice: MongoDB-backed data service for Bio AI"
+authors = ["Bio AI Team"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.95.2"
+uvicorn = {extras = ["standard"], version = "^0.22.0"}
+motor = "^4.4.0"
+pydantic = "^2.3"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.scripts]
+start = "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W"]

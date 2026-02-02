@@ -1,0 +1,5 @@
+apiVersion: v2
+name: bio-nexus
+description: A Helm chart for BioNexus
+version: 0.1.0
+appVersion: "0.1.0"
