@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: bio-nexus-config
+data:
+    APP_NAME: "bio_nexus"
+    LOG_LEVEL: "info"
+    MONGO_DB_NAME: "bio_nexus_db"

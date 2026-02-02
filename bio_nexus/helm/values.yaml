@@ -1,0 +1,18 @@
+replicaCount: 2
+image:
+    repository: your-registry/bio-nexus
+    tag: latest
+    pullPolicy: IfNotPresent
+service:
+    type: ClusterIP
+    port: 8000
+env:
+    ENV: prod
+    MONGODB_URI: ""
+    MONGO_DB_NAME: bio_nexus_db
+resources: {}
+autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
