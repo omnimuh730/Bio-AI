@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: yourorg/bio-storage
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+  - host: chart-example.local
+    paths: [ "/" ]
+  tls: []
+
+env:
+  MONGODB_URI: "mongodb://mongo:27017"
+  MONGO_DB_NAME: "bio_storage_db"
+
+s3:
+  endpoint: "http://minio:9000"
+  bucketHot: "bio-storage-hot"
+  bucketArchive: "bio-storage-archive"
+
+reconcile:
+  enabled: true
+  schedule: "0 3 * * *" # daily 03:00 UTC
