@@ -19,8 +19,8 @@ classDiagram
         class File_Gateway {
             <<FastAPI>>
             +POST /upload/sign-url
-            +GET /file/{file_id}/download-url
-            +DELETE /file/{file_id}
+            +GET /file/file_id/download-url
+            +DELETE /file/file_id
         }
 
         class Access_Policy {

@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 direction TB
 
@@ -126,3 +127,4 @@ direction TB
     Knowledge_Base --> Vector_DB : Vector Search
     Context_Builder --> LLM_Gateway : Send Prompt
     LLM_Gateway --> Inference_Cache : Cache Response
+```

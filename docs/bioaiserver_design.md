@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 direction TB
 
@@ -135,3 +136,4 @@ direction TB
     note for Dashboard_Aggregator - Aggregator Pattern:<br>1 Mobile Request = 1 BFF Response.<br>Prevents 'Chatty' Mobile Apps."
     note for Worker_Producer "Write-Behind Pattern:<br>Health data is acknowledged immediately,<br>but processed asynchronously to save battery."
     note for Auth_Guard "Stateless Verification:<br>Verifies RS256 Signature locally.<br>No network call to Bio_Auth."
+```
