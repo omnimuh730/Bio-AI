@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+    redis:
+        image: redis:7
+        restart: unless-stopped
+        ports:
+            - "6379:6379"
+
+    mongo:
+        image: mongo:6.0
+        restart: unless-stopped
+        ports:
+            - "27017:27017"
+
+    bio_worker:
+        build: .
+        depends_on:
+            - redis
+            - mongo
+        environment:
+            - REDIS_URL=redis://redis:6379/0
+            - MONGODB_URI=mongodb://mongo:27017
+            - MONGO_DB_NAME=bio_nexus_db
+        command: python -u app/main.py
+        volumes:
+            - .:/app

@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "bio_worker"
+version = "0.1.0"
+description = "BioWorker: background worker for processing streams and async jobs"
+authors = ["Bio AI Team"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aioredis = "^2.0.1"
+motor = "^4.4.0"
+python-dotenv = "^1.0.0"
+httpx = "^0.26.2"
+
+aiohttp = "^3.8.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

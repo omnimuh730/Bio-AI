@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: bio-worker
+    labels:
+        app: bio-worker
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: bio-worker
+    template:
+        metadata:
+            labels:
+                app: bio-worker
+        spec:
+            containers:
+                - name: bio-worker
+                  image: your-registry/bio-worker:latest
+                  env:
+                      - name: REDIS_URL
+                        valueFrom:
+                            secretKeyRef:
+                                name: redis-secret
+                                key: uri
+                      - name: MONGODB_URI
+                        valueFrom:
+                            secretKeyRef:
+                                name: mongo-secret
+                                key: uri
+                  readinessProbe:
+                      exec:
+                          command:
+                              ["/bin/sh", "-c", "pgrep -f app/main.py || true"]
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  livenessProbe:
+                      exec:
+                          command:
+                              ["/bin/sh", "-c", "pgrep -f app/main.py || true"]
+                      initialDelaySeconds: 20
+                      periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: bio-worker
+spec:
+    selector:
+        app: bio-worker
+    ports:
+        - protocol: TCP
+          port: 9000
+          targetPort: 9000
+    type: ClusterIP

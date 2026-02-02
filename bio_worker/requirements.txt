@@ -1,0 +1,11 @@
+aioredis==2.0.1
+motor==4.4.0
+python-dotenv==1.0.0
+httpx==0.26.2
+pytest==7.4.0
+pytest-asyncio==0.22.0
+pytest-mock==3.12.0
+ruff==0.13.0
+boto3==1.28.119
+moto==4.1.1
+prometheus-client==0.17.0
