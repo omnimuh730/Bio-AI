@@ -1,21 +1,26 @@
 # BioTrace — Telemetry & Observability Spec 📡
 
-**Purpose & Scope**
+**Purpose & Scope (MongoDB Time-Series Update)**
 
-BioTrace defines how telemetry is generated, collected, stored, and acted upon across our ecosystem. It is the operational blueprint for ensuring visibility into mobile, BFF, Nexus, and inference components so engineers can debug, observe, and maintain SLOs.
+BioTrace defines how telemetry is generated, collected, stored, and acted upon across our ecosystem. **As of Feb 2026**, telemetry metadata (ingestion logs, archival events, processing lag) is stored in **MongoDB time-series collections** rather than separate systems.
 
 **Architecture & Components**
 
-- Sources: Mobile (Flutter), BFF (FastAPI), Nexus (DB), and AI Engine (GPU jobs).
-- Collector: OpenTelemetry Collector (otlp/gRPC receivers, batching, sampling, processors for redaction).
-- Backends: Prometheus/Mimir (metrics), Loki (logs), Tempo (traces).
-- Visualization/Alerting: Grafana + Alertmanager (routes to PagerDuty/Slack).
+- **Sources:** Mobile (Flutter), BFF (FastAPI), Nexus (Database), and AI Engine (GPU jobs)
+- **Collector:** OpenTelemetry Collector (otlp/gRPC receivers, batching, sampling)
+- **Time-Series Storage:** MongoDB Atlas Time-Series collections (system metrics, ingestion telemetry)
+- **Logs:** Loki (application logs, error traces)
+- **Metrics:** Prometheus/Mimir (business metrics: API latency, inference confidence, model drift)
+- **Traces:** Tempo (distributed traces across services)
+- **Visualization/Alerting:** Grafana + Alertmanager (routes to PagerDuty/Slack)
 
 **Key Configuration & Best Practices**
 
-- Batching & Retry: Configure the collector with batching and retry policies to smooth bursts and avoid data loss.
-- Sampling: Apply tail-based or adaptive sampling on high-volume spans from the AI Engine while keeping error traces unsampled.
-- Redaction: Use processors to redact PII before shipping to third-party storage.
+- **Time-Series Collections in MongoDB:** Use for system telemetry (ingestion lag, DB IOPS, archival status). Configure with `timeField: 'timestamp'` and `metaField: 'metadata'`.
+- **Batching & Retry:** Configure the collector with batching and retry policies to smooth bursts and avoid data loss.
+- **Sampling:** Apply tail-based or adaptive sampling on high-volume spans from the AI Engine while keeping error traces unsampled.
+- **Redaction:** Use processors to redact PII before shipping to third-party storage.
+- **Retention & Downsampling:** Run periodic downsampling jobs that write aggregated metrics to lower-resolution collections in MongoDB (e.g., 1m → 1h aggregates).
 
 **Operational RUNBOOK (short)**
 

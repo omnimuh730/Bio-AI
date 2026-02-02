@@ -73,6 +73,8 @@ direction TB
             +get_user_profile()
             +get_food_logs_today()
             +upsert_health_metrics()
+            +query_vector_search()      # New: query bio_storage / bio_nexus vector endpoints
+            +request_archive_rehydrate()# New: trigger archival rehydrate
         }
 
         class Inference_Client {
@@ -103,7 +105,7 @@ direction TB
 
     class Bio_Nexus {
         <<Service>>
-        +Database (Postgres)
+        +Database (MongoDB Atlas)
     }
 
     class Bio_Inference {
@@ -225,13 +227,16 @@ bio_ai_server/
     3.  Return `202 Accepted` immediately (Latency < 50ms).
     4.  _Note:_ The `bio_worker` service consumes the stream later to update the DB.
 
-### **C. Vision Analysis (Circuit Breaker)**
+### **C. Vision Analysis (Circuit Breaker + Archive/Vector Integration)**
 
 - **Endpoint:** `POST /api/v1/vision/upload`
 - **Logic:**
-    1.  Generate S3 Presigned URL for mobile upload.
+    1.  Generate S3 Presigned URL for mobile upload via `bio_storage`.
     2.  Notify `Inference` service to expect a file.
-    3.  **Circuit Breaker:** If `Inference` times out (>3s) or 500s:
+    3.  On inference completion, `bio_inference` writes vision metadata; BFF persists food log to `bio_nexus`.
+    4.  **Barcode Flow (FatSecret):** For barcode scans, the BFF calls the **FatSecret Platform API** to retrieve product and nutrition metadata. The returned data is shown to users and persisted to `bio_nexus` (Global_Foods) with `source: "fatsecret"` and `for_ml_training: true` so it can be consumed by model training pipelines.
+    5.  BFF triggers `bio_storage` to compute embeddings and index them in MongoDB (async job).
+    6.  **Circuit Breaker:** If `Inference` times out (>3s) or 500s:
         - Return "Queued for processing" status.
         - Do not fail the request.
 

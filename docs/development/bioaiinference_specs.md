@@ -17,7 +17,13 @@ In our Monorepo, this service functions as the **Intelligence Layer**:
 
 1.  **The "Dragunov" Vision System:** A custom multi-stage pipeline that converts 2D food photos into 3D volumetric calorie estimates using Depth Maps and Segmentation.
 2.  **The Bio-Adaptive Brain:** A RAG (Retrieval-Augmented Generation) engine that generates personalized meal plans based on biological inputs (HRV, Sleep) rather than generic diet rules.
-3.  **Vector Memory:** Uses a Vector Database (Qdrant) to cache "semantic states" and accurate food nutrition data, reducing hallucination and API costs.
+3.  **Vector Memory:** Uses **MongoDB Atlas Vector Search** (native vector indexes) to cache semantic states and food nutrition embeddings, reducing hallucination and API costs. Qdrant is no longer the default unless a specific ANN feature is required.
+
+**Accuracy & Model Notes:**
+
+- **Depth maps:** Volume estimation uses depth maps (from device sensors or model-inferred depth) combined with segmentation to compute food volumes for more accurate calorie estimation.
+- **LLM generation:** Early natural language generation uses **GPT Nano** (small footprint LLM) for sentence generation and will be migrated to a dedicated in-house LLM as model training progresses.
+- **GPU Execution:** Inference workloads run on serverless GPU providers (e.g., **Runpod**, CoreWeave) to enable scalable, on-demand GPU execution.
 
 ---
 
@@ -117,7 +123,7 @@ direction TB
         }
 
         class Vector_DB {
-            <<Qdrant / Chroma>>
+            <<MongoDB Atlas Vector Search>>
             +Embeddings: Food Images
             +Embeddings: Menu Items
         }
@@ -165,7 +171,7 @@ direction TB
     - **Depth:** `Depth Anything V2` (Metric Depth Estimation)
     - **VLM:** `Qwen2.5-VL` or `GPT-4o-Vision` (via API)
 - **LLM Orchestration:** LangChain / LlamaIndex
-- **Vector DB:** [Qdrant](https://qdrant.tech/) (Running in Docker)
+- **Vector DB:** MongoDB Atlas Vector Search (managed / local Mongo for dev).
 - **Storage:** AWS S3 (via `boto3`) for temporary image processing.
 
 ---
@@ -241,7 +247,7 @@ Create a `.env` file (ensure this is `.gitignore`'d):
 ```ini
 # Infrastructure
 REDIS_URL="redis://redis:6379/0" # For Celery Queue
-QDRANT_URL="http://qdrant:6333"  # Vector DB
+MONGODB_URI="mongodb://localhost:27017"  # Local Mongo for vector collections
 S3_BUCKET_NAME="bio-ai-vision-temp"
 
 # Model Weights (Paths or HuggingFace IDs)
@@ -268,8 +274,10 @@ _Note: Vision pipelines will be slow (5-10s) on CPU._
 # 1. Install Dependencies
 poetry install --with cpu
 
-# 2. Start Qdrant (Vector DB)
-docker run -p 6333:6333 qdrant/qdrant
+# 2. Local Vector Search (MongoDB)
+# Use a local MongoDB image and run `scripts/init_mongo_vectors.py` to create required collections and vector indexes.
+docker run -p 27017:27017 --name mongo -d mongo:6.0
+python scripts/init_mongo_vectors.py --host localhost --db bio_inference_vectors
 
 # 3. Start Server
 uvicorn app.main:app --port 8001
@@ -277,7 +285,7 @@ uvicorn app.main:app --port 8001
 
 ### **Scenario B: Production (GPU / RunPod)**
 
-We use a specific Dockerfile that pulls the NVIDIA CUDA base image.
+We prefer **serverless GPU providers** (Runpod, CoreWeave) for on-demand model execution, but also support containerized GPU instances for long-running jobs. Use a GPU-enabled Docker image (CUDA) when running on static GPU nodes.
 
 ```bash
 # Build the GPU container

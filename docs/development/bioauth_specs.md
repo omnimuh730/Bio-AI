@@ -80,9 +80,9 @@ direction TB
         }
 
         class Auth_DB {
-            <<PostgreSQL>>
-            Table: users_identity
-            Table: audit_logs
+            <<MongoDB>>
+            Collection: users_identity
+            Collection: audit_logs
         }
     }
 
@@ -177,8 +177,8 @@ Exposes standard OIDC-style endpoints:
 
 `bio_auth` uses two distinct storage engines:
 
-1.  **PostgreSQL (`users_identity` table)**
-    - **Role:** The Source of Truth.
+1.  **MongoDB (`users_identity` collection)**
+    - **Role:** The Source of Truth for identity metadata.
     - **Data:** `email`, `password_hash` (Argon2id), `provider_id` (Google/Apple sub), `roles` (free/pro).
     - **Isolation:** This DB is separate from `bio_nexus`. The health data (Nexus) refers to users only by `UUID`, ensuring that if the health DB is leaked, no emails/passwords are exposed.
 

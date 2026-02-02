@@ -10,7 +10,7 @@ Unlike a simple repository of configuration files, this module represents the **
 
 The `infra` directory is built on three core pillars:
 
-1.  **Environment Parity:** The local Docker environment mirrors production architecture (using `MinIO` to mock `S3`, `Postgres` to mirror `RDS`).
+1.  **Environment Parity:** The local Docker environment mirrors production architecture (using `MinIO` to mock `S3`, `MongoDB` to mirror Atlas).
 2.  **Immutable Infrastructure:** Cloud resources are never modified manually. All changes are applied via Terraform/OpenTofu, ensuring the code is always the source of truth.
 3.  **Segregated Workloads:** The infrastructure recognizes that AI workloads (Inference) have different hardware requirements than I/O workloads (API). The design uses specific Node Pools to optimize cost and performance.
 
@@ -40,10 +40,10 @@ graph TD
             end
 
             subgraph "Persistence Layer"
-                PG[("Postgres 16")]
+                PG[("MongoDB Local")]
                 RedisL[("Redis Stack")]
                 MinIO[("MinIO<br>(S3 Emulation)")]
-                QdrantL[("Qdrant<br>(Vector DB)")]
+                QdrantL[("MongoDB Atlas<br>(Vector Search)")]
             end
         end
 
@@ -79,9 +79,9 @@ graph TD
             end
 
             subgraph "Managed Data Services"
-                RDS[("AWS RDS<br>(PostgreSQL Multi-AZ)")]
+                RDS[("MongoDB Atlas<br>(Managed Cluster)")]
                 ElastiCache[("AWS ElastiCache<br>(Redis Cluster)")]
-                MSK[("Amazon MSK / Vector<br>(Qdrant Managed)")]
+                MSK[("Amazon MSK<br>(Kafka Streams)")]
             end
         end
 
@@ -96,7 +96,7 @@ graph TD
         NG_Gen -- "Job Push" --> ElastiCache
         NG_Mem -- "Consume Job" --> ElastiCache
         NG_Mem -- "Inference Req" --> NG_GPU
-        NG_GPU -- "Embeddings" --> MSK
+        NG_GPU -- "Embeddings" --> RDS
         NG_Mem -- "Save Blobs" --> S3
     end
 
@@ -139,7 +139,7 @@ This is the most critical component. It creates an Elastic Kubernetes Service cl
 
 #### **3. Data Module**
 
-- **RDS (Postgres):** Provisions `db.t3.micro` (Staging) or `db.r5.large` Multi-AZ (Prod). Handles automated backups and encryption at rest.
+- **MongoDB Atlas (Managed):** Provisions appropriately-sized clusters for staging and production (multi-region/replica set). Handles snapshots, automated backups, and encryption at rest.
 - **ElastiCache (Redis):** Provisions a Redis Cluster for the Task Queue.
 
 ---
@@ -151,8 +151,8 @@ infra/
 ├── local/
 │   ├── docker-compose.yml     # The main entry point for devs
 │   ├── .env.example           # Template for environment variables
-│   └── init-scripts/          # SQL or Shell scripts to seed local DBs
-│       ├── 01_create_users.sql
+    └── init-scripts/          # Local seeding scripts for MongoDB & MinIO
+        ├── 01_init_collections.js   # seeds 'users' & 'global_foods'
 │       └── 02_create_buckets.sh
 ├── terraform/
 │   ├── main.tf                # Root module

@@ -20,10 +20,12 @@ BioNexus is the authoritative storage and retrieval service for user-centric dat
 **Tech Stack**
 
 - Framework: FastAPI (Python 3.11+)
-- Database: MongoDB Atlas (Time-Series, Vector/knn indexes)
+- Database: **MongoDB Atlas** (single datastore for: Time-Series for metrics, Collections for logs, Vector indexes for semantic search)
 - Object storage: S3 (media & depth maps)
-- Messaging (optional): Redis Streams or Kafka for background processing
+- Messaging: Redis Streams for ingest smoothing and archivals
 - Observability: OpenTelemetry + Prometheus + Loki
+
+> **Note:** A separate vector DB (e.g., Qdrant) is deprecated in our default stack in favor of MongoDB Atlas Vector Search unless an advanced ANN feature set is required.
 
 **API Surface & Example Endpoints**
 
@@ -32,6 +34,8 @@ BioNexus is the authoritative storage and retrieval service for user-centric dat
 - POST /api/v1/food_logs — Create user food log (links to vision metadata if present).
 - GET /api/v1/foods/search?query= — Text / embedding search over `Global_Foods`.
 - GET /api/v1/users/{id} — Read user profile and metadata.
+- POST /api/v1/foods/lookup_barcode — Accepts barcode or UPC; (BFF uses FatSecret) returns product metadata and persists entry to `Global_Foods` for training/quality review.
+- POST /api/v1/foods/ingest_for_training — API to mark/ingest records into ML training datasets (labels, provenance).
 
 **Folder Structure (proposed)**
 
@@ -193,6 +197,9 @@ direction TB
             +serving_size: qty: Float, unit: String
             +macros_per_100g: kcal, p, c, f
             +embedding_vector: Array[Float] [Vector Index]
+            +source: String [e.g., 'fatsecret', 'user_upload']
+            +for_ml_training: Boolean
+            +provenance: Object [  source, retrieved_at, confidence  ]
         }
     }
 
