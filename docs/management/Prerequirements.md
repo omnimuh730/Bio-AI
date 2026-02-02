@@ -15,7 +15,7 @@ This document outlines the hardware, software, and cloud accounts required to bu
 
 ## **1. Hardware Requirements**
 
-Because this architecture relies on a microservices mesh (running MongoDB, Postgres, Redis, MinIO, and Python services simultaneously), a robust local machine is required.
+Because this architecture relies on a microservices mesh (running MongoDB, Redis, MinIO, and Python services simultaneously), a robust local machine is required.
 
 - **Operating System:**
     - macOS (M1/M2/M3 Silicon recommended)
@@ -86,26 +86,30 @@ _Used for: Production Hosting (EKS), Storage (S3), Database (RDS)._
 3.  **Credentials:** Generate an Access Key ID and Secret Access Key.
 4.  **Local Setup:** Run `aws configure` and input these keys.
 
-### **B. GPU Compute (RunPod)**
+### **B. GPU Compute (RunPod / Serverless GPUs)**
 
-_Used for: Serverless GPU Inference (The "Dragunov" Vision System)._
+_Used for: Serverless GPU Inference (The "Dragunov" Vision System). We support RunPod, CoreWeave, or similar serverless GPU providers._
 
-1.  **Create Account:** [runpod.io](https://runpod.io/)
-2.  **Add Funds:** Deposit ~$10 (Minimum) for testing.
-3.  **API Key:** Generate a key under Settings > API Keys.
-4.  **Network Volume:** Create a Network Volume (10GB) if persistent model caching is needed.
+1.  **Create Account:** e.g., [runpod.io](https://runpod.io/) or CoreWeave.
+2.  **Add Funds / Setup Billing:** Deposit a nominal amount (e.g., $10) for testing and verify billing/quotas.
+3.  **API Key:** Generate a key under Settings > API Keys and store it securely in your secrets manager.
+4.  **Network Volume (Optional):** Create a Network Volume (10GB) if persistent model caching is needed. For ephemeral serverless runs, this is optional.
 
-### **C. AI Model APIs**
+### **C. AI Model APIs & External Data**
 
-_Used for: The "Bio-Adaptive" Agent Logic._
+_Used for: The "Bio-Adaptive" Agent Logic and external food metadata (barcode lookups)._
 
-1.  **OpenAI:**
+1.  **OpenAI (LLM / fallback):**
     - Create account at `platform.openai.com`.
     - Generate API Key.
     - Ensure you have credits (Free tier often has rate limits that break the app).
 2.  **Anthropic (Optional Fallback):**
     - Create account at `console.anthropic.com`.
     - Generate API Key for Claude 3.5 Sonnet.
+3.  **FatSecret Platform API (Barcode / Nutrition Data):**
+    - Create a developer account at the FatSecret Platform.
+    - Generate API credentials and register your app (client id/secret).
+    - **Note:** Barcode lookup results are persisted and flagged for ML training provenance (ensure you have legal consent and privacy controls).
 
 ### **D. Geo-Spatial Data**
 
@@ -147,10 +151,15 @@ PROJECT_NAME="Bio AI"
 # --- INFRASTRUCTURE (Local Docker) ---
 # We use standard internal Docker DNS names
 MONGO_URI="mongodb://mongo:27017"
+MONGO_ATLAS_URI="mongodb+srv://user:pass@cluster.mongodb.net/bio_ai"
 REDIS_URL="redis://redis:6379/0"
-POSTGRES_URI="postgresql://postgres:postgres@postgres:5432/bio_auth"
 
 # --- STORAGE (MinIO acting as S3) ---
+# --- EXTERNAL APIs (Fill these to make AI work) ---
+OPENAI_API_KEY="sk-proj-..."
+RUNPOD_API_KEY="rpa_..."
+FATSECRET_CLIENT_ID="your_fatsecret_client_id"
+FATSECRET_CLIENT_SECRET="your_fatsecret_client_secret"
 AWS_ACCESS_KEY_ID="minioadmin"
 AWS_SECRET_ACCESS_KEY="minioadmin"
 AWS_REGION="us-east-1"

@@ -24,12 +24,16 @@ This is the most critical flow. Users will abandon the app if logging takes too 
 
 The dashboard aggregates complex data (Sleep + Stress + Food).
 
-| Metric                        | Target (P95) | Max Limit (P99) | Notes                                                             |
-| :---------------------------- | :----------- | :-------------- | :---------------------------------------------------------------- |
-| **Dashboard Load Time**       | **< 300ms**  | 800ms           | Heavily relies on Redis caching in the BFF.                       |
-| **Auth Verification (Local)** | **< 5ms**    | 20ms            | RS256 local check at the Gateway (no DB hits).                    |
-| **Search (Smart Pantry)**     | **< 200ms**  | 500ms           | Text search against MongoDB/Qdrant.                               |
-| **Bio-Sync Ingestion**        | **< 50ms**   | 100ms           | Time for API to return `202 Accepted` (processing happens async). |
+| Metric                        | Target (P95) | Max Limit (P99) | Notes                                                       |
+| :---------------------------- | :----------- | :-------------- | :---------------------------------------------------------- |
+| **Dashboard Load Time**       | **< 300ms**  | 800ms           | Heavily relies on Redis caching in the BFF.                 |
+| **Auth Verification (Local)** | **< 5ms**    | 20ms            | RS256 local check at the Gateway (no DB hits).              |
+| **Search (Smart Pantry)**     | **< 200ms**  | 500ms           | Text + vector search against MongoDB Atlas (text + vector). |
+
+| **Barcode Lookup Success** | **> 95%** | 90% | Percentage of barcodes matched and returned with nutrition data (FatSecret). |
+
+| **Depth Map Availability** | **> 80%** | 60% | Percentage of captures that include a usable depth map for volume calculation. |
+| **Bio-Sync Ingestion** | **< 50ms** | 100ms | Time for API to return `202 Accepted` (processing happens async). |
 
 ---
 
@@ -61,12 +65,12 @@ _Goal: The AI must be accurate enough to build trust, but forgiving enough to be
 _Goal: The system handles bursts (lunchtime) without crashing._
 
 | Metric                        | Target      | Notes                                                                        |
-| :---------------------------- | :---------- | :--------------------------------------------------------------------------- |
+| :---------------------------- | :---------- | :--------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | **System Uptime**             | **99.9%**   | Allowable downtime: ~43 minutes per month.                                   |
 | **API Error Rate (5xx)**      | **< 0.1%**  | 1 in 1,000 requests can fail (retryable).                                    |
 | **Max Concurrent Inferences** | **100/sec** | Number of simultaneous GPU vision jobs before queuing logic kicks in.        |
 | **Queue Clearance Time**      | **< 30s**   | If a job is queued during peak load, it must be processed within 30 seconds. |
-| **Cold Start (GPU)**          | **< 10s**   | Time to spin up a new GPU node if autoscaling triggers.                      |
+| **Cold Start (GPU)**          | **< 15s**   | 30s                                                                          | Time to spin up a new GPU node (serverless cold start tolerant; aim for <15s P95). |
 
 ---
 

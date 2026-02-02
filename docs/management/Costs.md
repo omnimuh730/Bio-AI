@@ -40,7 +40,7 @@ _Workflow: Upload Image $\rightarrow$ GPU Inference (Seg/Depth/VLM) $\rightarrow
 | **Storage (Gallery)** | S3 Standard (100KB WebP, Perm)   | Negligible per single req  | $0.00001         |
 | **Database Write**    | MongoDB Atlas Write Unit         | 1 WCU                      | $0.00005         |
 | **Egress (App)**      | JSON Result Return (5KB)         | Negligible                 | $0.0000          |
-| **TOTAL**             |                                  |                            | **~$0.0035**     |
+| **TOTAL**             |                                  |                            | **~$0.0033**     |
 
 > **Reasoning:** We assume a **Serverless GPU** model (e.g., RunPod or AWS SageMaker Serverless Inference) rather than a 24/7 EC2 instance. This prevents paying for idle GPUs at 3 AM.
 
@@ -48,14 +48,14 @@ _Workflow: Upload Image $\rightarrow$ GPU Inference (Seg/Depth/VLM) $\rightarrow
 
 _Workflow: Context Assembly $\rightarrow$ LLM Token Generation $\rightarrow$ UI Return._
 
-| Component         | Resource Detail                | Cost Calculation  | Cost per Request |
-| :---------------- | :----------------------------- | :---------------- | :--------------- |
-| **Vector Search** | Qdrant (Retrieval)             | RAM utilization   | $0.0001          |
-| **LLM Input**     | **GPT-4o-mini** (1,500 Tokens) | $0.15 / 1M tokens | $0.00022         |
-| **LLM Output**    | **GPT-4o-mini** (500 Tokens)   | $0.60 / 1M tokens | $0.00030         |
-| **TOTAL**         |                                |                   | **~$0.00062**    |
+| Component         | Resource Detail                               | Cost Calculation   | Cost per Request |
+| :---------------- | :-------------------------------------------- | :----------------- | :--------------- |
+| **Vector Search** | MongoDB Atlas Vector Search (RU & index cost) | small RU per query | $0.00005         |
+| **LLM Input**     | **GPT Nano** (1,500 Tokens)                   | low-cost small LLM | $0.00003         |
+| **LLM Output**    | **GPT Nano** (500 Tokens)                     | low-cost small LLM | $0.00001         |
+| **TOTAL**         |                                               |                    | **~$0.00062**    |
 
-> **Reasoning:** We use "Mini" or "Haiku" class models. They are 30x cheaper than GPT-4 while sufficient for strict JSON formatting.
+> **Reasoning:** We use small footprint LLMs (GPT Nano early-stage) for sentence generation; these are much cheaper than larger LLMs. Vector retrieval is handled by MongoDB Atlas Vector Search to keep operations within a single managed datastore.
 
 ---
 
@@ -91,10 +91,9 @@ We avoid self-hosting stateful sets to ensure reliability.
 
 | Service                 | Spec                      | Unit Price | Monthly Cost |
 | :---------------------- | :------------------------ | :--------- | :----------- |
-| **MongoDB Atlas**       | M10 Cluster (General)     | Dedicated  | $57.00       |
-| **AWS RDS (Postgres)**  | `db.t3.micro` (Auth)      | Single AZ  | $13.00       |
+| **MongoDB Atlas**       | M10 Cluster (General)     | Managed    | $57.00       |
 | **Elasticache (Redis)** | `cache.t3.micro` (Queues) | 2 Nodes    | $34.00       |
-| **Subtotal**            |                           |            | **$104.00**  |
+| **Subtotal**            |                           |            | **$91.00**   |
 
 ---
 
@@ -108,9 +107,9 @@ We avoid self-hosting stateful sets to ensure reliability.
 | Category                                   | Cost        |
 | :----------------------------------------- | :---------- |
 | **Fixed Infrastructure**                   | $421.90     |
-| **Vision Costs** (3k daily _ 30 _ $0.0035) | $315.00     |
-| **LLM Costs** (3k daily _ 30 _ $0.00062)   | $55.80      |
-| **Total Monthly Burn**                     | **$792.70** |
+| **Vision Costs** (3k daily _ 30 _ $0.0033) | $297.00     |
+| **LLM Costs** (3k daily _ 30 _ $0.00012)   | $10.80      |
+| **Total Monthly Burn**                     | **$729.70** |
 | **Cost Per User**                          | **$0.79**   |
 
 ### **Scenario B: Growth Phase (50,000 Active Users)**
