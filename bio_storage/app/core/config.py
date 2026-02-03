@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     s3_region: str = Field("us-east-1", env="AWS_REGION")
     s3_bucket_hot: str = Field("bio-storage-hot", env="BUCKET_HOT")
     s3_bucket_archive: str = Field("bio-storage-archive", env="BUCKET_ARCHIVE")
+    # How many days before a file is considered for archival
+    archive_threshold_days: int = Field(30, env="ARCHIVE_THRESHOLD_DAYS")
 
     class Config:
         env_file = "../../.env"
