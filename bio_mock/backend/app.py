@@ -203,6 +203,41 @@ def build_ecosystem():
 
 msg_queue = asyncio.Queue()
 
+# --- Exposed / Available Devices (controlled via REST) ---
+# Keep an in-memory view of what devices are being "advertised" as available.
+# This is mutated when the frontend toggles a device on/off.
+ecosystem = build_ecosystem()
+exposed_devices = set()
+
+@app.get("/api/devices")
+async def list_devices():
+    """Return full list of devices and basic metadata."""
+    return {"devices": [{"name": name, "hz": config["hz"]} for name, config in ecosystem.items()]}
+
+@app.get("/api/available")
+async def list_available():
+    """Return currently exposed (available) devices."""
+    return {"available": sorted(list(exposed_devices))}
+
+@app.post("/api/expose")
+async def expose_device(request: Request):
+    payload = await request.json()
+    name = payload.get("device")
+    if not name or name not in ecosystem:
+        return {"error": "unknown_device", "device": name}
+    exposed_devices.add(name)
+    return {"status": "exposed", "device": name, "available": sorted(list(exposed_devices))}
+
+@app.post("/api/hide")
+async def hide_device(request: Request):
+    payload = await request.json()
+    name = payload.get("device")
+    if not name or name not in ecosystem:
+        return {"error": "unknown_device", "device": name}
+    exposed_devices.discard(name)
+    return {"status": "hidden", "device": name, "available": sorted(list(exposed_devices))}
+
+
 async def run_device(name, hz, sensors):
     """Independent loop for each device"""
     delay = 1.0 / hz

@@ -100,7 +100,24 @@ const MetricRow = ({ label, value, unit, color }) => {
 	);
 };
 
-const DeviceCard = ({ name, hz, metrics, count }) => {
+// Small switchbox component
+const SwitchBox = ({ checked, onChange }) => {
+	return (
+		<label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={(e) => onChange(e.target.checked)}
+				style={{ width: 40, height: 20 }}
+			/>
+			<span style={{ fontSize: 12, color: checked ? "#111" : "#888" }}>
+				{checked ? "On" : "Off"}
+			</span>
+		</label>
+	);
+};
+
+const DeviceCard = ({ name, hz, metrics, count, available, onToggle }) => {
 	const color = getBrandColor(name);
 
 	return (
@@ -134,17 +151,21 @@ const DeviceCard = ({ name, hz, metrics, count }) => {
 				>
 					{name}
 				</h3>
-				<span
-					style={{
-						background: "rgba(255,255,255,0.2)",
-						color: "white",
-						fontSize: 10,
-						padding: "2px 6px",
-						borderRadius: 4,
-					}}
-				>
-					{hz} Hz
-				</span>
+				<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+					<span
+						style={{
+							background: "rgba(255,255,255,0.2)",
+							color: "white",
+							fontSize: 10,
+							padding: "2px 6px",
+							borderRadius: 4,
+						}}
+					>
+						{hz} Hz
+					</span>
+					{/* Switch */}
+					<SwitchBox checked={available} onChange={onToggle} />
+				</div>
 			</div>
 
 			{/* Body */}
@@ -180,6 +201,8 @@ const DeviceCard = ({ name, hz, metrics, count }) => {
 
 export default function EcosystemDashboard() {
 	const [devices, setDevices] = useState({});
+	const [meta, setMeta] = useState({});
+	const [available, setAvailable] = useState([]);
 	const dataRef = useRef({});
 
 	useEffect(() => {
@@ -207,11 +230,50 @@ export default function EcosystemDashboard() {
 			setDevices({ ...dataRef.current });
 		}, 66);
 
+		// Fetch meta & available list on mount
+		fetch("http://localhost:8000/api/devices")
+			.then((r) => r.json())
+			.then((d) => {
+				const map = {};
+				d.devices.forEach((it) => (map[it.name] = it));
+				setMeta(map);
+			})
+			.catch(() => {});
+
+		fetch("http://localhost:8000/api/available")
+			.then((r) => r.json())
+			.then((d) => setAvailable(d.available || []))
+			.catch(() => setAvailable([]));
+
+		// Poll available every 5s so UI stays in sync if other clients change it
+		const poll = setInterval(() => {
+			fetch("http://localhost:8000/api/available")
+				.then((r) => r.json())
+				.then((d) => setAvailable(d.available || []))
+				.catch(() => {});
+		}, 5000);
+
 		return () => {
 			es.close();
 			clearInterval(interval);
+			clearInterval(poll);
 		};
 	}, []);
+
+	const toggleExposure = (name, on) => {
+		const url = `http://localhost:8000/api/${on ? "expose" : "hide"}`;
+		fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ device: name }),
+		})
+			.then((r) => r.json())
+			.then((d) => {
+				// backend returns available list
+				if (d.available) setAvailable(d.available);
+			})
+			.catch(() => {});
+	};
 
 	return (
 		<div
@@ -222,7 +284,7 @@ export default function EcosystemDashboard() {
 				fontFamily: "system-ui, sans-serif",
 			}}
 		>
-			<div style={{ marginBottom: 32 }}>
+			<div style={{ marginBottom: 16 }}>
 				<h1 style={{ margin: "0 0 8px 0", color: "#111" }}>
 					Global Health Stream
 				</h1>
@@ -230,6 +292,50 @@ export default function EcosystemDashboard() {
 					Real-time emulation of {Object.keys(devices).length}{" "}
 					heterogeneous wearable devices.
 				</p>
+			</div>
+
+			{/* Available Devices Panel */}
+			<div
+				style={{
+					marginBottom: 24,
+					display: "flex",
+					gap: 16,
+					alignItems: "center",
+				}}
+			>
+				<div
+					style={{
+						padding: 12,
+						background: "white",
+						borderRadius: 10,
+						boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+					}}
+				>
+					<strong style={{ display: "block", marginBottom: 6 }}>
+						Available Devices
+					</strong>
+					<div style={{ fontSize: 13, color: "#444" }}>
+						{available.length} device(s)
+					</div>
+					<div style={{ marginTop: 8, fontSize: 12, color: "#666" }}>
+						{available.join(", ") || "—"}
+					</div>
+				</div>
+				<div
+					style={{
+						padding: 12,
+						background: "white",
+						borderRadius: 10,
+						boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+					}}
+				>
+					<strong style={{ display: "block", marginBottom: 6 }}>
+						All Known Devices
+					</strong>
+					<div style={{ fontSize: 13, color: "#444" }}>
+						{Object.keys(meta).length} total
+					</div>
+				</div>
 			</div>
 
 			<div
@@ -240,15 +346,19 @@ export default function EcosystemDashboard() {
 					gap: 24,
 				}}
 			>
-				{Object.keys(devices)
+				{Object.keys({ ...meta, ...devices })
 					.sort()
 					.map((name) => (
 						<DeviceCard
 							key={name}
 							name={name}
-							hz={devices[name].hz}
-							metrics={devices[name].metrics}
-							count={devices[name].count}
+							hz={(devices[name] || meta[name] || {}).hz || "—"}
+							metrics={
+								(devices[name] && devices[name].metrics) || {}
+							}
+							count={(devices[name] && devices[name].count) || 0}
+							available={available.includes(name)}
+							onToggle={(on) => toggleExposure(name, on)}
 						/>
 					))}
 			</div>
