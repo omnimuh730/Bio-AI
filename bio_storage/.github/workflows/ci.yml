@@ -110,14 +110,20 @@ jobs:
         - 27017:27017
         options: >-
           --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
-      minio:
-        image: minio/minio:RELEASE.2024-01-01T00-00-00Z
-        ports:
-        - 9000:9000
-        options: "-e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin --health-cmd 'curl -f http://localhost:9000/minio/health/live || exit 1' --health-interval 10s --health-timeout 5s --health-retries 5"
-        command: ["server","/data"]
+      # Removed MinIO from 'services' because we need to pass custom arguments ('server /data')
+      # which GHA services does not easily support.
     steps:
     - uses: actions/checkout@v4
+
+    # Manually start MinIO with the correct command
+    - name: Start MinIO
+      run: |
+        docker run -d -p 9000:9000 --name minio \
+          -e MINIO_ROOT_USER=minioadmin \
+          -e MINIO_ROOT_PASSWORD=minioadmin \
+          minio/minio:RELEASE.2024-01-01T00-00-00Z \
+          server /data
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -133,11 +139,11 @@ jobs:
     - name: Create MinIO buckets
       run: |
         python - << 'PY'
-import boto3
-s3=boto3.client('s3', endpoint_url='http://127.0.0.1:9000', aws_access_key_id='minioadmin', aws_secret_access_key='minioadmin', region_name='us-east-1')
-s3.create_bucket(Bucket='bio-storage-hot')
-s3.create_bucket(Bucket='bio-storage-archive')
-PY
+        import boto3
+        s3=boto3.client('s3', endpoint_url='http://127.0.0.1:9000', aws_access_key_id='minioadmin', aws_secret_access_key='minioadmin', region_name='us-east-1')
+        s3.create_bucket(Bucket='bio-storage-hot')
+        s3.create_bucket(Bucket='bio-storage-archive')
+        PY
       env:
         AWS_ACCESS_KEY_ID: minioadmin
         AWS_SECRET_ACCESS_KEY: minioadmin
