@@ -81,6 +81,69 @@ Future<void> openFindDevicesModal(
   void Function(String) showToast,
   void Function(VoidCallback) setParentState,
 ) async {
+  // If running against the streaming mock in dev/stage, show that backend list
+  // Try backend first (force request). If it responds (even empty list) show mock modal.
+  try {
+    final available = await s.fetchAvailableDevices(force: true);
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          // keep local copy so UI updates without closing dialog
+          var localAvailable = List<String>.from(available);
+
+          Future<void> toggleByName(String name, bool value) async {
+            final key = s.keyForStreamingName(name);
+            if (key == null) return;
+
+            print('toggleByName: ${value ? 'expose' : 'hide'} $name');
+            await s.setDeviceExposure(key, value);
+
+            localAvailable = await s.fetchAvailableDevices(force: true);
+            setModalState(() {});
+            setParentState(() {});
+          }
+
+          final entries = localAvailable;
+
+          return AlertDialog(
+            title: const Text('Mock Available Devices'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: entries.isEmpty
+                  ? const Text('No devices available')
+                  : ListView(
+                      shrinkWrap: true,
+                      children: entries.map((name) {
+                        final key = s.keyForStreamingName(name);
+                        return ListTile(
+                          title: Text(name),
+                          trailing: Switch(
+                            value: key != null && localAvailable.contains(name),
+                            onChanged: key == null
+                                ? null
+                                : (v) async => await toggleByName(name, v),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    return;
+  } catch (_) {
+    // If backend is unreachable, fall back to BLE flow below
+  }
+
   final ble = ref.read(bleServiceProvider);
   final ok = await ble.ensurePermissions();
   await updateBtPermission(ref, s, setParentState);

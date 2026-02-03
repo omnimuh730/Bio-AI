@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/ui/organisms/floating_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
+import 'package:bio_ai/core/config.dart';
+import 'package:bio_ai/services/streaming_service.dart';
 
 import 'package:bio_ai/ui/pages/settings/widgets/settings_profile.dart';
 import 'package:bio_ai/ui/pages/settings/widgets/settings_device.dart';
@@ -31,16 +34,28 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _s = SettingsStateHolder();
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     // Check Bluetooth permission status once the widget is mounted
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateBtPermission());
+
+    // Start polling streaming backend for available devices when in dev/stage
+    if (AppConfig.isDevOrStage) {
+      // run immediately and then every 5s
+      _refreshAvailableDevices();
+      _pollTimer = Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => _refreshAvailableDevices(),
+      );
+    }
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _s.dispose();
     super.dispose();
   }
@@ -83,6 +98,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _toggleDevice(String key) {
+    // Client-side: connect only one device locally. Do not clear other available devices on backend.
+    final wasConnected = _s.devices[key]?.connected == true;
+
+    if (AppConfig.isDevOrStage) {
+      if (wasConnected) {
+        // disconnect locally
+        setState(() {
+          _s.devices[key]?.connected = false;
+          _s.devices[key]?.lastSync = '';
+        });
+        StreamingService.instance.setSelectedDevice(null);
+        _showToast('${_s.devices[key]?.label} disconnected');
+      } else {
+        // connect this device locally and ensure backend marks it available
+        setState(() {
+          // only one connected locally
+          _s.devices.forEach((k, v) {
+            v.connected = false;
+            v.lastSync = '';
+          });
+          _s.devices[key]?.connected = true;
+          _s.devices[key]?.lastSync = 'just now';
+        });
+        // mark available on backend (additive)
+        _s.setDeviceExposure(key, true).then((_) async {
+          // set selected device so dashboard shows its metrics
+          final name = _s.streamingName(key);
+          StreamingService.instance.setSelectedDevice(name);
+          _showToast('${_s.devices[key]?.label} connected');
+        });
+      }
+      return;
+    }
+
+    // Prod: local bluetooth flow
     setState(() => _s.toggleDevice(key));
     _showToast(
       '${_s.devices[key]?.label} ${_s.devices[key]?.connected == true ? 'connected' : 'disconnected'}',
@@ -211,4 +261,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _requestBluetoothPermission() async =>
       requestBluetoothPermission(ref, _s, (fn) => setState(fn), _showToast);
   void _openDeleteModal() => openDeleteModal(context, _s, _showToast);
+
+  Future<void> _refreshAvailableDevices() async {
+    try {
+      final available = await _s.fetchAvailableDevices();
+      setState(() {
+        _s.devices.forEach((k, v) {
+          final mappedName = _s.streamingName(k);
+          v.connected = mappedName != null && available.contains(mappedName);
+          v.lastSync = v.connected ? 'just now' : '';
+        });
+      });
+    } catch (e) {
+      // ignore errors
+    }
+  }
 }

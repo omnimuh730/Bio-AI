@@ -1,3 +1,6 @@
+import 'package:bio_ai/services/streaming_service.dart';
+import 'package:bio_ai/core/config.dart';
+
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
@@ -28,6 +31,22 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _mealIndex = 0;
+  final StreamingService _streaming = StreamingService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    if (AppConfig.isDevOrStage) {
+      _streaming.start();
+      _streaming.latest.addListener(() => setState(() {}));
+    }
+  }
+
+  @override
+  void dispose() {
+    _streaming.dispose();
+    super.dispose();
+  }
 
   void _swapMeal() {
     setState(() {
@@ -111,7 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   },
                 ),
-                const VitalsGrid(),
+                VitalsGrid(streaming: _streaming),
 
                 SectionTitle(localizations.aiSuggestion),
                 AIMealCard(

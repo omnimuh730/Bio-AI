@@ -23,6 +23,7 @@ class SettingsDeviceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasConnected = devices.values.any((d) => d.connected);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -30,33 +31,49 @@ class SettingsDeviceSection extends StatelessWidget {
         const SettingsSectionLabel('Device Sync'),
         SettingsCardContainer(
           children: [
-            SettingsDeviceRow(
-              device: devices['apple']!,
-              icon: Icons.apple,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('apple'),
-            ),
-            const SettingsDivider(),
-            SettingsDeviceRow(
-              device: devices['google']!,
-              icon: Icons.g_mobiledata,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('google'),
-            ),
-            const SettingsDivider(),
-            SettingsDeviceRow(
-              device: devices['garmin']!,
-              icon: Icons.watch,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('garmin'),
-            ),
-            const SettingsDivider(),
-            SettingsDeviceRow(
-              device: devices['fitbit']!,
-              icon: Icons.favorite_border,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('fitbit'),
-            ),
+            if (!hasConnected) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                child: Text(
+                  'No connected devices',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ] else ...[
+              SettingsDeviceRow(
+                device: devices['apple']!,
+                icon: Icons.apple,
+                iconColor: AppColors.textMain,
+                onToggle: () => onToggle('apple'),
+              ),
+              const SettingsDivider(),
+              SettingsDeviceRow(
+                device: devices['google']!,
+                icon: Icons.g_mobiledata,
+                iconColor: AppColors.textMain,
+                onToggle: () => onToggle('google'),
+              ),
+              const SettingsDivider(),
+              SettingsDeviceRow(
+                device: devices['garmin']!,
+                icon: Icons.watch,
+                iconColor: AppColors.textMain,
+                onToggle: () => onToggle('garmin'),
+              ),
+              const SettingsDivider(),
+              SettingsDeviceRow(
+                device: devices['fitbit']!,
+                icon: Icons.favorite_border,
+                iconColor: AppColors.textMain,
+                onToggle: () => onToggle('fitbit'),
+              ),
+            ],
+
             SettingsActionRow(
               label: 'Resync Devices',
               icon: Icons.sync,
