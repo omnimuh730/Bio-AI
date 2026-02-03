@@ -1,7 +1,12 @@
-name: CI
+name: CI - bio_storage
 
-# ARCHIVED: Automatic triggers disabled. Use the centralized workflow at .github/workflows/bio-storage-ci.yml
 on:
+  push:
+    paths:
+    - 'bio_storage/**'
+  pull_request:
+    paths:
+    - 'bio_storage/**'
   workflow_dispatch:
 
 
@@ -109,12 +114,9 @@ jobs:
         - 27017:27017
         options: >-
           --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
-      # Removed MinIO from 'services' because we need to pass custom arguments ('server /data')
-      # which GHA services does not easily support.
     steps:
     - uses: actions/checkout@v4
 
-    # Manually start MinIO with the correct command
     - name: Start MinIO
       run: |
         docker run -d -p 9000:9000 --name minio \

@@ -1,7 +1,12 @@
 name: CI - bio_trace
 
-# ARCHIVED: Automatic triggers disabled. Use the centralized workflow at .github/workflows/bio-trace-ci.yml
 on:
+  push:
+    paths:
+    - 'bio_trace/**'
+  pull_request:
+    paths:
+    - 'bio_trace/**'
   workflow_dispatch:
 
 

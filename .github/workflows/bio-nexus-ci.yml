@@ -1,7 +1,12 @@
-name: CI
+name: CI - bio_nexus
 
-# ARCHIVED: Automatic triggers disabled. Use the centralized workflow at .github/workflows/bio-nexus-ci.yml
 on:
+  push:
+    paths:
+    - 'bio_nexus/**'
+  pull_request:
+    paths:
+    - 'bio_nexus/**'
   workflow_dispatch:
 
 
