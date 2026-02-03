@@ -1,17 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from .config import DATABASE_URL
+# Database shim for MongoDB migration
+from typing import Generator
+from app.db.mongodb import get_db as get_mongo_db
 
-engine = create_engine(DATABASE_URL, echo=False, future=True)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
-Base = declarative_base()
 
 def init_db():
-    Base.metadata.create_all(bind=engine)
+    # No-op for MongoDB
+    return None
+
 
 def get_session():
-    db = SessionLocal()
+    """Compatibility dependency used by some routers. Returns the Motor database instance."""
+    db = get_mongo_db()
     try:
         yield db
     finally:
-        db.close()
+        pass
+
+
+def get_db():
+    """Preferred dependency returning the Motor database instance."""
+    return get_mongo_db()

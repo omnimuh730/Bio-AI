@@ -7,4 +7,3 @@ uploads/
 Extracted_ingredients/
 .env
 *.log
-.env.example

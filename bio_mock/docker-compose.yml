@@ -1,0 +1,11 @@
+services:
+    streaming-backend:
+        build: ./backend
+        ports:
+            - "8000:8000"
+    streaming-frontend:
+        build: ./streaming-frontend
+        ports:
+            - "5193:5193"
+        depends_on:
+            - streaming-backend
