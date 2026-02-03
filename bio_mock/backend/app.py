@@ -3,7 +3,6 @@ import json
 import random
 import math
 from datetime import datetime
-from typing import List, Dict
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,122 +16,225 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 1. Simulation Logic ---
+# --- 1. Advanced Metric Generators ---
 
-class Sensor:
-    def __init__(self, key, min_v, max_v, volatility, unit, is_int=False):
-        self.key = key
-        self.val = (min_v + max_v) / 2
+class MetricGenerator:
+    def tick(self):
+        raise NotImplementedError
+
+class RandomWalk(MetricGenerator):
+    """Organic floating point data (Temp, Weight)"""
+    def __init__(self, start, min_v, max_v, volatility, unit):
+        self.val = start
         self.min = min_v
         self.max = max_v
         self.vol = volatility
         self.unit = unit
-        self.is_int = is_int
-        self.trend = 0
-
-    def next(self):
-        # Brownian motion with mean reversion
+    
+    def tick(self):
         change = random.uniform(-self.vol, self.vol)
-        self.trend = (self.trend * 0.9) + change
-        self.val += self.trend
-        
-        # Wall bouncing
-        if self.val > self.max: self.val = self.max; self.trend *= -0.5
-        if self.val < self.min: self.val = self.min; self.trend *= -0.5
+        self.val += change
+        # Wall bounce
+        if self.val > self.max: self.val = self.max; self.val -= self.vol
+        if self.val < self.min: self.val = self.min; self.val += self.vol
+        return {"value": round(self.val, 2), "unit": self.unit}
 
-        res = int(self.val) if self.is_int else round(self.val, 2)
-        return {"type": self.key, "value": res, "unit": self.unit}
+class VitalSign(MetricGenerator):
+    """Heart Rate / SpO2 (Integers with specific behavior)"""
+    def __init__(self, start, min_v, max_v, volatility, unit):
+        self.val = start
+        self.min = min_v
+        self.max = max_v
+        self.vol = volatility
+        self.unit = unit
 
-class StateSensor:
-    """For categorical data like Sleep Stages or Activity Mode"""
-    def __init__(self, key, states):
-        self.key = key
+    def tick(self):
+        self.val += random.uniform(-self.vol, self.vol)
+        # Clamp
+        self.val = max(self.min, min(self.max, self.val))
+        return {"value": int(self.val), "unit": self.unit}
+
+class Waveform(MetricGenerator):
+    """High Speed Sensor Data (ECG, Accelerometer)"""
+    def __init__(self, amplitude, freq, unit):
+        self.step = 0
+        self.amp = amplitude
+        self.freq = freq
+        self.unit = unit
+
+    def tick(self):
+        self.step += 0.1
+        # Simulated sine wave + noise
+        val = math.sin(self.step * self.freq) * self.amp
+        noise = random.uniform(-self.amp * 0.1, self.amp * 0.1)
+        return {"value": round(val + noise, 3), "unit": self.unit}
+
+class GPS(MetricGenerator):
+    """Simulates moving in a circle"""
+    def __init__(self, lat, lon):
+        self.lat = lat
+        self.lon = lon
+        self.step = 0
+    
+    def tick(self):
+        self.step += 0.05
+        # Move in a small circle
+        d_lat = math.sin(self.step) * 0.0001
+        d_lon = math.cos(self.step) * 0.0001
+        return {"value": f"{self.lat + d_lat:.5f}, {self.lon + d_lon:.5f}", "unit": "loc"}
+
+class State(MetricGenerator):
+    """Enum states (Sleep, Stress Levels)"""
+    def __init__(self, states):
         self.states = states
         self.current = states[0]
-
-    def next(self):
-        # 5% chance to change state
-        if random.random() < 0.05:
+    
+    def tick(self):
+        if random.random() < 0.02: # Low chance to switch
             self.current = random.choice(self.states)
-        return {"type": self.key, "value": self.current, "unit": "state"}
+        return {"value": self.current, "unit": ""}
 
-# --- 2. Device Profiles (The Ecosystem) ---
+# --- 2. Device Definitions ---
 
-def create_apple_watch():
-    return [
-        Sensor("heart_rate", 60, 180, 2.0, "bpm", True),
-        Sensor("hrv_sdnn", 30, 80, 1.5, "ms", True),
-        Sensor("walking_asymmetry", 0, 15, 0.5, "%"),
-        Sensor("headphone_audio", 40, 95, 2.0, "dB"),
-        Sensor("blood_oxygen", 90, 100, 0.1, "%", True),
-        StateSensor("ecg_status", ["Sinus Rhythm", "Sinus Rhythm", "Inconclusive"])
-    ]
+def build_ecosystem():
+    """Returns a dict of devices with their Hz and Sensor Package"""
+    return {
+        # --- HIGH PERF (Apple / Garmin / Huawei) ---
+        "Apple Watch Ultra 2": {
+            "hz": 20.0,
+            "sensors": {
+                "heart_rate": VitalSign(75, 50, 190, 2.0, "bpm"),
+                "blood_oxygen": VitalSign(98, 92, 100, 0.5, "%"),
+                "ecg_waveform": Waveform(500, 2.0, "µV"),
+                "accel_x": Waveform(1.2, 0.5, "g"),
+                "env_noise": VitalSign(45, 30, 90, 5.0, "dB"),
+                "wrist_temp": RandomWalk(36.6, 35.0, 38.0, 0.02, "°C")
+            }
+        },
+        "Garmin Fenix 7 Pro": {
+            "hz": 10.0,
+            "sensors": {
+                "heart_rate": VitalSign(145, 120, 175, 1.0, "bpm"), # Runner mode
+                "cadence": VitalSign(170, 160, 180, 2.0, "spm"),
+                "vert_oscillation": RandomWalk(9.2, 6.0, 12.0, 0.5, "cm"),
+                "ground_contact": VitalSign(240, 200, 300, 5.0, "ms"),
+                "running_power": VitalSign(320, 200, 450, 10.0, "W"),
+                "gps_track": GPS(37.7749, -122.4194),
+                "body_battery": VitalSign(65, 0, 100, 0.1, "%")
+            }
+        },
+        "Huawei Watch Ultimate": {
+            "hz": 5.0,
+            "sensors": {
+                "heart_rate": VitalSign(70, 50, 120, 1.0, "bpm"),
+                "arterial_stiffness": RandomWalk(7.5, 6.0, 9.0, 0.1, "m/s"),
+                "spo2": VitalSign(97, 94, 100, 0.2, "%"),
+                "stress_score": VitalSign(42, 10, 90, 1.0, "idx")
+            }
+        },
 
-def create_garmin_fenix():
-    return [
-        Sensor("heart_rate", 50, 170, 1.5, "bpm", True),
-        Sensor("running_power", 200, 450, 10, "W", True), # Running Dynamics
-        Sensor("vertical_oscillation", 6, 12, 0.2, "cm"),
-        Sensor("ground_contact_time", 200, 300, 5, "ms", True),
-        Sensor("body_battery", 0, 100, 0.1, "%", True), # Garmin specific
-        Sensor("stress_score", 0, 100, 1.0, "index", True)
-    ]
+        # --- HEALTH FOCUSED (Samsung / Withings / OnePlus) ---
+        "Samsung Galaxy Watch 6": {
+            "hz": 5.0,
+            "sensors": {
+                "heart_rate": VitalSign(72, 60, 100, 1.5, "bpm"),
+                "systolic_bp": VitalSign(120, 110, 140, 2.0, "mmHg"),
+                "diastolic_bp": VitalSign(80, 70, 90, 1.5, "mmHg"),
+                "bia_body_fat": RandomWalk(18.5, 18.0, 19.0, 0.05, "%"),
+                "bia_muscle": RandomWalk(32.0, 31.5, 32.5, 0.05, "kg"),
+                "skin_temp": RandomWalk(35.2, 34.0, 36.5, 0.1, "°C")
+            }
+        },
+        "Withings ScanWatch 2": {
+            "hz": 1.0,
+            "sensors": {
+                "heart_rate": VitalSign(62, 50, 80, 0.5, "bpm"),
+                "temp_baseline": RandomWalk(0.0, -2.0, 2.0, 0.1, "°C"),
+                "ecg_afib_check": State(["Normal", "Normal", "Normal", "Inconclusive"]),
+                "resp_rate": VitalSign(14, 12, 18, 0.5, "br/min")
+            }
+        },
+        "OnePlus Watch 2": {
+            "hz": 2.0,
+            "sensors": {
+                "heart_rate": VitalSign(75, 60, 110, 1.2, "bpm"),
+                "vo2_max_est": RandomWalk(45.0, 44.5, 45.5, 0.01, "ml/kg"),
+                "stress": VitalSign(30, 1, 100, 2.0, "%")
+            }
+        },
 
-def create_samsung_galaxy():
-    return [
-        Sensor("heart_rate", 60, 140, 1.0, "bpm", True),
-        Sensor("systolic_bp", 110, 140, 0.5, "mmHg", True), # Blood Pressure
-        Sensor("diastolic_bp", 70, 90, 0.5, "mmHg", True),
-        Sensor("body_fat", 15, 25, 0.01, "%"), # BIA Sensor
-        Sensor("skeletal_muscle", 30, 40, 0.01, "kg"),
-        StateSensor("stress_level", ["Low", "Neutral", "High"])
-    ]
+        # --- LIFESTYLE / RECOVERY (Fitbit / Oura / Whoop / Amazfit) ---
+        "Fitbit Charge 6": {
+            "hz": 1.0,
+            "sensors": {
+                "heart_rate": VitalSign(68, 55, 130, 1.0, "bpm"),
+                "eda_stress": VitalSign(3, 0, 15, 1.0, "evts"), # Electrodermal Activity
+                "daily_readiness": VitalSign(85, 0, 100, 0.05, "scr"),
+                "azm_minutes": VitalSign(42, 42, 100, 0.0, "min") # Active Zone Mins
+            }
+        },
+        "Oura Ring Gen3": {
+            "hz": 0.5,
+            "sensors": {
+                "readiness_score": VitalSign(88, 50, 100, 0.1, "scr"),
+                "sleep_score": VitalSign(92, 50, 100, 0.0, "scr"),
+                "body_temp_dev": RandomWalk(0.2, -0.5, 1.5, 0.05, "°C"),
+                "activity_cal": VitalSign(350, 350, 800, 0.5, "cal")
+            }
+        },
+        "Whoop 4.0": {
+            "hz": 0.5,
+            "sensors": {
+                "strain": RandomWalk(12.4, 0, 21, 0.1, "idx"),
+                "recovery": VitalSign(65, 0, 100, 0.2, "%"),
+                "hrv_rmssd": VitalSign(55, 30, 110, 3.0, "ms"),
+                "skin_temp": RandomWalk(36.1, 35.0, 37.0, 0.05, "°C")
+            }
+        },
+        "Amazfit GTR 4": {
+            "hz": 1.0,
+            "sensors": {
+                "pai_score": VitalSign(110, 50, 150, 0.1, "pts"),
+                "heart_rate": VitalSign(72, 60, 100, 1.0, "bpm"),
+                "blood_oxygen": VitalSign(98, 90, 100, 0.5, "%")
+            }
+        }
+    }
 
-def create_fitbit_pixel():
-    return [
-        Sensor("heart_rate", 55, 150, 1.2, "bpm", True),
-        Sensor("eda_response", 0, 20, 0.5, "responses"), # Electrodermal Activity
-        Sensor("skin_temp_variation", -2, 2, 0.05, "°C"),
-        StateSensor("sleep_stage", ["Awake", "Light", "Deep", "REM"]),
-        Sensor("daily_readiness", 0, 100, 0.05, "score", True)
-    ]
+msg_queue = asyncio.Queue()
 
-# Registry of active mock devices
-DEVICES = {
-    "Apple Watch Series 9": create_apple_watch(),
-    "Garmin Fenix 7": create_garmin_fenix(),
-    "Samsung Galaxy Watch 6": create_samsung_galaxy(),
-    "Google Pixel Watch 2": create_fitbit_pixel()
-}
-
-async def master_generator(request: Request):
-    """Simulates multiple devices streaming simultaneously"""
+async def run_device(name, hz, sensors):
+    """Independent loop for each device"""
+    delay = 1.0 / hz
     while True:
-        if await request.is_disconnected():
-            break
-
-        timestamp = datetime.utcnow().isoformat() + "Z"
-        batch_events = []
-
-        # Iterate over all devices in the ecosystem
-        for device_name, sensors in DEVICES.items():
-            # Randomize sample rate (not all devices update all sensors every second)
-            active_sensors = [s for s in sensors if random.random() > 0.4]
-            
-            for sensor in active_sensors:
-                data = sensor.next()
-                data["timestamp"] = timestamp
-                data["device_id"] = device_name
-                batch_events.append(data)
-
-        if batch_events:
-            yield f"data: {json.dumps(batch_events)}\n\n"
+        # Tick all sensors
+        snapshot = {k: v.tick() for k, v in sensors.items()}
         
-        await asyncio.sleep(1.0) # 1Hz Global Tick
+        payload = {
+            "device": name,
+            "hz": hz,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "metrics": snapshot
+        }
+        await msg_queue.put(payload)
+        await asyncio.sleep(delay)
 
-@app.get("/api/stream/ecosystem")
-async def stream_ecosystem(request: Request):
-    return StreamingResponse(master_generator(request), media_type="text/event-stream")
+@app.on_event("startup")
+async def start_ecosystem():
+    devices = build_ecosystem()
+    for name, config in devices.items():
+        print(f"Booting {name} @ {config['hz']}Hz")
+        asyncio.create_task(run_device(name, config['hz'], config['sensors']))
+
+@app.get("/api/stream/all")
+async def sse_endpoint(request: Request):
+    async def generator():
+        while True:
+            if await request.is_disconnected(): break
+            data = await msg_queue.get()
+            yield f"data: {json.dumps(data)}\n\n"
+    
+    return StreamingResponse(generator(), media_type="text/event-stream")
 
 if __name__ == "__main__":
     import uvicorn

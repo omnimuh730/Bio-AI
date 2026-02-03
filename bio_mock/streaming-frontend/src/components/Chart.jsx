@@ -1,203 +1,257 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
-// --- Styles ---
-const styles = {
-	container: {
-		padding: "2rem",
-		fontFamily: "'Inter', sans-serif",
-		background: "#f3f4f6",
-		minHeight: "100vh",
-	},
-	header: { marginBottom: "2rem" },
-	grid: {
-		display: "grid",
-		gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
-		gap: "2rem",
-	},
-	deviceCard: {
-		background: "white",
-		borderRadius: "16px",
-		padding: "1.5rem",
-		boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-	},
-	deviceTitle: {
-		borderBottom: "1px solid #eee",
-		paddingBottom: "1rem",
-		marginBottom: "1rem",
-		fontSize: "1.25rem",
-		fontWeight: "bold",
-		color: "#111827",
-	},
-	metricRow: {
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: "0.75rem",
-		padding: "0.5rem",
-		borderRadius: "8px",
-		background: "#f9fafb",
-	},
-	metricLabel: {
-		fontSize: "0.875rem",
-		color: "#6b7280",
-		textTransform: "capitalize",
-	},
-	metricValue: {
-		fontWeight: "600",
-		color: "#111827",
-		fontSize: "1rem",
-		fontVariantNumeric: "tabular-nums",
-	},
-	unit: { fontSize: "0.75rem", color: "#9ca3af", marginLeft: "4px" },
-	sparkline: { marginLeft: "1rem" },
+// --- Colors & Branding ---
+const BRAND_COLORS = {
+	Apple: "#000000",
+	Samsung: "#1428a0",
+	Garmin: "#007cc3",
+	Fitbit: "#00b0b9",
+	Oura: "#d4af37", // Gold
+	Whoop: "#cf2e2e",
+	Huawei: "#c7000b",
+	Withings: "#4a4a4a",
+	OnePlus: "#f50000",
+	Amazfit: "#30d19e",
 };
 
-// --- Mini Sparkline ---
-const MiniSparkline = ({ history = [], color = "#3b82f6" }) => {
-	if (history.length < 5) return null;
-	const h = 30;
-	const w = 100;
-	const max = Math.max(...history);
-	const min = Math.min(...history);
-	const points = history
-		.map((v, i) => {
-			const x = (i / (history.length - 1)) * w;
-			const y = h - ((v - min) / (max - min || 1)) * h;
-			return `${x},${y}`;
-		})
-		.join(" ");
+const getBrandColor = (deviceName) => {
+	const key = Object.keys(BRAND_COLORS).find((k) => deviceName.includes(k));
+	return BRAND_COLORS[key] || "#555";
+};
+
+// --- Components ---
+
+const MetricRow = ({ label, value, unit, color }) => {
+	// Determine Visualizer Type
+	const isPercent = unit === "%" || label.includes("score");
+	const isWave = label.includes("ecg") || label.includes("accel");
+	const isLoc = unit === "loc";
 
 	return (
-		<svg width={w} height={h} style={styles.sparkline}>
-			<polyline
-				points={points}
-				fill="none"
-				stroke={color}
-				strokeWidth="2"
-				strokeLinecap="round"
-			/>
-		</svg>
+		<div style={{ marginBottom: 8, fontSize: 13 }}>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					marginBottom: 2,
+				}}
+			>
+				<span
+					style={{
+						color: "#666",
+						textTransform: "uppercase",
+						fontSize: 11,
+						fontWeight: 600,
+					}}
+				>
+					{label.replace(/_/g, " ")}
+				</span>
+				<span style={{ fontFamily: "monospace", fontWeight: 600 }}>
+					{value}{" "}
+					<span style={{ color: "#999", fontSize: 10 }}>{unit}</span>
+				</span>
+			</div>
+
+			{/* Conditional Visuals */}
+			{isPercent && (
+				<div style={{ height: 4, background: "#eee", borderRadius: 2 }}>
+					<div
+						style={{
+							width: `${Math.min(value, 100)}%`,
+							height: "100%",
+							background: color,
+							borderRadius: 2,
+						}}
+					/>
+				</div>
+			)}
+
+			{isWave && (
+				<div
+					style={{
+						height: 2,
+						background: "#eee",
+						marginTop: 4,
+						position: "relative",
+						overflow: "hidden",
+					}}
+				>
+					<div
+						style={{
+							position: "absolute",
+							left: 0,
+							top: 0,
+							bottom: 0,
+							width: "50%",
+							background: `linear-gradient(90deg, transparent, ${color})`,
+							transform: "translateX(100%)",
+							animation: "dash 0.5s linear infinite",
+						}}
+					/>
+				</div>
+			)}
+
+			{isLoc && (
+				<div style={{ fontSize: 10, color: "#aaa" }}>
+					Live GPS Tracking Active
+				</div>
+			)}
+		</div>
 	);
 };
 
-// --- Main Component ---
+const DeviceCard = ({ name, hz, metrics, count }) => {
+	const color = getBrandColor(name);
+
+	return (
+		<div
+			style={{
+				background: "white",
+				borderRadius: 12,
+				overflow: "hidden",
+				boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+				display: "flex",
+				flexDirection: "column",
+			}}
+		>
+			{/* Header */}
+			<div
+				style={{
+					background: color,
+					padding: "12px 16px",
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+			>
+				<h3
+					style={{
+						margin: 0,
+						color: "white",
+						fontSize: 15,
+						fontWeight: 600,
+					}}
+				>
+					{name}
+				</h3>
+				<span
+					style={{
+						background: "rgba(255,255,255,0.2)",
+						color: "white",
+						fontSize: 10,
+						padding: "2px 6px",
+						borderRadius: 4,
+					}}
+				>
+					{hz} Hz
+				</span>
+			</div>
+
+			{/* Body */}
+			<div style={{ padding: 16 }}>
+				{Object.entries(metrics).map(([key, data]) => (
+					<MetricRow
+						key={key}
+						label={key}
+						value={data.value}
+						unit={data.unit}
+						color={color}
+					/>
+				))}
+			</div>
+
+			{/* Footer */}
+			<div
+				style={{
+					marginTop: "auto",
+					padding: "8px 16px",
+					background: "#f8f9fa",
+					borderTop: "1px solid #eee",
+					fontSize: 10,
+					color: "#aaa",
+					textAlign: "right",
+				}}
+			>
+				Packets Received: {count.toLocaleString()}
+			</div>
+		</div>
+	);
+};
+
 export default function EcosystemDashboard() {
-	const [ecosystem, setEcosystem] = useState({});
+	const [devices, setDevices] = useState({});
+	const dataRef = useRef({});
 
 	useEffect(() => {
-		const evtSource = new EventSource(
-			"http://localhost:8000/api/stream/ecosystem",
-		);
+		// Inject CSS for the wave animation
+		const style = document.createElement("style");
+		style.innerHTML = `@keyframes dash { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`;
+		document.head.appendChild(style);
 
-		evtSource.onmessage = (e) => {
-			const batch = JSON.parse(e.data);
+		const es = new EventSource("http://localhost:8000/api/stream/all");
 
-			setEcosystem((prev) => {
-				const next = { ...prev };
+		es.onmessage = (e) => {
+			const msg = JSON.parse(e.data);
+			const { device, hz, metrics } = msg;
 
-				batch.forEach((item) => {
-					const { device_id, type, value, unit } = item;
-
-					if (!next[device_id]) next[device_id] = {};
-					if (!next[device_id][type])
-						next[device_id][type] = {
-							current: value,
-							unit,
-							history: [],
-						};
-
-					// Update Current Value
-					next[device_id][type].current = value;
-
-					// Update History (keep last 20 points for sparklines)
-					// Note: In categorical data (strings), we don't push to history for sparklines
-					if (typeof value === "number") {
-						const h = next[device_id][type].history;
-						next[device_id][type].history = [...h, value].slice(
-							-30,
-						);
-					}
-				});
-
-				return next;
-			});
+			// Update ref (buffer)
+			if (!dataRef.current[device]) {
+				dataRef.current[device] = { hz, metrics, count: 0 };
+			}
+			dataRef.current[device].metrics = metrics;
+			dataRef.current[device].count++;
 		};
 
-		return () => evtSource.close();
+		// Render loop: 15 FPS is enough for human eyes on a dashboard
+		const interval = setInterval(() => {
+			setDevices({ ...dataRef.current });
+		}, 66);
+
+		return () => {
+			es.close();
+			clearInterval(interval);
+		};
 	}, []);
 
 	return (
-		<div style={styles.container}>
-			<div style={styles.header}>
-				<h1
-					style={{
-						fontSize: "2rem",
-						fontWeight: "800",
-						color: "#1f2937",
-					}}
-				>
-					Health Data Exchange
+		<div
+			style={{
+				padding: 32,
+				background: "#f3f4f6",
+				minHeight: "100vh",
+				fontFamily: "system-ui, sans-serif",
+			}}
+		>
+			<div style={{ marginBottom: 32 }}>
+				<h1 style={{ margin: "0 0 8px 0", color: "#111" }}>
+					Global Health Stream
 				</h1>
-				<p style={{ color: "#6b7280" }}>
-					Live stream from 4 heterogeneous wearable sources
+				<p style={{ margin: 0, color: "#666" }}>
+					Real-time emulation of {Object.keys(devices).length}{" "}
+					heterogeneous wearable devices.
 				</p>
 			</div>
 
-			<div style={styles.grid}>
-				{Object.entries(ecosystem).map(([deviceName, metrics]) => (
-					<div key={deviceName} style={styles.deviceCard}>
-						<div style={styles.deviceTitle}>
-							{getIcon(deviceName)} {deviceName}
-						</div>
-
-						{Object.entries(metrics).map(([metricKey, data]) => (
-							<div key={metricKey} style={styles.metricRow}>
-								<div
-									style={{
-										display: "flex",
-										flexDirection: "column",
-									}}
-								>
-									<span style={styles.metricLabel}>
-										{metricKey.replace(/_/g, " ")}
-									</span>
-									<div>
-										<span style={styles.metricValue}>
-											{data.current}
-										</span>
-										<span style={styles.unit}>
-											{data.unit}
-										</span>
-									</div>
-								</div>
-								{typeof data.current === "number" && (
-									<MiniSparkline
-										history={data.history}
-										color={getColor(deviceName)}
-									/>
-								)}
-							</div>
-						))}
-					</div>
-				))}
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns:
+						"repeat(auto-fill, minmax(300px, 1fr))",
+					gap: 24,
+				}}
+			>
+				{Object.keys(devices)
+					.sort()
+					.map((name) => (
+						<DeviceCard
+							key={name}
+							name={name}
+							hz={devices[name].hz}
+							metrics={devices[name].metrics}
+							count={devices[name].count}
+						/>
+					))}
 			</div>
 		</div>
 	);
 }
-
-// Helpers for visual flair
-const getIcon = (name) => {
-	if (name.includes("Apple")) return "";
-	if (name.includes("Samsung")) return "S";
-	if (name.includes("Garmin")) return "▲";
-	if (name.includes("Pixel")) return "G";
-	return "⌚";
-};
-
-const getColor = (name) => {
-	if (name.includes("Apple")) return "#ef4444"; // Red ring
-	if (name.includes("Samsung")) return "#3b82f6"; // Blue
-	if (name.includes("Garmin")) return "#f59e0b"; // Orange
-	if (name.includes("Pixel")) return "#10b981"; // Green
-	return "#666";
-};
