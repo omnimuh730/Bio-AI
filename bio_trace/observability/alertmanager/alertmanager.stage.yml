@@ -1,0 +1,12 @@
+global:
+  resolve_timeout: 5m
+route:
+  receiver: 'combined'
+receivers:
+- name: 'combined'
+  webhook_configs:
+  - url: 'http://bio_trace:8080/alertmanager/webhook'
+  slack_configs:
+  - api_url: 'http://slack-stub:5000/webhook'
+    channel: '#stage'
+    send_resolved: true

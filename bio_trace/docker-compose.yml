@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+    bio_trace:
+        build: .
+        ports:
+            - "8080:8080"
+        environment:
+            - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+        depends_on:
+            - otel-collector
+
+    otel-collector:
+        image: otel/opentelemetry-collector-contrib:0.79.0
+        command: ["--config=/etc/otel-collector-config.yaml"]
+        volumes:
+            - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+        ports:
+            - "4317:4317" # OTLP gRPC
+            - "4318:4318" # OTLP HTTP
+            - "8888:8888" # Collector Prometheus metrics
+
+    prometheus:
+        image: prom/prometheus:latest
+        volumes:
+            - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - ./observability/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+        command: --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle
+        ports:
+            - "9090:9090"
+        depends_on:
+            - bio_trace
+
+    jaeger:
+        image: jaegertracing/all-in-one:1.48
+        ports:
+            - "16686:16686"
+            - "14268:14268"
+
+    loki:
+        image: grafana/loki:2.8.2
+        ports:
+            - "3100:3100"
+        command: -config.file=/etc/loki/local-config.yaml
+        volumes:
+            - ./observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
+
+    promtail:
+        image: grafana/promtail:2.8.2
+        volumes:
+            - /var/log:/var/log
+            - /var/lib/docker/containers:/var/lib/docker/containers:ro
+            - ./observability/promtail/promtail-config.yaml:/etc/promtail/config.yml:ro
+        command: -config.file=/etc/promtail/config.yml
+
+    grafana:
+        image: grafana/grafana:9.5.3
+        user: "472"
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+            - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+        depends_on:
+            - prometheus
+            - jaeger
+            - loki
+
+    alertmanager:
+        image: prom/alertmanager:latest
+        ports:
+            - "9093:9093"
+        environment:
+            - ALERT_MODE=${ALERT_MODE:-dev}
+        command:
+            [
+                "--config.file=/etc/alertmanager/alertmanager.${ALERT_MODE:-dev}.yml",
+            ]
+        volumes:
+            - ./observability/alertmanager/alertmanager.dev.yml:/etc/alertmanager/alertmanager.dev.yml:ro
+            - ./observability/alertmanager/alertmanager.stage.yml:/etc/alertmanager/alertmanager.stage.yml:ro
+            - ./observability/alertmanager/alertmanager.prod.yml:/etc/alertmanager/alertmanager.prod.yml:ro
+        depends_on:
+            - bio_trace
+
+    slack-stub:
+        build:
+            context: ./slack_stub
+        ports:
+            - "5000:5000"
+        depends_on:
+            - bio_trace
+
+    frontend:
+        build:
+            context: ./frontend
+        ports:
+            - "3001:80"
+        depends_on:
+            - bio_trace
