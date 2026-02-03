@@ -1,0 +1,28 @@
+name: CI - bio_trace
+
+on:
+  push:
+    paths:
+    - 'bio_trace/**'
+  pull_request:
+    paths:
+    - 'bio_trace/**'
+  workflow_dispatch:
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install deps
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r bio_trace/requirements.txt
+    - name: Run tests
+      run: |
+        pytest -q
