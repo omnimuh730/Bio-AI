@@ -6,9 +6,7 @@ rules:
   indentation:
     spaces: 2
   truthy:
-    allowed-values: [true, false, null]
+    allowed-values: [ true, false, null ]
   trailing-spaces:
     level: error
   document-start: disable
-  indentation:
-    spaces: 2
