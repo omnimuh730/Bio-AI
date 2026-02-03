@@ -1,18 +1,20 @@
 repos:
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.32.0
-    hooks:
-      - id: yamllint
-        args: ["-c", ".yamllint.yaml"]
-        files: "^.*\.ya?ml$"
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.4.0
-    hooks:
-      - id: ruff
-  - repo: local
-    hooks:
-      - id: pyright
-        name: pyright (via npx)
-        entry: npx pyright --project bio_storage/pyrightconfig.json
-        language: node
-        files: "^.*\.py$"
+- repo: https://github.com/adrienverge/yamllint
+  rev: v1.32.0
+  hooks:
+  - id: yamllint
+    args: [ "-c", ".yamllint.yaml" ]
+    # FIX: Use single quotes for regex so backslashes don't need escaping
+    files: '^.*\.ya?ml$'
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: v0.4.0
+  hooks:
+  - id: ruff
+- repo: local
+  hooks:
+  - id: pyright
+    name: pyright (via npx)
+    entry: npx pyright --project bio_storage/pyrightconfig.json
+    language: node
+    # FIX: Use single quotes here as well
+    files: '^.*\.py$'

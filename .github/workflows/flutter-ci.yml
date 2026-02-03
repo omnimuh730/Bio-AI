@@ -1,89 +1,93 @@
 name: Flutter CI
 
 on:
-    push:
-        branches: [master, develop]
-    pull_request:
-        types: [opened, synchronize, reopened, ready_for_review, edited]
-        branches: [master, develop]
-    workflow_dispatch:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review, edited ]
+    branches: [ master, develop ]
+    paths:
+    - 'bio_ai/**'
+    - 'analysis_options.yaml'
+  workflow_dispatch:
+
 
 jobs:
-    flutter-checks:
-        name: Flutter checks on ${{ matrix.os }} / ${{ matrix.channel }}
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [windows-latest]
-                channel: [stable]
-            fail-fast: false
+  flutter-checks:
+    name: Flutter checks on ${{ matrix.os }} / ${{ matrix.channel }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+        channel: [ stable ]
+      fail-fast: false
 
-        env:
-            FLUTTER_ROOT: /opt/hostedtoolcache/flutter
+    env:
+      FLUTTER_ROOT: /opt/hostedtoolcache/flutter
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+    - uses: actions/checkout@v4
 
-            - name: Cache pub packages
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.pub-cache
-                  key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+    - name: Cache pub packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pub-cache
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
 
-            - name: Setup Java (Android build)
-              if: matrix.os != 'macOS'
-              uses: actions/setup-java@v4
-              with:
-                  distribution: temurin
-                  java-version: "17"
+    - name: Setup Java (Android build)
+      if: matrix.os != 'macOS'
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "17"
 
-            - name: Install Flutter
-              uses: subosito/flutter-action@v2
-              with:
-                  channel: ${{ matrix.channel }}
+    - name: Install Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: ${{ matrix.channel }}
 
-            - name: Flutter doctor
-              working-directory: bio_ai
-              run: |
-                  flutter --version
-                  flutter doctor -v
+    - name: Flutter doctor
+      working-directory: bio_ai
+      run: |
+        flutter --version
+        flutter doctor -v
 
-            - name: Get dependencies
-              working-directory: bio_ai
-              run: flutter pub get
+    - name: Get dependencies
+      working-directory: bio_ai
+      run: flutter pub get
 
-            - name: Static analysis (flutter analyze)
-              working-directory: bio_ai
-              run: flutter analyze --no-fatal-infos
+    - name: Static analysis (flutter analyze)
+      working-directory: bio_ai
+      run: flutter analyze --no-fatal-infos
 
-            - name: Build Android APK
-              if: runner.os != 'macOS'
-              working-directory: bio_ai
-              run: flutter build apk --release
+    - name: Build Android APK
+      if: runner.os != 'macOS'
+      working-directory: bio_ai
+      run: flutter build apk --release
 
-            - name: Upload Android APK
-              if: runner.os != 'macOS'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: app-release-${{ matrix.os }}
-                  path: bio_ai/build/app/outputs/flutter-apk/app-release.apk
+    - name: Upload Android APK
+      if: runner.os != 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-${{ matrix.os }}
+        path: bio_ai/build/app/outputs/flutter-apk/app-release.apk
 
-            - name: Build iOS (no codesign)
-              if: runner.os == 'macOS'
-              working-directory: bio_ai
-              run: flutter build ios --no-codesign
+    - name: Build iOS (no codesign)
+      if: runner.os == 'macOS'
+      working-directory: bio_ai
+      run: flutter build ios --no-codesign
 
-            - name: Upload iOS build
-              if: runner.os == 'macOS'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ios-build
-                  path: bio_ai/build/ios/iphoneos
+    - name: Upload iOS build
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-build
+        path: bio_ai/build/ios/iphoneos
 
-            - name: Archive coverage
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: coverage
-                  path: bio_ai/coverage
+    - name: Archive coverage
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: bio_ai/coverage
