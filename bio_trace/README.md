@@ -14,6 +14,10 @@ Run locally
 2. Run: `uvicorn bio_trace.app.main:app --reload --port 8080`
 3. Visit `http://localhost:8080/` and `http://localhost:8080/metrics`
 
+Frontend dev server
+
+- Vite now runs on port **3001** to avoid the default 5173 port conflicts. Use `npm run dev` inside `frontend/` or start via Docker Compose (mapped to host port 3001).
+
 Configuration
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT` - optional OTLP endpoint for traces
