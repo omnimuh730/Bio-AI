@@ -46,6 +46,7 @@ The `scripts/up.*` helpers will start the stack in dev (hot-reload) or stage/pro
 Notes:
 
 - `.env.dev`, `.env.stage`, and `.env.prod` are included as templates. **Do not** commit secrets — use your deployment platform's secret management for production.
+- We recommend running **MongoDB 8.2.4** (or 8.0.0 if you need that compatibility). The stack uses `MONGODB_IMAGE` from `.env` (default: `mongo:8.2.4`).
 - In dev the app mounts your repository (hot-reload via uvicorn --reload). In stage/prod the service uses MongoDB and reads `.env.stage`/`.env.prod`.
 - For production, ensure you replace the example DB credentials and configure backups, networking, and secret management.
 

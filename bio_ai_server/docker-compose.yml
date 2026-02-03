@@ -1,6 +1,8 @@
 services:
     mongo:
-        image: mongo:6.0
+        # Use a configurable Mongo image so we can pick a modern patch release.
+        # Default: mongo:8.2.4 (recommended). Override via MONGODB_IMAGE in .env
+        image: ${MONGODB_IMAGE:-mongo:8.2.4}
         ports:
             - "27017:27017"
         volumes:
