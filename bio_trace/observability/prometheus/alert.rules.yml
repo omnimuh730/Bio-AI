@@ -8,13 +8,15 @@ groups:
       severity: page
     annotations:
       summary: "bio_trace not receiving requests"
-          description: "No requests received in the last 10 minutes (increase(bio_trace_requests_total[10m]) == 0)." 
+      # FIX 1: Unindented 'description' to align with 'summary'
+      description: "No requests received in the last 10 minutes (increase(bio_trace_requests_total[10m]) == 0)."
 
-      - alert: HighErrorRate
-        expr: increase(bio_trace_errors_total[5m]) > 0
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "bio_trace experiencing errors"
-          description: "Errors have been observed in the last 5 minutes (increase(bio_trace_errors_total[5m]) > 0)."
+  # FIX 2: Unindented this block to align with the first '- alert'
+  - alert: HighErrorRate
+    expr: increase(bio_trace_errors_total[5m]) > 0
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "bio_trace experiencing errors"
+      description: "Errors have been observed in the last 5 minutes (increase(bio_trace_errors_total[5m]) > 0)."

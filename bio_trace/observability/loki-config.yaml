@@ -13,12 +13,12 @@ storage_config:
     directory: /loki/chunks
 schema_config:
   configs:
-    - from: 2020-10-15
-      store: boltdb-shipper
-      object_store: filesystem
-      schema: v11
-      index:
-        prefix: index_
-        period: 168h
-server:
-  log_level: info
+  - from: 2020-10-15
+    store: boltdb-shipper
+    object_store: filesystem
+    schema: v11
+    index:
+      prefix: index_
+      period: 168h
+  server:
+    log_level: info
