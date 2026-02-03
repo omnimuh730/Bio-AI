@@ -1,18 +1,4 @@
 services:
-    mongo:
-        # Use a configurable Mongo image so we can pick a modern patch release.
-        # Default: mongo:8.2.4 (recommended). Override via MONGODB_IMAGE in .env
-        image: ${MONGODB_IMAGE:-mongo:8.2.4}
-        ports:
-            - "27017:27017"
-        volumes:
-            - mongo_data:/data/db
-        healthcheck:
-            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-            interval: 10s
-            timeout: 5s
-            retries: 6
-
     bio-ai-server:
         build: .
         env_file: .env
@@ -20,8 +6,6 @@ services:
             - "8000:8000"
         volumes:
             - ./uploads:/app/uploads
-        depends_on:
-            - mongo
         restart: unless-stopped
         healthcheck:
             test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
@@ -39,8 +23,6 @@ services:
             - ./:/app:cached
             - ./uploads:/app/uploads
         command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-        depends_on:
-            - mongo
         profiles:
             - dev
 
@@ -48,7 +30,6 @@ volumes:
     mongo_data:
 
 # Usage:
-# - For development: set ENV=dev in your .env then run the helper script `scripts/up.sh` or
-#   run with COMPOSE_PROFILES=dev docker compose up --build
+# - For development: set ENV=dev in your .env and run `COMPOSE_PROFILES=dev docker compose up --build` to enable hot-reload mounts
 # - For stage/prod: set ENV=stage|prod and run `docker compose up --build -d` (the plain service will run)
 

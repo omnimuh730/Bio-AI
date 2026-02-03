@@ -19,34 +19,52 @@ Dev (fast feedback, code mounts):
 
 ```bash
 # Copy `.env.example` -> `.env` and set ENV=dev
-# Then run the helper script (POSIX):
-./scripts/up.sh
-# Or Windows PowerShell:
-./scripts/up.ps1
+# Then run with the dev profile to mount code and enable hot reload:
+# POSIX
+COMPOSE_PROFILES=dev docker compose up --build
+# PowerShell
+$Env:COMPOSE_PROFILES='dev'; docker compose up --build
 ```
 
-Note: the helper script reads `ENV` from `.env` and activates the `dev` profile (mounts your code and runs uvicorn with --reload). For stage/prod the script will start the service detached using the same `docker-compose.yml` and the `ENV` value.
-
-Staging / Production (single compose, uses MongoDB service defined in `docker-compose.yml`):
+Stage / Production (detached):
 
 ```bash
 # staging
 cp .env.stage .env    # or set ENV=stage in .env
-./scripts/up.sh
+docker compose up --build -d
 
 # production
 cp .env.prod .env     # or set ENV=prod in .env
-./scripts/up.sh
+docker compose up --build -d
 ```
 
-The `scripts/up.*` helpers will start the stack in dev (hot-reload) or stage/prod (detached) depending on the `ENV` value in `.env`.
+The `dev` profile mounts your repository and runs `uvicorn` with `--reload`. For stage/prod, use the detached mode; ensure your `.env` is configured with production-ready MongoDB and secrets.
+
+Staging / Production (single compose):
+
+```bash
+# staging
+cp .env.stage .env    # or set ENV=stage in .env
+docker compose up --build -d
+
+# production
+cp .env.prod .env     # or set ENV=prod in .env
+docker compose up --build -d
+```
+
+Use the `COMPOSE_PROFILES=dev` environment variable for dev-only mounts (hot reload).
 
 - The API will be available at `http://localhost:8000`.
 
 Notes:
 
 - `.env.dev`, `.env.stage`, and `.env.prod` are included as templates. **Do not** commit secrets — use your deployment platform's secret management for production.
-- We recommend running **MongoDB 8.2.4** (or 8.0.0 if you need that compatibility). The stack uses `MONGODB_IMAGE` from `.env` (default: `mongo:8.2.4`).
+- We recommend running **MongoDB 8.2.4** (or 8.0.0 if you need compatibility with older clusters). Configure `MONGODB_URI` to point at the team's MongoDB service (e.g. `bio_nexus`).
+- This service integrates with other Bio AI services in the monorepo for a local full-stack development experience. Recommended local stack to bring up with Docker Compose:
+    - `bio_storage` (S3/MinIO) — for file uploads and object lifecycle
+    - `bio_nexus` (Mongo) — central data persistence (if you prefer using the project's central DB instead of the local one)
+    - `bio_worker` / `bio_inference` — optional for processing/ML jobs
+
 - In dev the app mounts your repository (hot-reload via uvicorn --reload). In stage/prod the service uses MongoDB and reads `.env.stage`/`.env.prod`.
 - For production, ensure you replace the example DB credentials and configure backups, networking, and secret management.
 
@@ -54,49 +72,71 @@ Notes:
 .venv\Scripts\Activate.ps1; python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Quick helper (Windows):
+Docker-first workflow (recommended):
 
-```powershell
-# This batch creates/activates venv and installs requirements. Pass an optional mode:
-#   start.bat           -> base requirements
-#   start.bat ml        -> installs CPU ML deps (opencv, ultralytics, transformers, CPU torch)
-#   start.bat ml-cuda   -> installs ML deps + CUDA PyTorch wheels (if you have CUDA drivers)
-# If your start.bat is corrupted on Windows, use the safe fallback `start_fixed.bat` instead.
-.
-# Usage from repo root (bio_ai_server):
-start.bat
-start.bat ml
-start.bat ml-cuda
-# or, if start.bat fails:
-start_fixed.bat
-start_fixed.bat ml
-start_fixed.bat ml-cuda
+This repository is Docker-first — use `docker compose` for running dev, stage, and production stacks. Copy `.env.example` → `.env` and set `ENV=dev|stage|prod`, then run:
+
+```bash
+# Development (hot reload, mounts code)
+COMPOSE_PROFILES=dev docker compose up --build
+
+# Stage / Production (detached)
+docker compose up --build -d
 ```
 
-Optional: install heavy ML dependencies for the vision demo
+## Build & run with Docker 🔧
 
-If you want the server to run `detect_food.py` (the demo segmentation + analysis pipeline) you should install the extra ML dependencies and model weights. There are two helpers on Windows:
+Quick commands to build and run the service and full stacks.
 
-- `start_win.bat` — a simple, pure-batch installer + runner (recommended):
+- Build the Docker images (reads `docker-compose.yml`):
 
-```powershell
-# From repo root: bio_ai_server
-# Install base + ML deps and start server
-start_win.bat
-# Install without ML deps (faster)
-start_win.bat nocache
-# Attempt CUDA PyTorch wheels
-start_win.bat ml-cuda
+```bash
+docker compose build
 ```
 
-- `scripts\setup_ml_env.ps1` — PowerShell script that installs the same deps (gives you more verbose logging and an option to request CUDA wheels):
+- Start the stack (dev profile mounts code for hot reload):
+
+```bash
+# Dev (hot reload)
+COMPOSE_PROFILES=dev docker compose up --build
+
+# Run detached (stage/prod)
+docker compose up --build -d
+```
+
+- Rebuild an individual service image and restart only that service:
+
+```bash
+# Rebuild the app image and restart the service
+docker compose build bio-ai-server && docker compose up -d bio-ai-server
+```
+
+- Run a multi-service full stack (example with `bio_storage` and `bio_nexus` in the monorepo):
+
+```bash
+# from the repo root (where other services live)
+# bring up the server plus storage + nexus services for full-stack testing
+docker compose -f docker-compose.yml -f ../bio_storage/docker-compose.yml -f ../bio_nexus/docker-compose.yml up --build
+```
+
+- Run one-off commands against the container (eg. run the CLI):
+
+```bash
+# Run a CLI inside the built image
+docker compose run --rm bio-ai-server python -m app.cli --dry-run
+```
+
+---
+
+These commands assume you have Docker and Docker Compose installed. If you need a one-liner for Windows PowerShell, set `COMPOSE_PROFILES` like this:
 
 ```powershell
-# From repo root: bio_ai_server
-.\scripts\setup_ml_env.ps1        # installs CPU-only PyTorch by default
-# or
-.\scripts\setup_ml_env.ps1 -UseCuda  # attempt CUDA-enabled wheels (only if you have drivers/CUDA)
+$Env:COMPOSE_PROFILES='dev'; docker compose up --build
 ```
+
+Optional: heavy ML dependencies for the vision demo
+
+If you want to run `detect_food.py` locally outside Docker, there is a helper PowerShell script `scripts/setup_ml_env.ps1` that installs the necessary ML deps and model weights. However, we recommend running the ML-enabled pipeline inside a Docker image designed for ML workloads instead of using local batch helpers.
 
 After the script finishes you can verify the environment with the health endpoint:
 
@@ -146,7 +186,8 @@ APIs available (stubs):
 - `POST /log/food`
 - `POST /leftovers/consume`
 
-This scaffold uses MongoDB for storage. By default the dev docker setup runs Mongo (at `mongodb://mongo:27017`).
+This scaffold uses MongoDB for storage. The `bio_ai_server` service does **not** run its own MongoDB instance; instead it expects `MONGODB_URI` to point to the desired database (for example your central `bio_nexus` service or a managed cluster).
 
 - To change the database endpoint, set `MONGODB_URI` and `MONGO_DB_NAME` in your `.env` or environment.
+- For local full-stack testing, bring up `bio_nexus` (or `bio_storage` if you need an included Mongo) alongside this service using `docker compose -f ...` as shown above.
 - For production, provide a managed MongoDB connection string and secure credentials via your platform's secret manager.
