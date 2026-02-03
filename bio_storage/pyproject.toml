@@ -1,0 +1,12 @@
+[project]
+name = "bio_storage"
+version = "0.1.0"
+description = "Storage service for Bio AI — S3 hot/archive and metadata store"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

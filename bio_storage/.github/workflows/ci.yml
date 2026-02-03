@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "feat/*", "feat/**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+        - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Install yaml linter
+      run: |
+        python -m pip install --upgrade pip
+        pip install yamllint
+    - name: Run YAML linter
+      run: |
+        yamllint -c ../../.yamllint.yaml .
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Install pre-commit and hooks
+      run: |
+        pip install pre-commit
+        pre-commit --version
+        pre-commit install --install-hooks
+    - name: Run pre-commit (all files)
+      run: |
+        pre-commit run --all-files || true
+    - name: Set up Node (for pyright)
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Install pyright
+      run: |
+        npm install -g pyright
+    - name: Run pyright
+      run: |
+        pyright
+    - name: Run linter (ruff)
+      run: |
+        ruff . --select F,E,W
+    - name: Run tests
+      env:
+        MONGODB_URI: mongodb://127.0.0.1:27017
+        MONGO_DB_NAME: bio_storage_db
+      run: |
+        pytest -q
+
+  publish-image:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    if: "github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != ''"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        registry: docker.io
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/bio-storage:latest
+
+  helm-lint:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Helm
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    - name: Run helm lint (default values)
+      run: |
+        helm lint helm/bio-storage -f helm/bio-storage/values.yaml
+    - name: Run helm lint (dev values)
+      run: |
+        helm lint helm/bio-storage -f helm/bio-storage/values.dev.yaml
+    - name: Run helm lint (stage values)
+      run: |
+        helm lint helm/bio-storage -f helm/bio-storage/values.stage.yaml
+    - name: Run helm lint (prod values)
+      run: |
+        helm lint helm/bio-storage -f helm/bio-storage/values.prod.yaml
+
+  integration-minio:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+        - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'" --health-interval 10s --health-timeout 5s --health-retries 5
+      # Removed MinIO from 'services' because we need to pass custom arguments ('server /data')
+      # which GHA services does not easily support.
+    steps:
+    - uses: actions/checkout@v4
+
+    # Manually start MinIO with the correct command
+    - name: Start MinIO
+      run: |
+        docker run -d -p 9000:9000 --name minio \
+          -e MINIO_ROOT_USER=minioadmin \
+          -e MINIO_ROOT_PASSWORD=minioadmin \
+          minio/minio:RELEASE.2024-01-01T00-00-00Z \
+          server /data
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Wait for MinIO
+      run: |
+        echo "Waiting for MinIO to be ready..."
+        for i in {1..20}; do curl -sS http://127.0.0.1:9000/minio/health/live && break || sleep 3; done
+    - name: Create MinIO buckets
+      run: |
+        python - << 'PY'
+        import boto3
+        s3=boto3.client('s3', endpoint_url='http://127.0.0.1:9000', aws_access_key_id='minioadmin', aws_secret_access_key='minioadmin', region_name='us-east-1')
+        s3.create_bucket(Bucket='bio-storage-hot')
+        s3.create_bucket(Bucket='bio-storage-archive')
+        PY
+      env:
+        AWS_ACCESS_KEY_ID: minioadmin
+        AWS_SECRET_ACCESS_KEY: minioadmin
+    - name: Run MinIO integration tests
+      env:
+        MONGODB_URI: mongodb://127.0.0.1:27017
+        MONGO_DB_NAME: bio_storage_db
+        S3_ENDPOINT_URL: http://127.0.0.1:9000
+        AWS_ACCESS_KEY_ID: minioadmin
+        AWS_SECRET_ACCESS_KEY: minioadmin
+      run: |
+        pytest -q tests/integration/test_minio_archive.py

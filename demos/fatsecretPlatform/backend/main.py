@@ -38,7 +38,7 @@ def get_token():
         # Added 'localization' to scope for region-specific barcode/recipe searches
         payload = {
             "grant_type": "client_credentials", 
-            "scope": "basic premier barcode" 
+            "scope": "basic premier barcode image-recognition" 
         }
         response = requests.post(TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload)
         

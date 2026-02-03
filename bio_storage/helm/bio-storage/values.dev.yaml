@@ -1,0 +1,17 @@
+replicaCount: 1
+image:
+  repository: yourorg/bio-storage
+  tag: dev
+service:
+  type: ClusterIP
+ingress:
+  enabled: false
+env:
+  MONGODB_URI: "mongodb://mongo:27017"
+  MONGO_DB_NAME: "bio_storage_db"
+s3:
+  endpoint: "http://minio:9000"
+  bucketHot: "bio-storage-hot"
+  bucketArchive: "bio-storage-archive"
+reconcile:
+  schedule: "*/30 * * * *" # every 30 minutes in dev

@@ -1,0 +1,28 @@
+{{- if .Values.reconcile.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "bio-storage.fullname" . }}-reconcile
+spec:
+  schedule: "{{ .Values.reconcile.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: reconcile
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              command: ["python", "-u", "-m", "app.cli", "reconcile"]
+              env:
+                - name: MONGODB_URI
+                  value: {{ quote .Values.env.MONGODB_URI }}
+                - name: MONGO_DB_NAME
+                  value: {{ quote .Values.env.MONGO_DB_NAME }}
+                - name: S3_ENDPOINT_URL
+                  value: {{ quote .Values.s3.endpoint }}
+                - name: BUCKET_HOT
+                  value: {{ quote .Values.s3.bucketHot }}
+                - name: BUCKET_ARCHIVE
+                  value: {{ quote .Values.s3.bucketArchive }}
+          restartPolicy: OnFailure
+{{- end }}

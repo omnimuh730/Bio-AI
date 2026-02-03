@@ -1,0 +1,15 @@
+{
+	"include": ["app", "tests"],
+	"exclude": ["**/node_modules"],
+	"reportMissingImports": false,
+	"typeCheckingMode": "strict",
+	"executionEnvironments": [
+		{
+			"root": "app",
+			"extraPaths": [".."]
+		}
+	],
+	"reportOptionalMemberAccess": true,
+	"reportOptionalSubscript": true,
+	"reportPrivateUsage": true
+}
