@@ -1,10 +1,9 @@
 name: CI
 
+# ARCHIVED: Automatic triggers disabled. Use the centralized workflow at .github/workflows/bio-storage-ci.yml
 on:
-  push:
-    branches: [ "main", "feat/*", "feat/**" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
+
 
 jobs:
   test-and-lint:
