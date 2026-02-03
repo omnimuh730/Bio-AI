@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:bio_ai/core/config.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DeviceState {
@@ -66,38 +67,54 @@ class SettingsStateHolder {
   /// Fetch available devices from streaming backend.
   ///
   /// If [force] is false (default), this will only run in dev/stage modes.
-  Future<List<String>> fetchAvailableDevices({bool force = false}) async {
+  Future<List<String>> fetchAvailableDevices({
+    bool force = false,
+    bool throwOnError = false,
+  }) async {
     if (!force && !AppConfig.isDevOrStage) return [];
     try {
-      const url = '${AppConfig.streamingBaseUrl}/api/available';
-      // debug
-      // print('Fetching available devices from $url');
+      final url = '${AppConfig.streamingBaseUrl}/api/available';
+      if (kDebugMode) print('Fetching available devices from $url');
       final res = await _dio.get(url);
-      print('Fetch available status: ${res.statusCode}');
+      if (kDebugMode) print('Fetch available status: ${res.statusCode}');
       if (res.statusCode == 200 && res.data != null) {
         final List l = res.data['available'] ?? [];
-        print('Available devices: $l');
+        if (kDebugMode) print('Available devices: $l');
         return List<String>.from(l);
       }
+      return [];
     } catch (e) {
-      // print('fetchAvailableDevices error: $e');
+      if (kDebugMode) print('fetchAvailableDevices error: $e');
+      if (throwOnError) rethrow;
+      return [];
     }
-    return [];
   }
 
-  /// Expose or hide a device on the streaming backend (dev/stage only)
-  Future<void> setDeviceExposure(String key, bool expose) async {
-    if (!AppConfig.isDevOrStage) return;
+  /// Expose or hide a device on the streaming backend (dev/stage only).
+  /// Returns true on success.
+  Future<bool> setDeviceExposure(
+    String key,
+    bool expose, {
+    bool force = false,
+  }) async {
+    if (!force && !AppConfig.isDevOrStage) return false;
     final name = _streamingName[key];
-    if (name == null) return;
+    if (name == null) return false;
     final endpoint = expose ? 'expose' : 'hide';
     try {
       final url = '${AppConfig.streamingBaseUrl}/api/$endpoint';
-      // debug logs (enabled while debugging)
-      print('POST $url -> $name');
-      await _dio.post(url, data: {'device': name});
+      if (kDebugMode) print('POST $url -> $name');
+      final res = await _dio.post(url, data: {'device': name});
+      final ok =
+          res.statusCode != null &&
+          res.statusCode! >= 200 &&
+          res.statusCode! < 300;
+      if (!ok && kDebugMode)
+        print('setDeviceExposure non-ok status: ${res.statusCode}');
+      return ok;
     } catch (e) {
-      print('setDeviceExposure error: $e');
+      if (kDebugMode) print('setDeviceExposure error: $e');
+      return false;
     }
   }
 

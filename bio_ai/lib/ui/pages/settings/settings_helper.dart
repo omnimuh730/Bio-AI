@@ -84,8 +84,15 @@ Future<void> openFindDevicesModal(
   // If running against the streaming mock in dev/stage, show that backend list
   // Try backend first (force request). If it responds (even empty list) show mock modal.
   try {
-    final available = await s.fetchAvailableDevices(force: true);
+    final available = await s.fetchAvailableDevices(
+      force: true,
+      throwOnError: true,
+    );
     if (!context.mounted) return;
+    // toast success
+    showToast(
+      'Fetched ${available.length} available device(s) from mock backend',
+    );
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -97,8 +104,12 @@ Future<void> openFindDevicesModal(
             final key = s.keyForStreamingName(name);
             if (key == null) return;
 
-            print('toggleByName: ${value ? 'expose' : 'hide'} $name');
-            await s.setDeviceExposure(key, value);
+            final ok = await s.setDeviceExposure(key, value, force: true);
+            if (ok) {
+              showToast(value ? 'Exposed $name' : 'Removed $name');
+            } else {
+              showToast('Backend error while updating $name');
+            }
 
             localAvailable = await s.fetchAvailableDevices(force: true);
             setModalState(() {});
@@ -140,8 +151,9 @@ Future<void> openFindDevicesModal(
       ),
     );
     return;
-  } catch (_) {
+  } catch (e) {
     // If backend is unreachable, fall back to BLE flow below
+    showToast('Could not contact mock backend: $e');
   }
 
   final ble = ref.read(bleServiceProvider);
