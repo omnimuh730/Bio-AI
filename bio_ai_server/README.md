@@ -11,6 +11,44 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Run with Docker (recommended for local testing):
+
+- Copy `.env.example` to `.env` and adjust values as needed (e.g., `FATSECRET_CLIENT_ID`, `FATSECRET_CLIENT_SECRET`).
+
+Dev (fast feedback, code mounts):
+
+```bash
+# Copy `.env.example` -> `.env` and set ENV=dev
+# Then run the helper script (POSIX):
+./scripts/up.sh
+# Or Windows PowerShell:
+./scripts/up.ps1
+```
+
+Note: the helper script reads `ENV` from `.env` and activates the `dev` profile (mounts your code and runs uvicorn with --reload). For stage/prod the script will start the service detached using the same `docker-compose.yml` and the `ENV` value.
+
+Staging / Production (single compose, uses MongoDB service defined in `docker-compose.yml`):
+
+```bash
+# staging
+cp .env.stage .env    # or set ENV=stage in .env
+./scripts/up.sh
+
+# production
+cp .env.prod .env     # or set ENV=prod in .env
+./scripts/up.sh
+```
+
+The `scripts/up.*` helpers will start the stack in dev (hot-reload) or stage/prod (detached) depending on the `ENV` value in `.env`.
+
+- The API will be available at `http://localhost:8000`.
+
+Notes:
+
+- `.env.dev`, `.env.stage`, and `.env.prod` are included as templates. **Do not** commit secrets — use your deployment platform's secret management for production.
+- In dev the app mounts your repository (hot-reload via uvicorn --reload). In stage/prod the service uses MongoDB and reads `.env.stage`/`.env.prod`.
+- For production, ensure you replace the example DB credentials and configure backups, networking, and secret management.
+
 ```
 .venv\Scripts\Activate.ps1; python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -107,4 +145,7 @@ APIs available (stubs):
 - `POST /log/food`
 - `POST /leftovers/consume`
 
-This scaffold uses SQLite + `sqlmodel` for local development. Replace with Postgres (asyncpg) for production.
+This scaffold uses MongoDB for storage. By default the dev docker setup runs Mongo (at `mongodb://mongo:27017`).
+
+- To change the database endpoint, set `MONGODB_URI` and `MONGO_DB_NAME` in your `.env` or environment.
+- For production, provide a managed MongoDB connection string and secure credentials via your platform's secret manager.

@@ -1,0 +1,2 @@
+# Deprecated: use the primary `docker-compose.yml` and set `ENV=prod` in `.env`.
+# This file is left as a historical reference only. See `docker-compose.yml` and `scripts/up.*` for the recommended workflow.
