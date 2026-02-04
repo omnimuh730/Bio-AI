@@ -72,8 +72,7 @@ class _VitalsGridState extends State<VitalsGrid> {
     _seriesByMetric.removeWhere((key, _) => !keys.contains(key));
     for (final entry in metrics.entries) {
       final metricData = entry.value;
-      final rawValue =
-          metricData is Map ? metricData['value'] : metricData;
+      final rawValue = metricData is Map ? metricData['value'] : metricData;
       final numeric = _toDouble(rawValue);
       if (numeric == null) continue;
       final list = _seriesByMetric.putIfAbsent(entry.key, () => []);
@@ -126,15 +125,25 @@ class _VitalsGridState extends State<VitalsGrid> {
     final lower = key.toLowerCase();
     if (lower.contains('heart')) return Icons.monitor_heart;
     if (lower.contains('sleep')) return Icons.nightlight_round;
-    if (lower.contains('stress') || lower.contains('hrv')) return Icons.psychology;
-    if (lower.contains('oxygen') || lower.contains('spo2'))
+    if (lower.contains('stress') || lower.contains('hrv')) {
+      return Icons.psychology;
+    }
+    if (lower.contains('oxygen') || lower.contains('spo2')) {
       return Icons.bloodtype;
-    if (lower.contains('temp')) return Icons.thermostat;
-    if (lower.contains('gps') || lower.contains('loc')) return Icons.place;
-    if (lower.contains('cadence') || lower.contains('steps'))
+    }
+    if (lower.contains('temp')) {
+      return Icons.thermostat;
+    }
+    if (lower.contains('gps') || lower.contains('loc')) {
+      return Icons.place;
+    }
+    if (lower.contains('cadence') || lower.contains('steps')) {
       return Icons.directions_walk;
+    }
     if (lower.contains('noise')) return Icons.surround_sound;
-    return Icons.bolt;
+    {
+      return Icons.bolt;
+    }
   }
 
   Color _colorForKey(String key) {
@@ -226,13 +235,14 @@ class _VitalsGridState extends State<VitalsGrid> {
             itemBuilder: (context, index) {
               final entry = entries[index];
               final metricData = entry.value;
-              final rawValue =
-                  metricData is Map ? metricData['value'] : metricData;
-              final unit =
-                  metricData is Map ? (metricData['unit'] ?? '') : '';
+              final rawValue = metricData is Map
+                  ? metricData['value']
+                  : metricData;
+              final unit = metricData is Map ? (metricData['unit'] ?? '') : '';
               final valueText = _formatValue(rawValue);
-              final series =
-                  List<double>.from(_seriesByMetric[entry.key] ?? const []);
+              final series = List<double>.from(
+                _seriesByMetric[entry.key] ?? const [],
+              );
               final color = _colorForKey(entry.key);
               return MetricCard(
                 icon: _iconForKey(entry.key),
@@ -374,8 +384,7 @@ class _SparklinePainter extends CustomPainter {
 
     for (var i = 0; i < values.length; i++) {
       final x = size.width * (i / (values.length - 1));
-      final y = size.height -
-          ((values[i] - minV) / safeRange) * size.height;
+      final y = size.height - ((values[i] - minV) / safeRange) * size.height;
       if (i == 0) {
         path.moveTo(x, y);
       } else {

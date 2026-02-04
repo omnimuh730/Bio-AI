@@ -150,7 +150,7 @@ class SettingsStateHolder extends ChangeNotifier {
   }) async {
     if (!force && !AppConfig.isDevOrStage) return [];
     try {
-      final url = '${AppConfig.streamingBaseUrl}/api/available';
+      const url = '${AppConfig.streamingBaseUrl}/api/available';
       if (kDebugMode) print('Fetching available devices from $url');
       final res = await _dio.get(url);
       if (kDebugMode) print('Fetch available status: ${res.statusCode}');
@@ -177,7 +177,7 @@ class SettingsStateHolder extends ChangeNotifier {
       return List<String>.from(streamingDevices);
     }
     try {
-      final url = '${AppConfig.streamingBaseUrl}/api/devices';
+      const url = '${AppConfig.streamingBaseUrl}/api/devices';
       if (kDebugMode) print('Fetching device catalog from $url');
       final res = await _dio.get(url);
       if (kDebugMode) print('Fetch devices status: ${res.statusCode}');
@@ -222,6 +222,7 @@ class SettingsStateHolder extends ChangeNotifier {
     return s.toString().split('.').last;
   }
 
+  @override
   void dispose() {
     deleteController.dispose();
     super.dispose();
