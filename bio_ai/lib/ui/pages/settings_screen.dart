@@ -33,8 +33,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _s = SettingsStateHolder();
   Timer? _pollTimer;
+  SettingsStateHolder get _s => ref.read(settingsStateProvider);
 
   @override
   void initState() {
@@ -56,7 +56,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _s.dispose();
     super.dispose();
   }
 
@@ -105,7 +104,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (AppConfig.isDevOrStage) {
       if (wasConnected) {
         // disconnect locally
-        setState(() {
+        _s.update(() {
           _s.devices[name]?.connected = false;
           _s.devices[name]?.lastSync = '';
         });
@@ -114,7 +113,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _showToast('$label disconnected');
       } else {
         // connect this device locally and ensure backend marks it available
-        setState(() {
+        _s.update(() {
           // only one connected locally
           _s.devices.forEach((k, v) {
             v.connected = false;
@@ -132,7 +131,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     // Prod: local bluetooth flow
-    setState(() => _s.toggleDevice(name));
+    _s.update(() => _s.toggleDevice(name));
     _showToast(
       '$label ${_s.devices[name]?.connected == true ? 'connected' : 'disconnected'}',
     );
@@ -149,6 +148,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(settingsStateProvider);
     return Scaffold(
       backgroundColor: AppColors.bgBody,
       body: Stack(
@@ -160,8 +160,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 const SettingsProfileHeader(),
                 SettingsDeviceSection(
-                  devices: _s.devices,
-                  availableDevices: _s.selectedDeviceNames,
+                  devices: s.devices,
+                  availableDevices: s.selectedDeviceNames,
                   onToggle: _toggleDevice,
                   onResync: () => _showToast('Resyncing devices...'),
                   onReauth: () => _showToast('Re-auth requested'),
@@ -171,33 +171,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChipTap: (chip) => _showToast('$chip selected'),
                 ),
                 SettingsPreferenceSection(
-                  metricUnits: _s.metricUnits,
+                  metricUnits: s.metricUnits,
                   onMetricChanged: (value) =>
-                      setState(() => _s.metricUnits = value),
-                  notificationsOn: _s.notificationsOn,
+                      _s.update(() => _s.metricUnits = value),
+                  notificationsOn: s.notificationsOn,
                   onNotificationsChanged: (value) =>
-                      setState(() => _s.notificationsOn = value),
-                  offlineOn: _s.offlineOn,
+                      _s.update(() => _s.notificationsOn = value),
+                  offlineOn: s.offlineOn,
                   onOfflineChanged: (value) =>
-                      setState(() => _s.offlineOn = value),
+                      _s.update(() => _s.offlineOn = value),
                 ),
                 SettingsGoalSection(
                   goals: [
                     SettingsGoalItem(
                       title: 'Lose Fat',
-                      selected: _s.selectedGoal == 'Lose Fat',
+                      selected: s.selectedGoal == 'Lose Fat',
                     ),
                     SettingsGoalItem(
                       title: 'Build Muscle',
-                      selected: _s.selectedGoal == 'Build Muscle',
+                      selected: s.selectedGoal == 'Build Muscle',
                     ),
                     SettingsGoalItem(
                       title: 'Maintain & Cognitive',
-                      selected: _s.selectedGoal == 'Maintain & Cognitive',
+                      selected: s.selectedGoal == 'Maintain & Cognitive',
                     ),
                   ],
                   onGoalTap: (title) {
-                    setState(() => _s.selectedGoal = title);
+                    _s.update(() => _s.selectedGoal = title);
                     _showToast('$title selected');
                   },
                 ),
@@ -216,7 +216,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onShowDevices: _openFindDevicesModal,
                   onRequestPermission: _requestBluetoothPermission,
                   onTestCapture: _testCapture,
-                  btPermissionLabel: _s.btPermissionLabel(),
+                  btPermissionLabel: s.btPermissionLabel(),
                   onRefresh: () async {
                     await _updateBtPermission();
                     ref.invalidate(connectedDeviceSummariesProvider);
@@ -244,22 +244,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _openSubscriptionModal() =>
-      openSubscriptionModal(context, ref, _s, _showToast, (fn) => setState(fn));
+      openSubscriptionModal(context, ref, _s, _showToast, _s.update);
 
   void _openExportModal() => openExportModal(context, _showToast);
 
   Future<void> _openFindDevicesModal() =>
-      openFindDevicesModal(context, ref, _s, _showToast, (fn) => setState(fn));
+      openFindDevicesModal(context, ref, _s, _showToast, _s.update);
   Future<void> _testTorch() async => testTorch(ref, _showToast);
   Future<void> _testGps() async => testGps(ref, _showToast);
   Future<void> _testNetwork() async => testNetwork(ref, _showToast);
   Future<void> _testCapture() async => testCapture(ref, _showToast);
   // ----- Bluetooth helpers -----
   Future<void> _updateBtPermission() async =>
-      updateBtPermission(ref, _s, (fn) => setState(fn));
+      updateBtPermission(ref, _s, _s.update);
 
   Future<void> _requestBluetoothPermission() async =>
-      requestBluetoothPermission(ref, _s, (fn) => setState(fn), _showToast);
+      requestBluetoothPermission(ref, _s, _s.update, _showToast);
   void _openDeleteModal() => openDeleteModal(context, _s, _showToast);
 
   Future<void> _refreshAvailableDevices() async {
@@ -267,7 +267,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final allDevices = await _s.fetchAllDevices();
       final available = await _s.fetchAvailableDevices();
       // update state holder with available list and refresh UI
-      setState(() {
+      _s.update(() {
         if (allDevices.isNotEmpty) {
           _s.updateStreamingDevices(allDevices);
         }

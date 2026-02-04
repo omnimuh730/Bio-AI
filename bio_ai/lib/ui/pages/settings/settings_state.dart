@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:bio_ai/core/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DeviceState {
@@ -12,7 +13,7 @@ class DeviceState {
   DeviceState(this.label, this.connected, this.lastSync);
 }
 
-class SettingsStateHolder {
+class SettingsStateHolder extends ChangeNotifier {
   SettingsStateHolder() {
     streamingDevices = List<String>.from(_fallbackDevices);
     _ensureDevices(streamingDevices);
@@ -38,6 +39,11 @@ class SettingsStateHolder {
   // Devices selected locally to show in Device Sync.
   Set<String> selectedStreaming = {};
   bool _selectionInitialized = false;
+
+  void update(VoidCallback fn) {
+    fn();
+    notifyListeners();
+  }
 
   void updateAvailable(List<String> names) {
     availableStreaming = names.toSet();
@@ -179,7 +185,6 @@ class SettingsStateHolder {
         final List l = res.data['devices'] ?? [];
         final names = l.map((e) => e['name']).whereType<String>().toList();
         if (kDebugMode) print('Device catalog: $names');
-        updateStreamingDevices(names);
         return names;
       }
       return List<String>.from(streamingDevices);
@@ -219,5 +224,10 @@ class SettingsStateHolder {
 
   void dispose() {
     deleteController.dispose();
+    super.dispose();
   }
 }
+
+final settingsStateProvider = ChangeNotifierProvider<SettingsStateHolder>(
+  (ref) => SettingsStateHolder(),
+);

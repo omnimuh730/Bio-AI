@@ -38,13 +38,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     if (AppConfig.isDevOrStage) {
       _streaming.start();
-      _streaming.latest.addListener(() => setState(() {}));
     }
   }
 
   @override
   void dispose() {
-    _streaming.dispose();
     super.dispose();
   }
 

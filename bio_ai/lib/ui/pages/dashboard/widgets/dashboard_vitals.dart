@@ -63,8 +63,9 @@ class _VitalsGridState extends State<VitalsGrid> {
   String? _resolveDeviceName(Map<String, dynamic> snapshot) {
     if (snapshot.isEmpty) return null;
     final selected = widget.streaming?.selectedDeviceName;
-    if (selected != null && snapshot.containsKey(selected)) return selected;
-    return snapshot.keys.first;
+    if (selected == null) return null;
+    if (snapshot.containsKey(selected)) return selected;
+    return null;
   }
 
   void _updateSeries(Map<String, dynamic> metrics) {
