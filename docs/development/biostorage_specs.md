@@ -1,3 +1,15 @@
+# ⚠️ DEPRECATED - Merged into bio_nexus
+
+**This service has been merged into bio_nexus as of Feb 2026.**
+
+All storage functionality (presigned URLs, file archival, S3 management) is now part of bio_nexus.
+
+See [bionexus_specs.md](./bionexus_specs.md) for the unified service documentation.
+
+---
+
+## Historical Documentation (for reference only)
+
 This is the full design and documentation for **`bio_storage`**.
 
 In a production AI system, handling binary files (images) through your main API server is a bottleneck. It consumes RAM, blocks threads, and wastes bandwidth.

@@ -1,11 +1,17 @@
 # bio_nexus
 
-Lightweight FastAPI microservice that provides data persistence and query capabilities for Bio AI. Uses MongoDB (Motor) as the primary datastore for time-series metrics, vision results, global food catalog, and user profiles.
+Unified FastAPI microservice that provides data persistence, storage, and query capabilities for Bio AI. Uses MongoDB (Motor) as the primary datastore for time-series metrics, vision results, global food catalog, user profiles, and file metadata. Integrates S3-compatible storage for binary assets (images, depth maps).
+
+**Merged Functionality:**
+
+- **Data Storage:** Time-series metrics, food logs, user profiles, vision results
+- **File Storage:** Direct-to-cloud uploads via presigned URLs, file archival, metadata tracking
+- **Vector Search:** Semantic search over food embeddings and image vectors
 
 Run locally (development)
 
 - The `dev` environment uses mock data, local services, and hot-reload. Services communicate via `localhost`/internal docker network.
-- Fill `.env` with MONGODB_URI and MONGO_DB_NAME, or use `docker-compose` (recommended)
+- Fill `.env` with MONGODB_URI, MONGO_DB_NAME, and S3 credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, BUCKET_HOT, BUCKET_ARCHIVE)
 - Start local stack (docker)
 
 ```bash
@@ -40,12 +46,22 @@ Notes:
 
 APIs:
 
+**Data & Metrics:**
+
 - POST /api/v1/metrics/batch
 - POST /api/v1/vision/result
 - POST /api/v1/food_logs
 - POST /api/v1/foods/search
 - POST /api/v1/foods/lookup_barcode
 - GET /api/v1/users/{id}
+
+**Storage (merged from bio_storage):**
+
+- POST /api/v1/storage/sign-upload — Generate presigned upload URL
+- GET /api/v1/storage/files/{file_id} — Get file metadata
+- GET /api/v1/storage/files/{file_id}/download-url — Get presigned download URL
+- POST /api/v1/storage/files/{file_id}/archive — Archive file to cold storage
+- POST /api/v1/storage/files — Direct upload (legacy)
 
 Notes:
 
