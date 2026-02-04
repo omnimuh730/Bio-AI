@@ -161,7 +161,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SettingsProfileHeader(),
                 SettingsDeviceSection(
                   devices: _s.devices,
-                  availableDevices: _s.availableDeviceNames,
+                  availableDevices: _s.selectedDeviceNames,
                   onToggle: _toggleDevice,
                   onResync: () => _showToast('Resyncing devices...'),
                   onReauth: () => _showToast('Re-auth requested'),
@@ -281,6 +281,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (!v.connected) v.lastSync = '';
           }
         });
+        final connected = _s.devices.entries
+            .where((e) => e.value.connected)
+            .map((e) => e.key)
+            .toList();
+        if (connected.isNotEmpty &&
+            !_s.selectedStreaming.contains(connected.first)) {
+          final device = _s.devices[connected.first];
+          if (device != null) {
+            device.connected = false;
+            device.lastSync = '';
+          }
+          StreamingService.instance.setSelectedDevice(null);
+          StreamingService.instance.stop();
+        }
       });
     } catch (e) {
       // ignore errors

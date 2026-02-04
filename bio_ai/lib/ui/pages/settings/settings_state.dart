@@ -35,6 +35,9 @@ class SettingsStateHolder {
 
   // Currently available devices reported by the streaming backend (streaming names)
   Set<String> availableStreaming = {};
+  // Devices selected locally to show in Device Sync.
+  Set<String> selectedStreaming = {};
+  bool _selectionInitialized = false;
 
   void updateAvailable(List<String> names) {
     availableStreaming = names.toSet();
@@ -43,6 +46,12 @@ class SettingsStateHolder {
       if (!streamingDevices.contains(name)) {
         streamingDevices.add(name);
       }
+    }
+    if (!_selectionInitialized) {
+      selectedStreaming = Set<String>.from(availableStreaming);
+      _selectionInitialized = true;
+    } else {
+      selectedStreaming = selectedStreaming.intersection(availableStreaming);
     }
   }
 
@@ -68,6 +77,36 @@ class SettingsStateHolder {
       return ordered;
     }
     return availableStreaming.toList();
+  }
+
+  /// Returns device names that are selected for Device Sync (ordered by catalog).
+  List<String> get selectedDeviceNames {
+    if (streamingDevices.isNotEmpty) {
+      final ordered = streamingDevices
+          .where((name) => selectedStreaming.contains(name))
+          .toList();
+      for (final name in selectedStreaming) {
+        if (!ordered.contains(name)) {
+          ordered.add(name);
+        }
+      }
+      return ordered;
+    }
+    return selectedStreaming.toList();
+  }
+
+  void setSelected(String name, bool selected) {
+    _ensureDevices([name]);
+    if (selected) {
+      selectedStreaming.add(name);
+    } else {
+      selectedStreaming.remove(name);
+      final device = devices[name];
+      if (device != null) {
+        device.connected = false;
+        device.lastSync = '';
+      }
+    }
   }
 
   bool metricUnits = true;

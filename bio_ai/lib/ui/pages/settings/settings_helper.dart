@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
+import 'package:bio_ai/services/streaming_service.dart';
 import 'package:bio_ai/ui/pages/settings/settings_state.dart';
 import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
 
@@ -87,17 +88,11 @@ Future<void> openFindDevicesModal(
       force: true,
       throwOnError: true,
     );
-    final allDevices = await s.fetchAllDevices(force: true);
     if (!context.mounted) return;
     // Keep a persistent local list so dialog switches reflect changes.
     var localAvailable = List<String>.from(available);
-    // Show all supported devices; toggle indicates availability.
-    final deviceNames = allDevices.isNotEmpty ? allDevices : localAvailable;
     // Sync parent so Device Sync panel reflects current availability.
     setParentState(() {
-      if (allDevices.isNotEmpty) {
-        s.updateStreamingDevices(allDevices);
-      }
       s.updateAvailable(localAvailable);
     });
     // toast success
@@ -106,38 +101,58 @@ Future<void> openFindDevicesModal(
     );
     showDialog(
       context: context,
-      builder: (context) {
-        final entries = deviceNames.isNotEmpty ? deviceNames : localAvailable;
-        return AlertDialog(
-          title: const Text('Mock Available Devices'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: entries.isEmpty
-                ? const Text('No devices available')
-                : ListView(
-                    shrinkWrap: true,
-                    children: entries.map((name) {
-                      final isAvailable = localAvailable.contains(name);
-                      return ListTile(
-                        title: Text(name),
-                        trailing: AbsorbPointer(
-                          child: Switch(
-                            value: isAvailable,
-                            onChanged: (_) {},
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          Future<void> toggleSelection(String name, bool value) async {
+            setParentState(() {
+              final wasConnected = s.devices[name]?.connected == true;
+              s.setSelected(name, value);
+              if (value) {
+                final dev = s.devices[name];
+                if (dev != null && dev.lastSync.isEmpty) {
+                  dev.lastSync = 'available';
+                }
+              } else {
+                if (wasConnected) {
+                  StreamingService.instance.setSelectedDevice(null);
+                  StreamingService.instance.stop();
+                }
+              }
+            });
+            setModalState(() {});
+          }
+
+          final entries = localAvailable;
+          return AlertDialog(
+            title: const Text('Mock Available Devices'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: entries.isEmpty
+                  ? const Text('No devices available')
+                  : ListView(
+                      shrinkWrap: true,
+                      children: entries.map((name) {
+                        final selected = s.selectedStreaming.contains(name);
+                        return ListTile(
+                          title: Text(name),
+                          trailing: Switch(
+                            value: selected,
+                            onChanged: (v) async =>
+                                await toggleSelection(name, v),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
+                        );
+                      }).toList(),
+                    ),
             ),
-          ],
-        );
-      },
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      ),
     );
     return;
   } catch (e) {
