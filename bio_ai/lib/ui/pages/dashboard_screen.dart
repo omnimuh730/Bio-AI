@@ -1,5 +1,8 @@
+import 'package:bio_ai/services/streaming_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:bio_ai/core/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../data/mock_data.dart';
 
@@ -18,16 +21,55 @@ import 'package:bio_ai/features/analytics/presentation/screens/analytics_screen.
 import 'package:bio_ai/features/settings/presentation/screens/settings_screen.dart';
 import 'package:bio_ai/features/vision/presentation/screens/capture_screen.dart';
 import 'package:bio_ai/features/planner/presentation/screens/planner_screen.dart';
+import 'settings/settings_state.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _mealIndex = 0;
+  final StreamingService _streaming = StreamingService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncStreaming());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncStreaming();
+  }
+
+  void _syncStreaming() {
+    final settings = ref.read(settingsStateProvider);
+    String? connectedDevice;
+    for (final entry in settings.devices.entries) {
+      if (entry.value.connected) {
+        connectedDevice = entry.key;
+        break;
+      }
+    }
+
+    if (connectedDevice == null) {
+      _streaming.setSelectedDevice(null);
+      _streaming.stop();
+      return;
+    }
+
+    _streaming.setSelectedDevice(connectedDevice);
+    _streaming.start(force: true);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   void _swapMeal() {
     setState(() {
@@ -88,6 +130,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final settings = ref.watch(settingsStateProvider);
+    String? connectedDevice;
+    for (final entry in settings.devices.entries) {
+      if (entry.value.connected) {
+        connectedDevice = entry.key;
+        break;
+      }
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgBody,
@@ -100,7 +150,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 50),
-                const HeaderProfile(),
+                HeaderProfile(
+                  isSyncActive: connectedDevice != null,
+                  connectedDeviceName: connectedDevice,
+                ),
                 const SetupCard(),
 
                 SectionTitle(
@@ -111,7 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   },
                 ),
-                const VitalsGrid(),
+                VitalsGrid(streaming: _streaming),
 
                 SectionTitle(localizations.aiSuggestion),
                 AIMealCard(

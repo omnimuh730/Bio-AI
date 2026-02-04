@@ -1,4 +1,5 @@
 const Map<String, String> stringsRu = {
+  'bio_sync_inactive': 'Bio-Sync Inactive',
   // Dashboard & Navigation
   'bio_sync_active': 'Bio‑Sync активен',
   'hello_user': 'Привет, {name}',

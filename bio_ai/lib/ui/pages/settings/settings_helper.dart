@@ -3,7 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
-
+import 'package:bio_ai/services/streaming_service.dart';
 import 'package:bio_ai/ui/pages/settings/settings_state.dart';
 import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
 
@@ -81,6 +81,85 @@ Future<void> openFindDevicesModal(
   void Function(String) showToast,
   void Function(VoidCallback) setParentState,
 ) async {
+  // If running against the streaming mock in dev/stage, show that backend list
+  // Try backend first (force request). If it responds (even empty list) show mock modal.
+  try {
+    final available = await s.fetchAvailableDevices(
+      force: true,
+      throwOnError: true,
+    );
+    if (!context.mounted) return;
+    // Keep a persistent local list so dialog switches reflect changes.
+    var localAvailable = List<String>.from(available);
+    // Sync parent so Device Sync panel reflects current availability.
+    setParentState(() {
+      s.updateAvailable(localAvailable);
+    });
+    // toast success
+    showToast(
+      'Fetched ${available.length} available device(s) from mock backend',
+    );
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          Future<void> toggleSelection(String name, bool value) async {
+            setParentState(() {
+              final wasConnected = s.devices[name]?.connected == true;
+              s.setSelected(name, value);
+              if (value) {
+                final dev = s.devices[name];
+                if (dev != null && dev.lastSync.isEmpty) {
+                  dev.lastSync = 'available';
+                }
+              } else {
+                if (wasConnected) {
+                  StreamingService.instance.setSelectedDevice(null);
+                  StreamingService.instance.stop();
+                }
+              }
+            });
+            setModalState(() {});
+          }
+
+          final entries = localAvailable;
+          return AlertDialog(
+            title: const Text('Mock Available Devices'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: entries.isEmpty
+                  ? const Text('No devices available')
+                  : ListView(
+                      shrinkWrap: true,
+                      children: entries.map((name) {
+                        final selected = s.selectedStreaming.contains(name);
+                        return ListTile(
+                          title: Text(name),
+                          trailing: Switch(
+                            value: selected,
+                            onChanged: (v) async =>
+                                await toggleSelection(name, v),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    return;
+  } catch (e) {
+    // If backend is unreachable, fall back to BLE flow below
+    showToast('Could not contact mock backend: $e');
+  }
+
   final ble = ref.read(bleServiceProvider);
   final ok = await ble.ensurePermissions();
   await updateBtPermission(ref, s, setParentState);

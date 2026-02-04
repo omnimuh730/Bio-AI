@@ -208,6 +208,7 @@ msg_queue = asyncio.Queue()
 # This is mutated when the frontend toggles a device on/off.
 ecosystem = build_ecosystem()
 exposed_devices = set()
+last_message = {}
 
 @app.get("/api/devices")
 async def list_devices():
@@ -219,12 +220,19 @@ async def list_available():
     """Return currently exposed (available) devices."""
     return {"available": sorted(list(exposed_devices))}
 
+@app.get("/api/latest")
+async def latest():
+    """Return latest payloads for currently exposed devices."""
+    # Only return devices that are in the exposed set
+    return {"latest": [last_message[d] for d in sorted(exposed_devices) if d in last_message]}
+
 @app.post("/api/expose")
 async def expose_device(request: Request):
     payload = await request.json()
     name = payload.get("device")
     if not name or name not in ecosystem:
         return {"error": "unknown_device", "device": name}
+    # Add device to available set (allow multiple available devices)
     exposed_devices.add(name)
     return {"status": "exposed", "device": name, "available": sorted(list(exposed_devices))}
 
@@ -252,6 +260,8 @@ async def run_device(name, hz, sensors):
             "metrics": snapshot
         }
         await msg_queue.put(payload)
+        # Also keep latest payload available for polling clients
+        last_message[name] = payload
         await asyncio.sleep(delay)
 
 @app.on_event("startup")

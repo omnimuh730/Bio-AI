@@ -7,6 +7,7 @@ import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
 
 class SettingsDeviceSection extends StatelessWidget {
   final Map<String, DeviceState> devices;
+  final List<String> availableDevices;
   final ValueChanged<String> onToggle;
   final VoidCallback onResync;
   final VoidCallback onReauth;
@@ -15,6 +16,7 @@ class SettingsDeviceSection extends StatelessWidget {
   const SettingsDeviceSection({
     super.key,
     required this.devices,
+    this.availableDevices = const [],
     required this.onToggle,
     required this.onResync,
     required this.onReauth,
@@ -23,6 +25,7 @@ class SettingsDeviceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasAvailable = availableDevices.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -30,33 +33,32 @@ class SettingsDeviceSection extends StatelessWidget {
         const SettingsSectionLabel('Device Sync'),
         SettingsCardContainer(
           children: [
-            SettingsDeviceRow(
-              device: devices['apple']!,
-              icon: Icons.apple,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('apple'),
-            ),
-            const SettingsDivider(),
-            SettingsDeviceRow(
-              device: devices['google']!,
-              icon: Icons.g_mobiledata,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('google'),
-            ),
-            const SettingsDivider(),
-            SettingsDeviceRow(
-              device: devices['garmin']!,
-              icon: Icons.watch,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('garmin'),
-            ),
-            const SettingsDivider(),
-            SettingsDeviceRow(
-              device: devices['fitbit']!,
-              icon: Icons.favorite_border,
-              iconColor: AppColors.textMain,
-              onToggle: () => onToggle('fitbit'),
-            ),
+            if (!hasAvailable) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                child: Text(
+                  'No connected devices',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ] else ...[
+              // Show rows for available devices (preserve order)
+              for (var i = 0; i < availableDevices.length; i++) ...[
+                SettingsDeviceRow(
+                  device: devices[availableDevices[i]]!,
+                  icon: _iconForDevice(availableDevices[i]),
+                  iconColor: AppColors.textMain,
+                  onToggle: () => onToggle(availableDevices[i]),
+                ),
+                if (i != availableDevices.length - 1) const SettingsDivider(),
+              ],
+            ],
+
             SettingsActionRow(
               label: 'Resync Devices',
               icon: Icons.sync,
@@ -82,6 +84,15 @@ class SettingsDeviceSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  IconData _iconForDevice(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('apple')) return Icons.apple;
+    if (lower.contains('fitbit')) return Icons.favorite_border;
+    if (lower.contains('google')) return Icons.g_mobiledata;
+    if (lower.contains('oura')) return Icons.g_mobiledata;
+    return Icons.watch;
   }
 }
 
