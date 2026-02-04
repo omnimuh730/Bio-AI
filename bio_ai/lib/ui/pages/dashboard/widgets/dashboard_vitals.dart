@@ -5,7 +5,6 @@ import 'package:bio_ai/core/theme/app_colors.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 import 'package:bio_ai/services/streaming_service.dart';
-import 'package:bio_ai/core/config.dart';
 
 class VitalsGrid extends StatefulWidget {
   final StreamingService? streaming;
@@ -24,7 +23,7 @@ class _VitalsGridState extends State<VitalsGrid> {
   @override
   void initState() {
     super.initState();
-    if (AppConfig.isDevOrStage && widget.streaming != null) {
+    if (widget.streaming != null) {
       latest = widget.streaming!.latest.value;
       _deviceName = _resolveDeviceName(latest);
       _metrics = _deviceName == null
@@ -37,7 +36,7 @@ class _VitalsGridState extends State<VitalsGrid> {
 
   @override
   void dispose() {
-    if (AppConfig.isDevOrStage && widget.streaming != null) {
+    if (widget.streaming != null) {
       widget.streaming!.latest.removeListener(_onLatest);
     }
     super.dispose();
@@ -156,6 +155,10 @@ class _VitalsGridState extends State<VitalsGrid> {
     final entries = _metrics.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
     if (entries.isEmpty) {
+      final selected = widget.streaming?.selectedDeviceName;
+      final message = selected == null
+          ? 'No live metrics yet. Connect a device to start streaming.'
+          : 'Waiting for live metrics from $selected...';
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Container(
@@ -172,7 +175,7 @@ class _VitalsGridState extends State<VitalsGrid> {
             ],
           ),
           child: Text(
-            'No live metrics yet. Connect a device to start streaming.',
+            message,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textSecondary,
             ),

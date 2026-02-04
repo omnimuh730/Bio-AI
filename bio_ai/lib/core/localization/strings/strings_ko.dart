@@ -1,4 +1,5 @@
 const Map<String, String> stringsKo = {
+  'bio_sync_inactive': 'Bio-Sync Inactive',
   // Dashboard & Navigation
   'bio_sync_active': 'Bio‑Sync 활성화',
   'hello_user': '안녕하세요, {name}',

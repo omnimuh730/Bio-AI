@@ -51,6 +51,7 @@ class AppLocalizations {
 
   // Dashboard screen strings
   String get bioSyncActive => get('bio_sync_active');
+  String get bioSyncInactive => get('bio_sync_inactive');
   String get helloUser => get('hello_user');
   String get newSuggestionLoaded => get('new_suggestion_loaded');
   String get comingSoon => get('coming_soon');

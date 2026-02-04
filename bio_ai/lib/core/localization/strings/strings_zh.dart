@@ -1,4 +1,5 @@
 const Map<String, String> stringsZh = {
+  'bio_sync_inactive': 'Bio-Sync Inactive',
   // Dashboard & Navigation
   'bio_sync_active': '生物同步已启用',
   'hello_user': '你好，{name}',

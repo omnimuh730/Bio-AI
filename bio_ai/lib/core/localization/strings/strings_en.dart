@@ -1,6 +1,7 @@
 const Map<String, String> stringsEn = {
   // Dashboard & Navigation
   'bio_sync_active': 'Bio-Sync Active',
+  'bio_sync_inactive': 'Bio-Sync Inactive',
   'hello_user': 'Hello, {name}',
   'new_suggestion_loaded': 'New suggestion loaded',
   'coming_soon': 'Coming soon',

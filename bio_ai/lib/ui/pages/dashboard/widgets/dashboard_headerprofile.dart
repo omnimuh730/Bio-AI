@@ -39,14 +39,31 @@ class SectionTitle extends StatelessWidget {
 
 class HeaderProfile extends StatelessWidget {
   final DataProvider? dataProvider;
+  final bool isSyncActive;
+  final String? connectedDeviceName;
 
-  const HeaderProfile({super.key, this.dataProvider});
+  const HeaderProfile({
+    super.key,
+    this.dataProvider,
+    this.isSyncActive = false,
+    this.connectedDeviceName,
+  });
 
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
 
     final userName = dataProvider?.userProfile.name ?? 'Dekomori';
+    final statusLabel = isSyncActive
+        ? localizations.bioSyncActive
+        : localizations.bioSyncInactive;
+    final statusDetail =
+        isSyncActive && connectedDeviceName != null && connectedDeviceName!.isNotEmpty
+            ? ' · ${connectedDeviceName!}'
+            : '';
+    final statusColor = isSyncActive
+        ? AppColors.success
+        : AppColors.textLight;
 
     return Padding(
       padding: AppSpacings.contentPadding,
@@ -62,15 +79,19 @@ class HeaderProfile extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppColors.success,
+                      color: statusColor,
                       shape: BoxShape.circle,
-                      boxShadow: AppShadows.shadowColor(AppColors.success, 8),
+                      boxShadow: AppShadows.shadowColor(statusColor, 8),
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    localizations.bioSyncActive,
-                    style: AppTextStyles.bodySmall,
+                    '$statusLabel$statusDetail',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: isSyncActive
+                          ? AppTextStyles.bodySmall.color
+                          : AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),

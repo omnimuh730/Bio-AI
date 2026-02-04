@@ -1,4 +1,5 @@
 const Map<String, String> stringsAr = {
+  'bio_sync_inactive': 'Bio-Sync Inactive',
   // Dashboard & Navigation
   'bio_sync_active': 'Bio-Sync نشط',
   'hello_user': 'مرحبا، {name}',
