@@ -34,6 +34,31 @@ class S3Client:
             extra["ContentType"] = content_type
         self.client.put_object(Bucket=self.hot_bucket, Key=key, Body=fileobj.read(), **extra)
 
+    def generate_presigned_upload_url(self, key: str, content_type: str, expires_in: int = 3600) -> str:
+        """Generate a presigned URL for direct client upload to S3."""
+        url = self.client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket': self.hot_bucket,
+                'Key': key,
+                'ContentType': content_type
+            },
+            ExpiresIn=expires_in
+        )
+        return url
+
+    def generate_presigned_download_url(self, key: str, expires_in: int = 3600) -> str:
+        """Generate a presigned URL for downloading from S3."""
+        url = self.client.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': self.hot_bucket,
+                'Key': key
+            },
+            ExpiresIn=expires_in
+        )
+        return url
+
     def copy_to_archive(self, key):
         copy_source = {"Bucket": self.hot_bucket, "Key": key}
         self.client.copy_object(CopySource=copy_source, Bucket=self.archive_bucket, Key=key)

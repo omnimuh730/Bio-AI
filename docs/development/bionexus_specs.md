@@ -2,12 +2,13 @@
 
 **Role**
 
-BioNexus is the authoritative storage and retrieval service for user-centric data: health metrics (time-series), food logs and vision metadata, canonical food references and embeddings, and AI audit logs. It provides a simple API for ingestion and query, offers vector similarity search for recommendation pipelines, and enforces indexing/retention policies to balance performance and cost.
+BioNexus is the authoritative storage and retrieval service for user-centric data: health metrics (time-series), food logs and vision metadata, canonical food references and embeddings, AI audit logs, and **file/blob storage** (merged from bio_storage). It provides a simple API for ingestion and query, offers vector similarity search for recommendation pipelines, enforces indexing/retention policies, and manages direct-to-cloud uploads via presigned URLs.
 
 **Architecture Summary**
 
 - Backend: FastAPI (Python) microservice exposing ingest and query endpoints.
-- Primary storage: MongoDB Atlas (Time-Series for metrics, Collections for logs and reference data).
+- Primary storage: MongoDB Atlas (Time-Series for metrics, Collections for logs, reference data, and file metadata).
+- Object storage: S3-compatible storage (AWS S3, MinIO) for binary assets (images, depth maps).
 - Secondary features: Vector indexes (for semantic/embedding similarity), TTLs for audit data, geospatial indexes for restaurants.
 
 **Responsibilities**
@@ -16,18 +17,21 @@ BioNexus is the authoritative storage and retrieval service for user-centric dat
 - Store vision output and links to media (S3), and provide a mapping from vision results → food logs.
 - Maintain a canonical global food catalog with embeddings used by the recommendation pipeline.
 - Provide observability/audit logs to trace model predictions and support RLHF workflows.
+- **File Storage:** Generate presigned URLs for direct client uploads, manage file lifecycle (hot→archive), track metadata.
 
 **Tech Stack**
 
 - Framework: FastAPI (Python 3.11+)
-- Database: **MongoDB Atlas** (single datastore for: Time-Series for metrics, Collections for logs, Vector indexes for semantic search)
-- Object storage: S3 (media & depth maps)
+- Database: **MongoDB Atlas** (single datastore for: Time-Series for metrics, Collections for logs, Vector indexes for semantic search, File metadata)
+- Object storage: S3-compatible (AWS S3, MinIO) for images, depth maps, and binary assets
 - Messaging: Redis Streams for ingest smoothing and archivals
 - Observability: OpenTelemetry + Prometheus + Loki
 
 > **Note:** A separate vector DB (e.g., Qdrant) is deprecated in our default stack in favor of MongoDB Atlas Vector Search unless an advanced ANN feature set is required.
 
 **API Surface & Example Endpoints**
+
+**Data & Metrics:**
 
 - POST /api/v1/metrics/batch — Ingest health metrics (time-series batch).
 - POST /api/v1/vision/result — Store vision output and S3 pointers.
@@ -37,7 +41,15 @@ BioNexus is the authoritative storage and retrieval service for user-centric dat
 - POST /api/v1/foods/lookup_barcode — Accepts barcode or UPC; (BFF uses FatSecret) returns product metadata and persists entry to `Global_Foods` for training/quality review.
 - POST /api/v1/foods/ingest_for_training — API to mark/ingest records into ML training datasets (labels, provenance).
 
-**Folder Structure (proposed)**
+**Storage (merged from bio_storage):**
+
+- POST /api/v1/storage/sign-upload — Generate presigned S3 upload URL for direct client uploads
+- GET /api/v1/storage/files/{file_id} — Get file metadata
+- GET /api/v1/storage/files/{file_id}/download-url — Get presigned download URL
+- POST /api/v1/storage/files/{file_id}/archive — Move file from hot to archive bucket
+- POST /api/v1/storage/files — Direct upload endpoint (legacy)
+
+**Folder Structure (updated after bio_storage merge)**
 
 ```
 bio_nexus/
@@ -48,12 +60,17 @@ bio_nexus/
 │   │   │   │   ├── metrics.py
 │   │   │   │   ├── vision.py
 │   │   │   │   ├── foods.py
-│   │   │   │   └── users.py
+│   │   │   │   ├── users.py
+│   │   │   │   └── storage.py        # merged from bio_storage
 │   ├── core/
-│   │   └── config.py
+│   │   └── config.py                 # includes S3 settings
 │   ├── db/
 │   │   └── mongodb.py
-│   └── services/
+│   ├── s3/                           # merged from bio_storage
+│   │   └── client.py                 # S3 client with presigned URL generation
+│   ├── services/
+│   │   └── storage.py                # file upload/archive logic
+│   └── main.py
 └── tests/
 ```
 
@@ -72,7 +89,14 @@ bio_nexus/
 **Environment Variables**
 
 - MONGODB_URI (Atlas connection)
-- S3_BUCKET_NAME
+- MONGO_DB_NAME (database name)
+- S3_ENDPOINT_URL (optional, for MinIO or custom endpoints)
+- AWS_ACCESS_KEY_ID (S3 credentials)
+- AWS_SECRET_ACCESS_KEY (S3 credentials)
+- AWS_REGION (S3 region)
+- BUCKET_HOT (hot storage bucket name)
+- BUCKET_ARCHIVE (archive/cold storage bucket name)
+- ARCHIVE_THRESHOLD_DAYS (days before archival)
 - REDIS_URL (if using streams)
 - OAUTH_PUBLIC_KEY_URL (for any auth verification)
 
