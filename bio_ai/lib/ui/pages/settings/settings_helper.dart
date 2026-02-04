@@ -3,8 +3,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
-import 'package:bio_ai/services/streaming_service.dart';
-
 import 'package:bio_ai/ui/pages/settings/settings_state.dart';
 import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
 
@@ -108,107 +106,38 @@ Future<void> openFindDevicesModal(
     );
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          Future<void> toggleByName(String name, bool value) async {
-            // Optimistic UI update so the modal feels responsive
-            if (value) {
-              if (!localAvailable.contains(name)) localAvailable.add(name);
-            } else {
-              localAvailable.remove(name);
-            }
-            setModalState(() {});
-
-            // Update backend availability
-            final ok = await s.setDeviceExposureByName(
-              name,
-              value,
-              force: true,
-            );
-            if (!ok) {
-              // Revert optimistic update
-              if (value) {
-                localAvailable.remove(name);
-              } else {
-                if (!localAvailable.contains(name)) localAvailable.add(name);
-              }
-              setModalState(() {});
-              showToast('Backend error while updating $name');
-              return;
-            }
-
-            // Enforce single local connection in the app and update parent's available list
-            if (value) {
-              setParentState(() {
-                s.devices.forEach((k, v) {
-                  v.connected = false;
-                  v.lastSync = '';
-                });
-                final dev = s.devices[name];
-                if (dev != null) {
-                  dev.connected = true;
-                  dev.lastSync = 'just now';
-                }
-                s.updateAvailable(localAvailable);
-              });
-              StreamingService.instance.setSelectedDevice(name);
-              // Ensure the streaming service is running so dashboard receives data
-              StreamingService.instance.start(force: true);
-              showToast('Connected $name');
-            } else {
-              setParentState(() {
-                final dev = s.devices[name];
-                if (dev != null) {
-                  final wasConnected = dev.connected;
-                  dev.connected = false;
-                  dev.lastSync = '';
-                  if (wasConnected) {
-                    StreamingService.instance.setSelectedDevice(null);
-                    StreamingService.instance.stop();
-                  }
-                }
-                s.updateAvailable(localAvailable);
-              });
-              showToast('Removed $name');
-            }
-
-            // Refresh authoritative list from backend
-            localAvailable = await s.fetchAvailableDevices(force: true);
-            // Sync parent again in case backend differs
-            setParentState(() => s.updateAvailable(localAvailable));
-            setModalState(() {});
-          }
-
-          final entries = deviceNames.isNotEmpty ? deviceNames : localAvailable;
-
-          return AlertDialog(
-            title: const Text('Mock Available Devices'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: entries.isEmpty
-                  ? const Text('No devices available')
-                  : ListView(
-                      shrinkWrap: true,
-                      children: entries.map((name) {
-                        return ListTile(
-                          title: Text(name),
-                          trailing: Switch(
-                            value: localAvailable.contains(name),
-                            onChanged: (v) async => await toggleByName(name, v),
+      builder: (context) {
+        final entries = deviceNames.isNotEmpty ? deviceNames : localAvailable;
+        return AlertDialog(
+          title: const Text('Mock Available Devices'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: entries.isEmpty
+                ? const Text('No devices available')
+                : ListView(
+                    shrinkWrap: true,
+                    children: entries.map((name) {
+                      final isAvailable = localAvailable.contains(name);
+                      return ListTile(
+                        title: Text(name),
+                        trailing: AbsorbPointer(
+                          child: Switch(
+                            value: isAvailable,
+                            onChanged: (_) {},
                           ),
-                        );
-                      }).toList(),
-                    ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        },
-      ),
+          ],
+        );
+      },
     );
     return;
   } catch (e) {

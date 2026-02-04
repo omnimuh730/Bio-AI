@@ -110,6 +110,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _s.devices[name]?.lastSync = '';
         });
         StreamingService.instance.setSelectedDevice(null);
+        StreamingService.instance.stop();
         _showToast('$label disconnected');
       } else {
         // connect this device locally and ensure backend marks it available
@@ -122,17 +123,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _s.devices[name]?.connected = true;
           _s.devices[name]?.lastSync = 'just now';
         });
-        // mark available on backend (additive)
-        _s.setDeviceExposureByName(name, true, force: true).then((ok) async {
-          // set selected device so dashboard shows its metrics
-          if (ok) {
-            StreamingService.instance.setSelectedDevice(name);
-            StreamingService.instance.start(force: true);
-            _showToast('$label connected');
-          } else {
-            _showToast('Failed to expose device on backend');
-          }
-        });
+        // set selected device so dashboard shows its metrics
+        StreamingService.instance.setSelectedDevice(name);
+        StreamingService.instance.start(force: true);
+        _showToast('$label connected');
       }
       return;
     }

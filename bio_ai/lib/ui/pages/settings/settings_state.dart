@@ -84,8 +84,15 @@ class SettingsStateHolder {
   void toggleDevice(String name) {
     final device = devices[name];
     if (device == null) return;
-    device.connected = !device.connected;
-    device.lastSync = device.connected ? 'just now' : '';
+    final shouldConnect = !device.connected;
+    if (shouldConnect) {
+      devices.forEach((_, v) {
+        v.connected = false;
+        v.lastSync = '';
+      });
+    }
+    device.connected = shouldConnect;
+    device.lastSync = shouldConnect ? 'just now' : '';
   }
 
   /// Fetch available devices from streaming backend (dev/stage only)
@@ -141,34 +148,6 @@ class SettingsStateHolder {
       if (kDebugMode) print('fetchAllDevices error: $e');
       if (throwOnError) rethrow;
       return List<String>.from(streamingDevices);
-    }
-  }
-
-  /// Expose or hide a device on the streaming backend (dev/stage only).
-  /// Returns true on success.
-  Future<bool> setDeviceExposureByName(
-    String name,
-    bool expose, {
-    bool force = false,
-  }) async {
-    if (!force && !AppConfig.isDevOrStage) return false;
-    final endpoint = expose ? 'expose' : 'hide';
-    try {
-      final url = '${AppConfig.streamingBaseUrl}/api/$endpoint';
-      if (kDebugMode) print('POST $url -> $name');
-      final res = await _dio.post(url, data: {'device': name});
-      final data = res.data;
-      final ok =
-          res.statusCode != null &&
-          res.statusCode! >= 200 &&
-          res.statusCode! < 300 &&
-          !(data is Map && data['error'] != null);
-      if (!ok && kDebugMode)
-        print('setDeviceExposure non-ok status: ${res.statusCode}');
-      return ok;
-    } catch (e) {
-      if (kDebugMode) print('setDeviceExposure error: $e');
-      return false;
     }
   }
 
