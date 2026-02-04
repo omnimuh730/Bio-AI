@@ -13,8 +13,8 @@ class StreamingService {
   final ValueNotifier<Map<String, dynamic>> latest = ValueNotifier({});
   String? selectedDeviceName;
 
-  void start() {
-    if (!AppConfig.isDevOrStage) return;
+  void start({bool force = false}) {
+    if (!force && !AppConfig.isDevOrStage) return;
     // poll every second
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _poll());

@@ -122,11 +122,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _s.devices[key]?.lastSync = 'just now';
         });
         // mark available on backend (additive)
-        _s.setDeviceExposure(key, true).then((_) async {
+        _s.setDeviceExposure(key, true, force: true).then((ok) async {
           // set selected device so dashboard shows its metrics
           final name = _s.streamingName(key);
-          StreamingService.instance.setSelectedDevice(name);
-          _showToast('${_s.devices[key]?.label} connected');
+          if (ok) {
+            StreamingService.instance.setSelectedDevice(name);
+            StreamingService.instance.start(force: true);
+            _showToast('${_s.devices[key]?.label} connected');
+          } else {
+            _showToast('Failed to expose device on backend');
+          }
         });
       }
       return;

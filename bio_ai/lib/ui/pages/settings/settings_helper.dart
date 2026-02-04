@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:bio_ai/core/theme/app_text_styles.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bio_ai/app/di/injectors.dart';
+import 'package:bio_ai/services/streaming_service.dart';
 
 import 'package:bio_ai/ui/pages/settings/settings_state.dart';
 import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
@@ -104,16 +105,48 @@ Future<void> openFindDevicesModal(
             final key = s.keyForStreamingName(name);
             if (key == null) return;
 
+            // Update backend availability first
             final ok = await s.setDeviceExposure(key, value, force: true);
-            if (ok) {
-              showToast(value ? 'Exposed $name' : 'Removed $name');
-            } else {
+            if (!ok) {
               showToast('Backend error while updating $name');
+              return;
+            }
+
+            // Enforce single local connection in the app
+            if (value) {
+              setParentState(() {
+                s.devices.forEach((k, v) {
+                  v.connected = false;
+                  v.lastSync = '';
+                });
+                final dev = s.devices[key];
+                if (dev != null) {
+                  dev.connected = true;
+                  dev.lastSync = 'just now';
+                }
+              });
+              StreamingService.instance.setSelectedDevice(name);
+              // Ensure the streaming service is running so dashboard receives data
+              StreamingService.instance.start(force: true);
+              showToast('Connected $name');
+            } else {
+              setParentState(() {
+                final dev = s.devices[key];
+                if (dev != null) {
+                  final wasConnected = dev.connected;
+                  dev.connected = false;
+                  dev.lastSync = '';
+                  if (wasConnected) {
+                    StreamingService.instance.setSelectedDevice(null);
+                    StreamingService.instance.stop();
+                  }
+                }
+              });
+              showToast('Removed $name');
             }
 
             localAvailable = await s.fetchAvailableDevices(force: true);
             setModalState(() {});
-            setParentState(() {});
           }
 
           final entries = localAvailable;
