@@ -13,52 +13,62 @@ class DeviceState {
 }
 
 class SettingsStateHolder {
-  final Map<String, DeviceState> devices = {
-    // Initially no devices are connected in settings; Find Devices will populate
-    'apple': DeviceState('Apple Health', false, ''),
-    'google': DeviceState('Google Fit', false, ''),
-    'garmin': DeviceState('Garmin', false, ''),
-    'fitbit': DeviceState('Fitbit', false, ''),
-    'amazfit': DeviceState('Amazfit', false, ''),
-  };
-
-  // Mapping from settings keys to streaming mock device names
-  final Map<String, String> _streamingName = {
-    'apple': 'Apple Watch Ultra 2',
-    'google': 'Oura Ring Gen3',
-    'garmin': 'Garmin Fenix 7 Pro',
-    'fitbit': 'Fitbit Charge 6',
-    'amazfit': 'Amazfit GTR 4',
-  };
-
-  String? streamingName(String key) => _streamingName[key];
-
-  String? keyForStreamingName(String name) {
-    return _streamingName.entries
-            .firstWhere(
-              (e) => e.value == name,
-              orElse: () => const MapEntry('', ''),
-            )
-            .key
-            .isEmpty
-        ? null
-        : _streamingName.entries.firstWhere((e) => e.value == name).key;
+  SettingsStateHolder() {
+    streamingDevices = List<String>.from(_fallbackDevices);
+    _ensureDevices(streamingDevices);
   }
 
-  Map<String, String> get streamingMap => Map.unmodifiable(_streamingName);
+  final Map<String, DeviceState> devices = {};
+
+  // Fallback list when the mock backend isn't reachable.
+  final List<String> _fallbackDevices = const [
+    'Apple Watch Ultra 2',
+    'Oura Ring Gen3',
+    'Garmin Fenix 7 Pro',
+    'Fitbit Charge 6',
+    'Amazfit GTR 4',
+  ];
+
+  List<String> streamingDevices = [];
+  List<String> _deviceCatalog = [];
+  bool _catalogFetched = false;
 
   // Currently available devices reported by the streaming backend (streaming names)
   Set<String> availableStreaming = {};
 
   void updateAvailable(List<String> names) {
     availableStreaming = names.toSet();
+    _ensureDevices(availableStreaming);
+    for (final name in names) {
+      if (!streamingDevices.contains(name)) {
+        streamingDevices.add(name);
+      }
+    }
   }
 
-  /// Returns the keys (apple/google/garmin/...) that correspond to available streaming devices
-  List<String> get availableKeys => _streamingName.entries
-      .where((e) => availableStreaming.contains(e.value))
-      .map((e) => e.key)
-      .toList();
+  void updateStreamingDevices(List<String> names) {
+    if (names.isEmpty) return;
+    streamingDevices = List<String>.from(names);
+    _deviceCatalog = List<String>.from(names);
+    _catalogFetched = true;
+    _ensureDevices(streamingDevices);
+  }
+
+  /// Returns the device names that are currently available (ordered by catalog).
+  List<String> get availableDeviceNames {
+    if (streamingDevices.isNotEmpty) {
+      final ordered = streamingDevices
+          .where((name) => availableStreaming.contains(name))
+          .toList();
+      for (final name in availableStreaming) {
+        if (!ordered.contains(name)) {
+          ordered.add(name);
+        }
+      }
+      return ordered;
+    }
+    return availableStreaming.toList();
+  }
 
   bool metricUnits = true;
   String selectedPlan = 'pro-monthly';
@@ -71,8 +81,8 @@ class SettingsStateHolder {
 
   final Dio _dio = Dio();
 
-  void toggleDevice(String key) {
-    final device = devices[key];
+  void toggleDevice(String name) {
+    final device = devices[name];
     if (device == null) return;
     device.connected = !device.connected;
     device.lastSync = device.connected ? 'just now' : '';
@@ -105,31 +115,66 @@ class SettingsStateHolder {
     }
   }
 
+  /// Fetch full device catalog from streaming backend (dev/stage only).
+  Future<List<String>> fetchAllDevices({
+    bool force = false,
+    bool throwOnError = false,
+  }) async {
+    if (!force && _catalogFetched) return List<String>.from(_deviceCatalog);
+    if (!force && !AppConfig.isDevOrStage) {
+      return List<String>.from(streamingDevices);
+    }
+    try {
+      final url = '${AppConfig.streamingBaseUrl}/api/devices';
+      if (kDebugMode) print('Fetching device catalog from $url');
+      final res = await _dio.get(url);
+      if (kDebugMode) print('Fetch devices status: ${res.statusCode}');
+      if (res.statusCode == 200 && res.data != null) {
+        final List l = res.data['devices'] ?? [];
+        final names = l.map((e) => e['name']).whereType<String>().toList();
+        if (kDebugMode) print('Device catalog: $names');
+        updateStreamingDevices(names);
+        return names;
+      }
+      return List<String>.from(streamingDevices);
+    } catch (e) {
+      if (kDebugMode) print('fetchAllDevices error: $e');
+      if (throwOnError) rethrow;
+      return List<String>.from(streamingDevices);
+    }
+  }
+
   /// Expose or hide a device on the streaming backend (dev/stage only).
   /// Returns true on success.
-  Future<bool> setDeviceExposure(
-    String key,
+  Future<bool> setDeviceExposureByName(
+    String name,
     bool expose, {
     bool force = false,
   }) async {
     if (!force && !AppConfig.isDevOrStage) return false;
-    final name = _streamingName[key];
-    if (name == null) return false;
     final endpoint = expose ? 'expose' : 'hide';
     try {
       final url = '${AppConfig.streamingBaseUrl}/api/$endpoint';
       if (kDebugMode) print('POST $url -> $name');
       final res = await _dio.post(url, data: {'device': name});
+      final data = res.data;
       final ok =
           res.statusCode != null &&
           res.statusCode! >= 200 &&
-          res.statusCode! < 300;
+          res.statusCode! < 300 &&
+          !(data is Map && data['error'] != null);
       if (!ok && kDebugMode)
         print('setDeviceExposure non-ok status: ${res.statusCode}');
       return ok;
     } catch (e) {
       if (kDebugMode) print('setDeviceExposure error: $e');
       return false;
+    }
+  }
+
+  void _ensureDevices(Iterable<String> names) {
+    for (final name in names) {
+      devices.putIfAbsent(name, () => DeviceState(name, false, ''));
     }
   }
 

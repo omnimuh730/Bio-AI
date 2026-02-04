@@ -97,19 +97,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _toggleDevice(String key) {
+  void _toggleDevice(String name) {
     // Client-side: connect only one device locally. Do not clear other available devices on backend.
-    final wasConnected = _s.devices[key]?.connected == true;
+    final wasConnected = _s.devices[name]?.connected == true;
+    final label = _s.devices[name]?.label ?? name;
 
     if (AppConfig.isDevOrStage) {
       if (wasConnected) {
         // disconnect locally
         setState(() {
-          _s.devices[key]?.connected = false;
-          _s.devices[key]?.lastSync = '';
+          _s.devices[name]?.connected = false;
+          _s.devices[name]?.lastSync = '';
         });
         StreamingService.instance.setSelectedDevice(null);
-        _showToast('${_s.devices[key]?.label} disconnected');
+        _showToast('$label disconnected');
       } else {
         // connect this device locally and ensure backend marks it available
         setState(() {
@@ -118,17 +119,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             v.connected = false;
             v.lastSync = '';
           });
-          _s.devices[key]?.connected = true;
-          _s.devices[key]?.lastSync = 'just now';
+          _s.devices[name]?.connected = true;
+          _s.devices[name]?.lastSync = 'just now';
         });
         // mark available on backend (additive)
-        _s.setDeviceExposure(key, true, force: true).then((ok) async {
+        _s.setDeviceExposureByName(name, true, force: true).then((ok) async {
           // set selected device so dashboard shows its metrics
-          final name = _s.streamingName(key);
           if (ok) {
             StreamingService.instance.setSelectedDevice(name);
             StreamingService.instance.start(force: true);
-            _showToast('${_s.devices[key]?.label} connected');
+            _showToast('$label connected');
           } else {
             _showToast('Failed to expose device on backend');
           }
@@ -138,9 +138,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     // Prod: local bluetooth flow
-    setState(() => _s.toggleDevice(key));
+    setState(() => _s.toggleDevice(name));
     _showToast(
-      '${_s.devices[key]?.label} ${_s.devices[key]?.connected == true ? 'connected' : 'disconnected'}',
+      '$label ${_s.devices[name]?.connected == true ? 'connected' : 'disconnected'}',
     );
   }
 
@@ -167,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SettingsProfileHeader(),
                 SettingsDeviceSection(
                   devices: _s.devices,
-                  availableKeys: _s.availableKeys,
+                  availableDevices: _s.availableDeviceNames,
                   onToggle: _toggleDevice,
                   onResync: () => _showToast('Resyncing devices...'),
                   onReauth: () => _showToast('Re-auth requested'),
@@ -270,15 +270,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _refreshAvailableDevices() async {
     try {
+      final allDevices = await _s.fetchAllDevices();
       final available = await _s.fetchAvailableDevices();
       // update state holder with available list and refresh UI
       setState(() {
+        if (allDevices.isNotEmpty) {
+          _s.updateStreamingDevices(allDevices);
+        }
         _s.updateAvailable(available);
         // do NOT mark devices as connected just because they're available;
         // connected means locally selected (only one). Keep lastSync for visible devices.
-        _s.devices.forEach((k, v) {
-          final mappedName = _s.streamingName(k);
-          if (mappedName != null && available.contains(mappedName)) {
+        _s.devices.forEach((name, v) {
+          if (available.contains(name)) {
             v.lastSync = v.lastSync.isEmpty ? 'available' : v.lastSync;
           } else {
             if (!v.connected) v.lastSync = '';

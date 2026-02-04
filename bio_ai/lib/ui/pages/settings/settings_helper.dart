@@ -89,13 +89,19 @@ Future<void> openFindDevicesModal(
       force: true,
       throwOnError: true,
     );
+    final allDevices = await s.fetchAllDevices(force: true);
     if (!context.mounted) return;
     // Keep a persistent local list so dialog switches reflect changes.
     var localAvailable = List<String>.from(available);
     // Show all supported devices; toggle indicates availability.
-    final deviceNames = s.streamingMap.values.toList();
+    final deviceNames = allDevices.isNotEmpty ? allDevices : localAvailable;
     // Sync parent so Device Sync panel reflects current availability.
-    setParentState(() => s.updateAvailable(localAvailable));
+    setParentState(() {
+      if (allDevices.isNotEmpty) {
+        s.updateStreamingDevices(allDevices);
+      }
+      s.updateAvailable(localAvailable);
+    });
     // toast success
     showToast(
       'Fetched ${available.length} available device(s) from mock backend',
@@ -105,9 +111,6 @@ Future<void> openFindDevicesModal(
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           Future<void> toggleByName(String name, bool value) async {
-            final key = s.keyForStreamingName(name);
-            if (key == null) return;
-
             // Optimistic UI update so the modal feels responsive
             if (value) {
               if (!localAvailable.contains(name)) localAvailable.add(name);
@@ -117,7 +120,11 @@ Future<void> openFindDevicesModal(
             setModalState(() {});
 
             // Update backend availability
-            final ok = await s.setDeviceExposure(key, value, force: true);
+            final ok = await s.setDeviceExposureByName(
+              name,
+              value,
+              force: true,
+            );
             if (!ok) {
               // Revert optimistic update
               if (value) {
@@ -137,7 +144,7 @@ Future<void> openFindDevicesModal(
                   v.connected = false;
                   v.lastSync = '';
                 });
-                final dev = s.devices[key];
+                final dev = s.devices[name];
                 if (dev != null) {
                   dev.connected = true;
                   dev.lastSync = 'just now';
@@ -150,7 +157,7 @@ Future<void> openFindDevicesModal(
               showToast('Connected $name');
             } else {
               setParentState(() {
-                final dev = s.devices[key];
+                final dev = s.devices[name];
                 if (dev != null) {
                   final wasConnected = dev.connected;
                   dev.connected = false;
@@ -183,14 +190,11 @@ Future<void> openFindDevicesModal(
                   : ListView(
                       shrinkWrap: true,
                       children: entries.map((name) {
-                        final key = s.keyForStreamingName(name);
                         return ListTile(
                           title: Text(name),
                           trailing: Switch(
                             value: localAvailable.contains(name),
-                            onChanged: key == null
-                                ? null
-                                : (v) async => await toggleByName(name, v),
+                            onChanged: (v) async => await toggleByName(name, v),
                           ),
                         );
                       }).toList(),

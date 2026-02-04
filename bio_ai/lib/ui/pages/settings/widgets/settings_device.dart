@@ -7,8 +7,7 @@ import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
 
 class SettingsDeviceSection extends StatelessWidget {
   final Map<String, DeviceState> devices;
-  final List<String>
-  availableKeys; // keys for devices that are available from streaming backend
+  final List<String> availableDevices;
   final ValueChanged<String> onToggle;
   final VoidCallback onResync;
   final VoidCallback onReauth;
@@ -17,7 +16,7 @@ class SettingsDeviceSection extends StatelessWidget {
   const SettingsDeviceSection({
     super.key,
     required this.devices,
-    this.availableKeys = const [],
+    this.availableDevices = const [],
     required this.onToggle,
     required this.onResync,
     required this.onReauth,
@@ -26,7 +25,7 @@ class SettingsDeviceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasAvailable = availableKeys.isNotEmpty;
+    final hasAvailable = availableDevices.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -49,22 +48,14 @@ class SettingsDeviceSection extends StatelessWidget {
               ),
             ] else ...[
               // Show rows for available devices (preserve order)
-              for (var i = 0; i < availableKeys.length; i++) ...[
+              for (var i = 0; i < availableDevices.length; i++) ...[
                 SettingsDeviceRow(
-                  device: devices[availableKeys[i]]!,
-                  icon: availableKeys[i] == 'apple'
-                      ? Icons.apple
-                      : availableKeys[i] == 'google'
-                      ? Icons.g_mobiledata
-                      : availableKeys[i] == 'garmin'
-                      ? Icons.watch
-                      : availableKeys[i] == 'amazfit'
-                      ? Icons.watch
-                      : Icons.favorite_border,
+                  device: devices[availableDevices[i]]!,
+                  icon: _iconForDevice(availableDevices[i]),
                   iconColor: AppColors.textMain,
-                  onToggle: () => onToggle(availableKeys[i]),
+                  onToggle: () => onToggle(availableDevices[i]),
                 ),
-                if (i != availableKeys.length - 1) const SettingsDivider(),
+                if (i != availableDevices.length - 1) const SettingsDivider(),
               ],
             ],
 
@@ -93,6 +84,15 @@ class SettingsDeviceSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  IconData _iconForDevice(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('apple')) return Icons.apple;
+    if (lower.contains('fitbit')) return Icons.favorite_border;
+    if (lower.contains('google')) return Icons.g_mobiledata;
+    if (lower.contains('oura')) return Icons.g_mobiledata;
+    return Icons.watch;
   }
 }
 
