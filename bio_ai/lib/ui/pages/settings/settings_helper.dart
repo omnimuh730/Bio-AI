@@ -90,6 +90,12 @@ Future<void> openFindDevicesModal(
       throwOnError: true,
     );
     if (!context.mounted) return;
+    // Keep a persistent local list so dialog switches reflect changes.
+    var localAvailable = List<String>.from(available);
+    // Show all supported devices; toggle indicates availability.
+    final deviceNames = s.streamingMap.values.toList();
+    // Sync parent so Device Sync panel reflects current availability.
+    setParentState(() => s.updateAvailable(localAvailable));
     // toast success
     showToast(
       'Fetched ${available.length} available device(s) from mock backend',
@@ -98,21 +104,33 @@ Future<void> openFindDevicesModal(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // keep local copy so UI updates without closing dialog
-          var localAvailable = List<String>.from(available);
-
           Future<void> toggleByName(String name, bool value) async {
             final key = s.keyForStreamingName(name);
             if (key == null) return;
 
-            // Update backend availability first
+            // Optimistic UI update so the modal feels responsive
+            if (value) {
+              if (!localAvailable.contains(name)) localAvailable.add(name);
+            } else {
+              localAvailable.remove(name);
+            }
+            setModalState(() {});
+
+            // Update backend availability
             final ok = await s.setDeviceExposure(key, value, force: true);
             if (!ok) {
+              // Revert optimistic update
+              if (value) {
+                localAvailable.remove(name);
+              } else {
+                if (!localAvailable.contains(name)) localAvailable.add(name);
+              }
+              setModalState(() {});
               showToast('Backend error while updating $name');
               return;
             }
 
-            // Enforce single local connection in the app
+            // Enforce single local connection in the app and update parent's available list
             if (value) {
               setParentState(() {
                 s.devices.forEach((k, v) {
@@ -124,6 +142,7 @@ Future<void> openFindDevicesModal(
                   dev.connected = true;
                   dev.lastSync = 'just now';
                 }
+                s.updateAvailable(localAvailable);
               });
               StreamingService.instance.setSelectedDevice(name);
               // Ensure the streaming service is running so dashboard receives data
@@ -141,15 +160,19 @@ Future<void> openFindDevicesModal(
                     StreamingService.instance.stop();
                   }
                 }
+                s.updateAvailable(localAvailable);
               });
               showToast('Removed $name');
             }
 
+            // Refresh authoritative list from backend
             localAvailable = await s.fetchAvailableDevices(force: true);
+            // Sync parent again in case backend differs
+            setParentState(() => s.updateAvailable(localAvailable));
             setModalState(() {});
           }
 
-          final entries = localAvailable;
+          final entries = deviceNames.isNotEmpty ? deviceNames : localAvailable;
 
           return AlertDialog(
             title: const Text('Mock Available Devices'),
@@ -164,7 +187,7 @@ Future<void> openFindDevicesModal(
                         return ListTile(
                           title: Text(name),
                           trailing: Switch(
-                            value: key != null && localAvailable.contains(name),
+                            value: localAvailable.contains(name),
                             onChanged: key == null
                                 ? null
                                 : (v) async => await toggleByName(name, v),

@@ -58,6 +58,8 @@ class SettingsDeviceSection extends StatelessWidget {
                       ? Icons.g_mobiledata
                       : availableKeys[i] == 'garmin'
                       ? Icons.watch
+                      : availableKeys[i] == 'amazfit'
+                      ? Icons.watch
                       : Icons.favorite_border,
                   iconColor: AppColors.textMain,
                   onToggle: () => onToggle(availableKeys[i]),

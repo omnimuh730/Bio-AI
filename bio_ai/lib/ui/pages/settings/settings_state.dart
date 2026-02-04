@@ -19,6 +19,7 @@ class SettingsStateHolder {
     'google': DeviceState('Google Fit', false, ''),
     'garmin': DeviceState('Garmin', false, ''),
     'fitbit': DeviceState('Fitbit', false, ''),
+    'amazfit': DeviceState('Amazfit', false, ''),
   };
 
   // Mapping from settings keys to streaming mock device names
@@ -27,6 +28,7 @@ class SettingsStateHolder {
     'google': 'Oura Ring Gen3',
     'garmin': 'Garmin Fenix 7 Pro',
     'fitbit': 'Fitbit Charge 6',
+    'amazfit': 'Amazfit GTR 4',
   };
 
   String? streamingName(String key) => _streamingName[key];
