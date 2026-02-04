@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
@@ -159,3 +159,181 @@ class FoodLogIn(BaseModel):
 class LeftoverConsume(BaseModel):
     leftover_id: int
     consumed_servings: float
+
+
+# ============================================================================
+# Analytics Schemas
+# ============================================================================
+
+# Enums and Types
+EntryType = Literal["MEAL", "EXERCISE", "HYDRATION", "SLEEP"]
+MetricType = Literal[
+    "calorie_intake", "protein_intake", "carb_intake", "fat_intake",
+    "active_burn", "hydration", "steps",
+    "sleep_quality", "energy_score", "hrv_stress", "mood"
+]
+PeriodType = Literal["1W", "1M", "3M", "6M", "1Y"]
+TrendDirection = Literal["up", "down", "flat"]
+
+
+# Dashboard Summary Schemas
+class EnergyScoreTrend(BaseModel):
+    """Energy score trend information"""
+    direction: TrendDirection
+    percentage: float
+    message: str
+
+
+class EnergyScore(BaseModel):
+    """Energy score with trend"""
+    value: int
+    label: str
+    trend: EnergyScoreTrend
+
+
+class MetricValue(BaseModel):
+    """Metric with current and goal values"""
+    current: float
+    goal: float
+    unit: str
+
+
+class SimpleMetric(BaseModel):
+    """Simple metric with just value and unit"""
+    value: float
+    unit: str
+
+
+class SleepMetric(BaseModel):
+    """Sleep score metric"""
+    value: int
+    max: int = 100
+
+
+class DailyMetrics(BaseModel):
+    """All daily metrics"""
+    calories: MetricValue
+    protein: MetricValue
+    carbs: Optional[MetricValue] = None
+    fats: Optional[MetricValue] = None
+    active_burn: SimpleMetric
+    sleep_score: SleepMetric
+    hydration: Optional[MetricValue] = None
+    steps: Optional[MetricValue] = None
+
+
+class DailySummary(BaseModel):
+    """Daily summary response"""
+    date: str
+    energy_score: EnergyScore
+    metrics: DailyMetrics
+
+
+# AI Insights Schemas
+class InsightResponse(BaseModel):
+    """AI-generated insight"""
+    insight_id: str
+    type: str  # "weekly", "monthly"
+    text: str
+    generated_at: datetime
+    recommendations: Optional[List[str]] = None
+
+
+# Correlation Schemas
+class DataPoint(BaseModel):
+    """Single data point for charts"""
+    date: str
+    value: float
+
+
+class AxisData(BaseModel):
+    """Data for one axis of correlation chart"""
+    metric: MetricType
+    label: str
+    unit: str
+    data: List[DataPoint]
+
+
+class CorrelationData(BaseModel):
+    """Correlation analysis response"""
+    period: PeriodType
+    start_date: str
+    end_date: str
+    left_axis: AxisData
+    right_axis: AxisData
+    correlation_coefficient: Optional[float] = None
+    insights: Optional[List[str]] = None
+
+
+# Timeline Entry Schemas
+class Entry(BaseModel):
+    """Timeline entry (meal, exercise, hydration, sleep)"""
+    id: str
+    type: EntryType
+    title: str
+    subtitle: str
+    time: str  # HH:MM format
+    time_label: str  # Display format like "12 PM"
+    value: float
+    value_display: str
+    unit: str
+    metadata: Optional[Dict[str, Any]] = None
+    is_editable: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+
+class EntryList(BaseModel):
+    """List of timeline entries"""
+    date: str
+    total_count: int
+    entries: List[Entry]
+
+
+class EntryCreate(BaseModel):
+    """Create new timeline entry"""
+    date: str
+    time: str  # HH:MM format
+    type: EntryType
+    title: str
+    subtitle: Optional[str] = None
+    value: float
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class EntryUpdate(BaseModel):
+    """Update timeline entry (partial)"""
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    value: Optional[float] = None
+    time: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+# Metric History Schemas
+class MetricDataPoint(BaseModel):
+    """Data point with goal tracking"""
+    date: str
+    value: float
+    goal: Optional[float] = None
+    percentage: Optional[float] = None
+
+
+class MetricStatistics(BaseModel):
+    """Statistics for metric history"""
+    average: float
+    min: float
+    max: float
+    goal_achievement_rate: Optional[float] = None
+
+
+class MetricHistory(BaseModel):
+    """Historical data for a metric"""
+    metric: MetricType
+    label: str
+    unit: str
+    period: PeriodType
+    start_date: str
+    end_date: str
+    data: List[MetricDataPoint]
+    statistics: MetricStatistics
