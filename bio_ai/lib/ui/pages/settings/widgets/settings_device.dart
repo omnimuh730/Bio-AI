@@ -7,6 +7,8 @@ import 'package:bio_ai/ui/pages/settings/core/core_components.dart';
 
 class SettingsDeviceSection extends StatelessWidget {
   final Map<String, DeviceState> devices;
+  final List<String>
+  availableKeys; // keys for devices that are available from streaming backend
   final ValueChanged<String> onToggle;
   final VoidCallback onResync;
   final VoidCallback onReauth;
@@ -15,6 +17,7 @@ class SettingsDeviceSection extends StatelessWidget {
   const SettingsDeviceSection({
     super.key,
     required this.devices,
+    this.availableKeys = const [],
     required this.onToggle,
     required this.onResync,
     required this.onReauth,
@@ -23,7 +26,7 @@ class SettingsDeviceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasConnected = devices.values.any((d) => d.connected);
+    final hasAvailable = availableKeys.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -31,7 +34,7 @@ class SettingsDeviceSection extends StatelessWidget {
         const SettingsSectionLabel('Device Sync'),
         SettingsCardContainer(
           children: [
-            if (!hasConnected) ...[
+            if (!hasAvailable) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -45,33 +48,22 @@ class SettingsDeviceSection extends StatelessWidget {
                 ),
               ),
             ] else ...[
-              SettingsDeviceRow(
-                device: devices['apple']!,
-                icon: Icons.apple,
-                iconColor: AppColors.textMain,
-                onToggle: () => onToggle('apple'),
-              ),
-              const SettingsDivider(),
-              SettingsDeviceRow(
-                device: devices['google']!,
-                icon: Icons.g_mobiledata,
-                iconColor: AppColors.textMain,
-                onToggle: () => onToggle('google'),
-              ),
-              const SettingsDivider(),
-              SettingsDeviceRow(
-                device: devices['garmin']!,
-                icon: Icons.watch,
-                iconColor: AppColors.textMain,
-                onToggle: () => onToggle('garmin'),
-              ),
-              const SettingsDivider(),
-              SettingsDeviceRow(
-                device: devices['fitbit']!,
-                icon: Icons.favorite_border,
-                iconColor: AppColors.textMain,
-                onToggle: () => onToggle('fitbit'),
-              ),
+              // Show rows for available devices (preserve order)
+              for (var i = 0; i < availableKeys.length; i++) ...[
+                SettingsDeviceRow(
+                  device: devices[availableKeys[i]]!,
+                  icon: availableKeys[i] == 'apple'
+                      ? Icons.apple
+                      : availableKeys[i] == 'google'
+                      ? Icons.g_mobiledata
+                      : availableKeys[i] == 'garmin'
+                      ? Icons.watch
+                      : Icons.favorite_border,
+                  iconColor: AppColors.textMain,
+                  onToggle: () => onToggle(availableKeys[i]),
+                ),
+                if (i != availableKeys.length - 1) const SettingsDivider(),
+              ],
             ],
 
             SettingsActionRow(

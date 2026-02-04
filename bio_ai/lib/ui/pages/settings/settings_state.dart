@@ -45,6 +45,19 @@ class SettingsStateHolder {
 
   Map<String, String> get streamingMap => Map.unmodifiable(_streamingName);
 
+  // Currently available devices reported by the streaming backend (streaming names)
+  Set<String> availableStreaming = {};
+
+  void updateAvailable(List<String> names) {
+    availableStreaming = names.toSet();
+  }
+
+  /// Returns the keys (apple/google/garmin/...) that correspond to available streaming devices
+  List<String> get availableKeys => _streamingName.entries
+      .where((e) => availableStreaming.contains(e.value))
+      .map((e) => e.key)
+      .toList();
+
   bool metricUnits = true;
   String selectedPlan = 'pro-monthly';
   String selectedGoal = 'Lose Fat';

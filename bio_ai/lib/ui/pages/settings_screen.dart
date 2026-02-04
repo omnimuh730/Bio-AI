@@ -162,6 +162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SettingsProfileHeader(),
                 SettingsDeviceSection(
                   devices: _s.devices,
+                  availableKeys: _s.availableKeys,
                   onToggle: _toggleDevice,
                   onResync: () => _showToast('Resyncing devices...'),
                   onReauth: () => _showToast('Re-auth requested'),
@@ -265,11 +266,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _refreshAvailableDevices() async {
     try {
       final available = await _s.fetchAvailableDevices();
+      // update state holder with available list and refresh UI
       setState(() {
+        _s.updateAvailable(available);
+        // do NOT mark devices as connected just because they're available;
+        // connected means locally selected (only one). Keep lastSync for visible devices.
         _s.devices.forEach((k, v) {
           final mappedName = _s.streamingName(k);
-          v.connected = mappedName != null && available.contains(mappedName);
-          v.lastSync = v.connected ? 'just now' : '';
+          if (mappedName != null && available.contains(mappedName)) {
+            v.lastSync = v.lastSync.isEmpty ? 'available' : v.lastSync;
+          } else {
+            if (!v.connected) v.lastSync = '';
+          }
         });
       });
     } catch (e) {
