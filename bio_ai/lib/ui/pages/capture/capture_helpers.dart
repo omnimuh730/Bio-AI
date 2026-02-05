@@ -4,6 +4,37 @@ import 'package:bio_ai/core/theme/app_text_styles.dart';
 
 import 'capture_models.dart';
 
+/// Recursively converts all nested Maps to Map<String, dynamic>
+/// This is needed because JSON decoded from HTTP responses often
+/// returns Map<dynamic, dynamic> which causes type errors in Dart.
+Map<String, dynamic> deepConvertMap(dynamic data) {
+  if (data is Map) {
+    return data.map((key, value) {
+      if (value is Map) {
+        return MapEntry(key.toString(), deepConvertMap(value));
+      } else if (value is List) {
+        return MapEntry(key.toString(), deepConvertList(value));
+      } else {
+        return MapEntry(key.toString(), value);
+      }
+    });
+  }
+  return <String, dynamic>{};
+}
+
+/// Recursively converts all nested Maps in a List
+List<dynamic> deepConvertList(List<dynamic> list) {
+  return list.map((item) {
+    if (item is Map) {
+      return deepConvertMap(item);
+    } else if (item is List) {
+      return deepConvertList(item);
+    } else {
+      return item;
+    }
+  }).toList();
+}
+
 FoodItem? parseFatSecretFood(dynamic food) {
   try {
     final name = food['food_name'] ?? food['name'] ?? 'Unknown Food';

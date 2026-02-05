@@ -337,3 +337,158 @@ class MetricHistory(BaseModel):
     end_date: str
     data: List[MetricDataPoint]
     statistics: MetricStatistics
+
+
+# ============================================================================
+# Capture (Photo & Barcode Scan) Schemas
+# ============================================================================
+
+# Nutrition breakdown
+class NutritionInfo(BaseModel):
+    """Nutritional information"""
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+    fiber: Optional[float] = None
+    sugar: Optional[float] = None
+    sodium: Optional[float] = None
+
+
+# Serving information
+class ServingInfo(BaseModel):
+    """Serving size information"""
+    amount: float
+    unit: str
+
+
+# Photo Analysis Schemas
+class AlternativeSuggestion(BaseModel):
+    """Alternative food suggestion"""
+    name: str
+    confidence: float
+    nutrition: NutritionInfo
+
+
+class DetectedItem(BaseModel):
+    """Detected food item from image analysis"""
+    temp_id: str
+    name: str
+    confidence: float
+    default_serving: ServingInfo
+    nutrition: NutritionInfo
+    alternative_suggestions: Optional[List[AlternativeSuggestion]] = None
+
+
+class MealContext(BaseModel):
+    """Suggested meal context"""
+    suggested_meal_type: str  # breakfast, lunch, dinner, snack
+    suggested_time: str  # HH:MM format
+
+
+class ImageAnalysisResponse(BaseModel):
+    """Response from image analysis"""
+    analysis_id: str
+    uploaded_at: datetime
+    detected_items: List[DetectedItem]
+    total_nutrition: NutritionInfo
+    meal_context: MealContext
+
+
+# Barcode Schemas
+class BarcodeItem(BaseModel):
+    """Food product from barcode"""
+    name: str
+    brand: str
+    description: Optional[str] = None
+    serving_size: str
+    servings_per_container: float = 1.0
+    nutrition: NutritionInfo
+    ingredients: Optional[str] = None
+    allergens: Optional[List[str]] = None
+    image_url: Optional[str] = None
+
+
+class BarcodeResponse(BaseModel):
+    """Response from barcode lookup"""
+    found: bool
+    barcode: str
+    item: Optional[BarcodeItem] = None
+    message: Optional[str] = None
+    suggestion: Optional[str] = None
+
+
+# Confirm Entry Schemas
+class CaptureConfirm(BaseModel):
+    """Confirm and log food entry"""
+    date: str
+    time: str
+    type: str = "MEAL"
+    title: str
+    subtitle: Optional[str] = None
+    value: float  # calories
+    nutrition: NutritionInfo
+    serving_info: Optional[ServingInfo] = None
+    source: str  # scan_ai, barcode, manual
+    analysis_id: Optional[str] = None
+    temp_id: Optional[str] = None
+
+
+class CaptureEntryPreview(BaseModel):
+    """Preview of created entry"""
+    id: str
+    date: str
+    time: str
+    title: str
+    value: float
+    type: str
+
+
+class DailyTotals(BaseModel):
+    """Daily nutrition totals"""
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+
+
+class CaptureConfirmResponse(BaseModel):
+    """Response after confirming entry"""
+    id: str
+    message: str
+    entry: CaptureEntryPreview
+    daily_totals: DailyTotals
+
+
+# Analysis History Schemas
+class AnalysisHistoryItem(BaseModel):
+    """Single analysis history item"""
+    analysis_id: str
+    uploaded_at: datetime
+    thumbnail_url: Optional[str] = None
+    detected_items_count: int
+    primary_item: str
+    was_logged: bool
+
+
+class AnalysisHistoryResponse(BaseModel):
+    """Analysis history list"""
+    total_count: int
+    analyses: List[AnalysisHistoryItem]
+
+
+# Food Search Schemas
+class FoodSearchResult(BaseModel):
+    """Single food search result"""
+    id: str
+    name: str
+    brand: Optional[str] = None
+    serving_size: str
+    calories: float
+    image_url: Optional[str] = None
+
+
+class FoodSearchResponse(BaseModel):
+    """Food search results"""
+    query: str
+    results: List[FoodSearchResult]

@@ -32,10 +32,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize with empty items list
-    _s.results = _s.searchService.catalog.isNotEmpty
-        ? List<FoodItem>.from(_s.searchService.catalog)
-        : [];
   }
 
   @override
@@ -70,10 +66,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   Future<FoodItem?> _showMealDetailModal(FoodItem item) {
     return showDialog<FoodItem?>(
       context: context,
-      builder: (_) => MealDetailModal(
-        item: item,
-        loadFatSecret: _s.searchService.fetchFatSecretByName,
-      ),
+      builder: (_) => MealDetailModal(item: item, loadFatSecret: null),
     );
   }
 
@@ -95,38 +88,36 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       backgroundColor: Colors.black,
       body: CaptureScreenBody(
         items: _s.items,
-        results: _s.results,
         sheetOpen: _s.sheetOpen,
-        searchOpen: _s.searchOpen,
         offlineMode: _s.offlineMode,
         barcodeOpen: _s.barcodeOpen,
         barcodeFound: _s.barcodeFound,
         barcodeScanning: _s.barcodeScanning,
         barcodePendingConfirmation: _s.barcodePendingConfirmation,
         barcodeFullData: _s.barcodeFullData,
+        scanResultOpen: _s.scanResultOpen,
+        scanResults: _s.scanResults,
+        scanProcessing: _s.scanProcessing,
         mode: _s.mode,
         portionOptions: _s.portionOptions,
         totalCals: _totalCals,
         totalProtein: _totalProtein,
         totalFat: _totalFat,
-        controller: _s.searchController,
-        isSearching: _s.searching,
         barcodeItem: _s.barcodeItem,
-        onOpenSearch: _controller.openSearch,
-        onCloseSearch: _controller.closeSearch,
         onToggleBarcode: _controller.toggleBarcode,
         onCloseBarcodeResult: _controller.closeBarcodeResult,
         onAddBarcodeItem: _controller.addBarcodeItemAndClose,
         onConfirmBarcode: _controller.confirmBarcodeLookup,
         onCancelBarcode: _controller.cancelBarcodeLookup,
         onBarcodeDetected: _controller.handleBarcodeDetected,
+        onCloseScanResult: _controller.closeScanResult,
+        onAddScanResultItem: _controller.addScanResultItem,
         onToggleQuickSwitch: _controller.toggleQuickSwitch,
         onNavigateFromQuick: _navigateFromQuick,
         onAddItem: _controller.addItem,
         onRemoveItem: _controller.removeItem,
         onPortionChanged: (i, p) =>
             setState(() => _s.items[i].portionIndex = p),
-        onCreateCustom: _controller.createCustomFood,
         onLog: () {
           _controller.logMeal(
             onViewDiary: () {
@@ -140,10 +131,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             },
           );
         },
-        onAddCaffeine: () => _controller.addItem(_s.searchService.catalog[0]),
-        onAddAlcohol: () => _controller.addItem(_s.searchService.catalog[1]),
-        onQueryChanged: _controller.filterSearch,
-        onTapItem: _controller.openMealModal,
         onCapturePhoto: _controller.captureAndUpload,
       ),
     );

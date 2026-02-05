@@ -33,18 +33,6 @@ class CaptureScreenController {
 
   void closeSheet() => setState(() => state.sheetOpen = false);
 
-  void openSearch() {
-    setState(() {
-      state.searchOpen = true;
-      state.mode = 'search';
-    });
-  }
-
-  void closeSearch() => setState(() {
-    state.searchOpen = false;
-    state.mode = 'scan';
-  });
-
   void toggleQuickSwitch() =>
       setState(() => state.quickSwitchOpen = !state.quickSwitchOpen);
 
@@ -91,8 +79,18 @@ class CaptureScreenController {
   }
 
   Future<void> captureAndUpload() async {
+    if (state.mode == 'barcode') {
+      // In barcode mode, just toggle the barcode scanner
+      toggleBarcode();
+      return;
+    }
+
+    // In scan mode, capture photo and recognize food
     final cam = ref.read(cameraServiceProvider);
     final fatSecret = ref.read(fatSecretServiceProvider);
+
+    setState(() => state.scanProcessing = true);
+
     try {
       if (!cam.isInitialized) await cam.initialize();
       final file = await cam.takePhoto();
@@ -105,34 +103,71 @@ class CaptureScreenController {
 
       if (result['error'] != null) {
         if (isMounted()) {
+          setState(() => state.scanProcessing = false);
           showSnackBar('Recognition failed: ${result['error']}');
         }
         return;
       }
 
       final recognition = result['recognition'];
-      if (recognition != null && recognition['foods'] != null) {
-        final foods = recognition['foods'] as List;
-        if (foods.isNotEmpty) {
-          for (var food in foods.take(3)) {
-            final item = parseFatSecretFood(food);
-            if (item != null) {
-              addItem(item);
-            }
+      if (recognition != null) {
+        // FatSecret returns 'food_response' not 'foods'
+        final foods = recognition['food_response'] as List?;
+        if (foods != null && foods.isNotEmpty) {
+          // Store ALL recognized food data (entire response item including food_id, eaten, suggested_serving, food)
+          // Use deepConvertMap to properly convert all nested Map<dynamic,dynamic> to Map<String,dynamic>
+          final foodMaps = <Map<String, dynamic>>[];
+          for (final item in foods) {
+            // Pass the ENTIRE item with all fields (food_id, food_entry_name, eaten, suggested_serving, food)
+            foodMaps.add(deepConvertMap(item));
           }
-          if (isMounted()) {
-            showSnackBar('Found ${foods.length} food items!');
+
+          if (foodMaps.isNotEmpty) {
+            setState(() {
+              state.scanResults = foodMaps;
+              state.scanResultOpen = true;
+              state.scanProcessing = false;
+            });
+            if (isMounted()) {
+              showSnackBar('Found ${foodMaps.length} food item(s)!');
+            }
+          } else {
+            if (isMounted()) {
+              setState(() => state.scanProcessing = false);
+              showSnackBar('No food data in response');
+            }
           }
         } else {
           if (isMounted()) {
+            setState(() => state.scanProcessing = false);
             showSnackBar('No food detected in image');
           }
+        }
+      } else {
+        if (isMounted()) {
+          setState(() => state.scanProcessing = false);
+          showSnackBar('No recognition data received');
         }
       }
     } catch (e) {
       if (isMounted()) {
+        setState(() => state.scanProcessing = false);
         showSnackBar('Capture/upload failed: $e');
       }
+    }
+  }
+
+  void closeScanResult() {
+    setState(() {
+      state.scanResultOpen = false;
+      state.scanResults = [];
+    });
+  }
+
+  void addScanResultItem(Map<String, dynamic> foodData) {
+    final item = parseFatSecretFood(foodData);
+    if (item != null) {
+      addItem(item);
     }
   }
 
@@ -214,71 +249,6 @@ class CaptureScreenController {
       state.barcodePendingConfirmation = null;
       state.barcodeScanning = true;
     });
-  }
-
-  void filterSearch(String query) {
-    state.searchDebounce?.cancel();
-    final q = query.trim();
-    if (q.isEmpty) {
-      setState(() {
-        state.results = List<FoodItem>.from(state.searchService.catalog);
-        state.searching = false;
-      });
-      return;
-    }
-
-    final lower = q.toLowerCase();
-    setState(() {
-      state.results = state.searchService.catalog
-          .where((item) => item.name.toLowerCase().contains(lower))
-          .toList();
-      state.searching = true;
-    });
-
-    state.searchDebounce = Timer(const Duration(seconds: 1), () async {
-      final fatSecret = ref.read(fatSecretServiceProvider);
-      final result = await fatSecret.searchFood(q);
-
-      if (result['error'] == null && result['foods'] != null) {
-        final foodsData = result['foods'];
-        final foodList = foodsData['food'] as List?;
-        if (foodList != null) {
-          final items = foodList
-              .map((f) => parseFatSecretFood(f))
-              .whereType<FoodItem>()
-              .toList();
-          if (isMounted()) {
-            setState(() {
-              state.results = items;
-              state.searching = false;
-            });
-          }
-          return;
-        }
-      }
-
-      final res = await state.searchService.search(q);
-      if (isMounted()) {
-        setState(() {
-          state.results = res;
-          state.searching = false;
-        });
-      }
-    });
-  }
-
-  Future<void> openMealModal(FoodItem item) async {
-    final added = await showMealDetailModal(item);
-    if (added != null) addItem(added);
-  }
-
-  Future<void> createCustomFood() async {
-    final custom = await showCustomFoodDialog(state.searchController.text);
-    if (custom != null) {
-      addItem(custom);
-      state.searchController.clear();
-      filterSearch('');
-    }
   }
 
   void logMeal({required VoidCallback onViewDiary}) {

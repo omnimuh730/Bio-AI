@@ -34,9 +34,7 @@ class CaptureBottomControls extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _modeButton('scan'),
-                const SizedBox(width: 24),
-                _modeButton('search'),
-                const SizedBox(width: 24),
+                const SizedBox(width: 48),
                 _modeButton('barcode'),
               ],
             ),
