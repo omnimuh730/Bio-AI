@@ -30,9 +30,8 @@ export default function App() {
 				)}
 				{screen === "onboarding" && (
 					<Onboarding onFinish={() => setScreen("home")} />
-				</div>
-
-				{/* home indicator */}
+				)}
+			</div>
 				<div className="home-indicator" />
 			</div>
 		</div>

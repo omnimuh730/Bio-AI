@@ -40,7 +40,7 @@ export default function Splash({ onFinish }) {
 						<path d="M36 10c4 0 6 2 6 8v12c0 6-4 10-10 10h-4" />
 					</g>
 				</svg>
-				<div className="splash-title">Eatsy</div>
+				<div className="splash-title">BioAI</div>
 			</div>
 		</div>
 	);
