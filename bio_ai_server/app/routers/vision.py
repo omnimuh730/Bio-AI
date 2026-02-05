@@ -34,7 +34,7 @@ def get_fatsecret_token():
     try:
         payload = {
             "grant_type": "client_credentials",
-            "scope": "basic premier barcode"
+            "scope": "basic premier barcode image-recognition"
         }
         response = requests.post(
             FATSECRET_TOKEN_URL,
@@ -346,32 +346,58 @@ async def upload_vision(file: UploadFile = File(...)):
     Upload an image and recognize food using FatSecret.
     Saves file locally and returns recognition results.
     """
+    print("=" * 80)
+    print("🖼️  IMAGE RECOGNITION REQUEST")
+    print("=" * 80)
+    
     try:
         # Save uploaded file
         out_path = os.path.join(UPLOAD_DIR, file.filename)
+        print(f"📁 Step 1: Saving uploaded file")
+        print(f"   - Filename: {file.filename}")
+        print(f"   - Save path: {out_path}")
+        
         with open(out_path, "wb") as f:
             content = await file.read()
             f.write(content)
+        
+        print(f"   - File size: {len(content)} bytes")
+        print(f"   ✅ File saved successfully")
 
         # Reset file pointer and recognize
         await file.seek(0)
         token = get_fatsecret_token()
         if not token:
+            print(f"\n❌ Step 2: Authentication failed")
+            print(f"   - No valid FatSecret token available")
+            print("=" * 80)
             return JSONResponse(
                 content={"status": "saved", "file": out_path, "recognition": None}
             )
 
+        print(f"\n🔐 Step 2: Authentication successful")
+        print(f"   - Token obtained")
+
         # Process image for recognition
+        print(f"\n🎨 Step 3: Processing image")
         img = Image.open(io.BytesIO(content))
+        print(f"   - Original size: {img.size}")
+        print(f"   - Original mode: {img.mode}")
+        
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
+            print(f"   - Converted to RGB mode")
+        
         img.thumbnail((512, 512))
+        print(f"   - Resized to: {img.size}")
 
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=85)
         buffer.seek(0)
         image_data = buffer.read()
         base64_encoded = base64.b64encode(image_data).decode('utf-8')
+        
+        print(f"   - Base64 encoded length: {len(base64_encoded)} chars")
 
         payload = {
             "image_b64": base64_encoded,
@@ -385,17 +411,80 @@ async def upload_vision(file: UploadFile = File(...)):
             "Content-Type": "application/json"
         }
 
+        print(f"\n🌐 Step 4: Calling FatSecret Image Recognition API")
+        print(f"   - URL: {FATSECRET_RECOGNITION_URL}")
+        print(f"   - Region: US")
+        print(f"   - Language: en")
+        print(f"   - Include food data: True")
+
         res = requests.post(FATSECRET_RECOGNITION_URL, headers=headers, json=payload)
 
-        recognition_result = res.json() if res.status_code == 200 else None
+        print(f"\n📡 Step 5: FatSecret API Response")
+        print(f"   - Status code: {res.status_code}")
+        print(f"   - Response size: {len(res.content)} bytes")
 
-        return JSONResponse(content={
+        if res.status_code != 200:
+            print(f"   ❌ Error response:")
+            print(f"   - {res.text}")
+            recognition_result = None
+        else:
+            recognition_result = res.json()
+            print(f"\n📄 FULL RECOGNITION RESPONSE:")
+            print("=" * 80)
+            try:
+                print(json.dumps(recognition_result, indent=2, ensure_ascii=False))
+            except Exception as e:
+                print(f"   (JSON formatting failed: {e})")
+                print(f"   Raw: {recognition_result}")
+            print("=" * 80)
+            
+            # Analyze the response structure
+            print(f"\n🔍 Response Analysis:")
+            if isinstance(recognition_result, dict):
+                print(f"   - Response is a dictionary")
+                print(f"   - Keys: {list(recognition_result.keys())}")
+                
+                if "foods" in recognition_result:
+                    foods = recognition_result["foods"]
+                    print(f"   - 'foods' key found")
+                    print(f"   - Type: {type(foods)}")
+                    if isinstance(foods, list):
+                        print(f"   - Number of foods: {len(foods)}")
+                        if len(foods) > 0:
+                            print(f"   - First food keys: {list(foods[0].keys()) if isinstance(foods[0], dict) else 'Not a dict'}")
+                    else:
+                        print(f"   - 'foods' is not a list!")
+                else:
+                    print(f"   - No 'foods' key in response")
+                
+                if "error" in recognition_result:
+                    print(f"   - ⚠️ Error in response: {recognition_result['error']}")
+            else:
+                print(f"   - Response is not a dictionary: {type(recognition_result)}")
+
+        final_response = {
             "status": "processed",
             "file": out_path,
             "recognition": recognition_result
-        })
+        }
+        
+        print(f"\n✅ Step 6: Returning response to Flutter client")
+        print(f"   - Status: {final_response['status']}")
+        print(f"   - Recognition data: {'Present' if recognition_result else 'None'}")
+        print("=" * 80)
+        print()
+
+        return JSONResponse(content=final_response)
 
     except Exception as e:
+        print(f"\n❌ EXCEPTION OCCURRED:")
+        print(f"   - Error: {str(e)}")
+        print(f"   - Type: {type(e).__name__}")
+        import traceback
+        print(f"\n📋 Full traceback:")
+        traceback.print_exc()
+        print("=" * 80)
+        print()
         raise HTTPException(status_code=500, detail=str(e))
 
 

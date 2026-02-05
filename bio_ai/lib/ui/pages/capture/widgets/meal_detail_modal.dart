@@ -5,13 +5,9 @@ import 'package:bio_ai/ui/pages/capture/capture_models.dart';
 
 class MealDetailModal extends StatefulWidget {
   final FoodItem item;
-  final Future<Map<String, dynamic>?> Function(String) loadFatSecret;
+  final Future<Map<String, dynamic>?> Function(String)? loadFatSecret;
 
-  const MealDetailModal({
-    super.key,
-    required this.item,
-    required this.loadFatSecret,
-  });
+  const MealDetailModal({super.key, required this.item, this.loadFatSecret});
 
   @override
   State<MealDetailModal> createState() => _MealDetailModalState();
@@ -55,13 +51,13 @@ class _MealDetailModalState extends State<MealDetailModal> {
               const SizedBox(height: 12),
             ],
             if (fatRaw != null) ...[_buildFatSecretSection(fatRaw!)],
-            if (fatRaw == null && !loading)
+            if (fatRaw == null && !loading && widget.loadFatSecret != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: ElevatedButton(
                   onPressed: () async {
                     setState(() => loading = true);
-                    final f = await widget.loadFatSecret(widget.item.name);
+                    final f = await widget.loadFatSecret!(widget.item.name);
                     setState(() {
                       fatRaw = f;
                       loading = false;
