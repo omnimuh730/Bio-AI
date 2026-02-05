@@ -2,14 +2,15 @@
 .boti-root {
 	height: 100%;
 	color: white;
+	background: linear-gradient(180deg, #1a1a1a, #0f1011 70%);
 }
 .header {
-	padding: 24px 20px 10px 20px;
+	padding: 28px 20px 10px 20px;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	position: absolute;
-	top: 0;
+	top: 8px;
 	width: 100%;
 	z-index: 20;
 }

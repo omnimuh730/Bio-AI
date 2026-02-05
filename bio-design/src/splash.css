@@ -9,7 +9,12 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: linear-gradient(180deg, #fff6f3 0%, #ffece3 40%);
+	background: radial-gradient(
+		circle at 20% 10%,
+		#fff9f4,
+		#f6e9df 45%,
+		#efe0d6 100%
+	);
 }
 
 .phone-frame {
@@ -17,16 +22,39 @@
 	height: 812px;
 	background: #0f1011;
 	border-radius: 40px;
-	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+	box-shadow:
+		0 20px 50px rgba(0, 0, 0, 0.5),
+		0 1px 0 rgba(255, 255, 255, 0.12) inset;
 	position: relative;
 	overflow: hidden;
 	border: 8px solid #000;
+}
+.phone-frame::before {
+	content: "";
+	position: absolute;
+	inset: 10px;
+	border-radius: 32px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	pointer-events: none;
+}
+
+.notch {
+	position: absolute;
+	top: 8px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 140px;
+	height: 26px;
+	background: #000;
+	border-radius: 0 0 18px 18px;
+	box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+	z-index: 26;
 }
 
 /* Status bar and home indicator shared across screens */
 .status-bar {
 	position: absolute;
-	top: 10px;
+	top: 16px;
 	left: 18px;
 	right: 18px;
 	display: flex;
@@ -65,9 +93,11 @@
 
 .splash-inner {
 	height: 100%;
+	width: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	background: linear-gradient(160deg, #ff7a55, #ff5c3b 65%, #ff7f5c);
 }
 .splash-card {
 	text-align: center;
@@ -85,10 +115,8 @@
 }
 .splash-title {
 	font-family:
-		"Poppins",
-		system-ui,
-		-apple-system,
-		Roboto,
+		"Fraunces",
+		"Manrope",
 		"Segoe UI",
 		sans-serif;
 	font-weight: 700;
@@ -122,8 +150,9 @@
 .content-area {
 	position: absolute;
 	inset: 0;
-	padding-top: 46px; /* account for status bar */
+	padding-top: 0;
 	overflow: hidden;
+	background: #fff6f2;
 }
 
 /* animate splash out only (keep device frame visible) */

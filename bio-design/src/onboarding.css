@@ -1,0 +1,133 @@
+/* Onboarding slides */
+.onboarding-root {
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding-top: 46px; /* safe area */
+	box-sizing: border-box;
+}
+
+.slides {
+	position: relative;
+	width: 100%;
+	height: calc(100% - 86px);
+	overflow: hidden;
+}
+
+.slide {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 28px;
+	transition: transform 420ms cubic-bezier(.2,.9,.3,1), opacity 320ms ease;
+	opacity: 0;
+	transform: translateX(8%);
+}
+
+.slides.step-0 .slide:nth-child(1),
+.slides.step-1 .slide:nth-child(2),
+.slides.step-2 .slide:nth-child(3) {
+	opacity: 1;
+	transform: translateX(0);
+}
+
+.onboarding-card {
+	background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.88));
+	padding: 28px;
+	border-radius: 18px;
+	text-align: center;
+	box-shadow: 0 18px 40px var(--shadow);
+	width: 78%;
+	max-width: 320px;
+}
+
+.badge {
+	background: rgba(255, 255, 255, 0.06);
+	color: var(--accent);
+	font-weight: 800;
+	padding: 10px 14px;
+	border-radius: 14px;
+	display: inline-block;
+	margin-bottom: 10px;
+}
+
+.card-title {
+	font-weight: 700;
+	margin-top: 6px;
+	font-size: 18px;
+}
+
+.onboarding-cta {
+	text-align: center;
+}
+
+.onboarding-cta h3 {
+	font-size: 22px;
+	margin-bottom: 8px;
+}
+
+.onboarding-controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	max-width: 320px;
+	padding: 12px 28px 18px 28px;
+	box-sizing: border-box;
+}
+
+.ghost {
+	background: transparent;
+	border: none;
+	color: var(--muted);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.dots {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: rgba(0,0,0,0.08);
+	cursor: pointer;
+}
+
+.dot.active {
+	background: var(--accent);
+}
+
+.next-btn,
+.primary {
+	background: var(--accent);
+	color: white;
+	border: none;
+	padding: 10px 18px;
+	border-radius: 26px;
+	font-weight: 800;
+	cursor: pointer;
+}
+
+.secondary {
+	border: 1px solid rgba(0,0,0,0.06);
+	background: transparent;
+	color: var(--ink);
+	padding: 8px 14px;
+	border-radius: 18px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+/* small bubble variants used on slide 0 */
+.bubbles.small .bubble { box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 4px solid rgba(255,255,255,0.9); }
+.bubbles.small .bubble img { width: 100%; height: 100%; object-fit: cover; }

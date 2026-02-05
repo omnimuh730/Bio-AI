@@ -14,6 +14,7 @@ export default function Splash({ onFinish }) {
 		return () => {
 			clearTimeout(id);
 			clearTimeout(finishId);
+			document.body.classList.remove("splash-hidden");
 		};
 	}, [onFinish]);
 

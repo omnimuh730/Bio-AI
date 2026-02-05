@@ -1,7 +1,8 @@
 import "./index.css";
 import "./splash.css";
+import "./App.css";
 import Splash from "./components/Splash";
-import Welcome from "./components/Welcome";
+import Onboarding from "./components/Onboarding";
 import Boti from "./components/Boti";
 import { useState } from "react";
 
@@ -11,6 +12,7 @@ export default function App() {
 	return (
 		<div className="phone-preview-bg">
 			<div className="phone-frame">
+				<div className="notch" aria-hidden="true" />
 				{/* status bar */}
 				<div className="status-bar">
 					<div className="status-left">10:40</div>
@@ -24,12 +26,10 @@ export default function App() {
 				{/* content area (screens will render here) */}
 				<div className="content-area">
 					{screen === "splash" && (
-						<Splash onFinish={() => setScreen("welcome")} />
-					)}
-					{screen === "welcome" && (
-						<Welcome onGetStarted={() => setScreen("home")} />
-					)}
-					{screen === "home" && <Boti />}
+					<Splash onFinish={() => setScreen("onboarding")} />
+				)}
+				{screen === "onboarding" && (
+					<Onboarding onFinish={() => setScreen("home")} />
 				</div>
 
 				{/* home indicator */}

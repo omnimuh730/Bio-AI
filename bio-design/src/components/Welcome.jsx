@@ -45,6 +45,8 @@ export default function Welcome({ onGetStarted }) {
 							height: c.size,
 							left: c.x,
 							top: c.y,
+							animationDelay: `${c.id * 0.6}s`,
+							animationDuration: `${6 + c.id}s`,
 						}}
 					>
 						<img src={c.url} alt="food" />
