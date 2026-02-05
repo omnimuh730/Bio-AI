@@ -56,7 +56,7 @@ export default function Welcome({ onGetStarted }) {
 
 			<div className="welcome-body">
 				<h2>
-					Welcome to <span className="accent">BioAI</span>{" "}
+					Welcome to <span className="accent">bioai</span>{" "}
 					<span className="wave">👋</span>
 				</h2>
 				<p className="muted">

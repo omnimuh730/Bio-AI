@@ -1,19 +1,32 @@
-/* Onboarding slides */
+/* Onboarding slides - redesigned for multi-step personal setup */
 .onboarding-root {
 	height: 100%;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
 	padding-top: 46px; /* safe area */
 	box-sizing: border-box;
+}
+
+.progress-row {
+	width: 88%;
+	height: 6px;
+	background: rgba(0,0,0,0.06);
+	border-radius: 6px;
+	margin: 12px 0 8px 0;
+	overflow: hidden;
+}
+.progress-row .progress {
+	height: 100%;
+	background: linear-gradient(90deg, var(--accent), var(--accent-cta));
+	transition: width 320ms ease;
 }
 
 .slides {
 	position: relative;
 	width: 100%;
-	height: calc(100% - 86px);
+	height: calc(100% - 110px);
 	overflow: hidden;
 }
 
@@ -23,110 +36,77 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 28px;
+	padding: 18px;
 	transition: transform 420ms cubic-bezier(.2,.9,.3,1), opacity 320ms ease;
 	opacity: 0;
 	transform: translateX(8%);
 }
 
+/* show the correct slide for up to 5 steps */
 .slides.step-0 .slide:nth-child(1),
 .slides.step-1 .slide:nth-child(2),
-.slides.step-2 .slide:nth-child(3) {
+.slides.step-2 .slide:nth-child(3),
+.slides.step-3 .slide:nth-child(4),
+.slides.step-4 .slide:nth-child(5) {
 	opacity: 1;
 	transform: translateX(0);
 }
 
 .onboarding-card {
-	background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.88));
-	padding: 28px;
+	background: linear-gradient(180deg, var(--surface), rgba(255,255,255,0.96));
+	padding: 20px;
 	border-radius: 18px;
 	text-align: center;
 	box-shadow: 0 18px 40px var(--shadow);
-	width: 78%;
-	max-width: 320px;
+	width: 84%;
+	max-width: 360px;
 }
 
-.badge {
-	background: rgba(255, 255, 255, 0.06);
-	color: var(--accent);
-	font-weight: 800;
-	padding: 10px 14px;
+.options-row { display:flex; gap:10px; justify-content:center; margin-top:12px }
+.option-card {
+	padding: 12px 14px;
 	border-radius: 14px;
-	display: inline-block;
-	margin-bottom: 10px;
-}
-
-.card-title {
+	background: rgba(0,0,0,0.04);
+	border: 1px solid rgba(0,0,0,0.02);
 	font-weight: 700;
-	margin-top: 6px;
-	font-size: 18px;
+	min-width: 100px;
+}
+.option-card.active {
+	background: linear-gradient(90deg, var(--accent-cta), var(--accent));
+	color: var(--surface);
+	box-shadow: 0 10px 22px rgba(0,0,0,0.12);
 }
 
-.onboarding-cta {
-	text-align: center;
-}
+.options-col { display:flex; flex-direction:column; gap:8px; align-items:flex-start; margin-top:12px }
+.check { display:flex; gap:12px; align-items:center; padding:8px 10px; border-radius:10px; background: rgba(0,0,0,0.02); }
+.check.checked { background: rgba(255, 107, 69, 0.08); border: 1px solid rgba(255,107,69,0.08) }
+.check input { margin-right:6px }
 
-.onboarding-cta h3 {
-	font-size: 22px;
-	margin-bottom: 8px;
-}
+.tiles { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; justify-content:center }
+.chip { padding:8px 12px; border-radius: 20px; background: rgba(0,0,0,0.03); border: none; font-weight:600; }
+.chip.liked { background: rgba(17, 153, 63, 0.16); color: #0b5f2f; box-shadow: 0 6px 14px rgba(12, 90, 44, 0.06); }
+.chip.disliked { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.6); text-decoration: line-through }
+
+.hint { margin-top: 10px; font-size: 13px }
+.summary { text-align:left; margin: 12px 0 }
 
 .onboarding-controls {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
-	max-width: 320px;
-	padding: 12px 28px 18px 28px;
+	max-width: 360px;
+	padding: 12px 16px 22px 16px;
 	box-sizing: border-box;
 }
 
-.ghost {
-	background: transparent;
-	border: none;
-	color: var(--muted);
-	font-weight: 600;
-	cursor: pointer;
-}
+.ghost { background: transparent; border: none; color: var(--muted); font-weight: 600; cursor: pointer }
 
-.dots {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
+.dots { display:flex; gap:8px; align-items:center }
+.dot { width:10px; height:10px; border-radius:50%; background: rgba(0,0,0,0.06); cursor:pointer }
+.dot.active { background: var(--accent) }
 
-.dot {
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
-	background: rgba(0,0,0,0.08);
-	cursor: pointer;
-}
-
-.dot.active {
-	background: var(--accent);
-}
-
-.next-btn,
-.primary {
-	background: var(--accent);
-	color: white;
-	border: none;
-	padding: 10px 18px;
-	border-radius: 26px;
-	font-weight: 800;
-	cursor: pointer;
-}
-
-.secondary {
-	border: 1px solid rgba(0,0,0,0.06);
-	background: transparent;
-	color: var(--ink);
-	padding: 8px 14px;
-	border-radius: 18px;
-	font-weight: 700;
-	cursor: pointer;
-}
+.next-btn, .primary { background: var(--accent); color: var(--surface); border: none; padding: 10px 18px; border-radius: 26px; font-weight: 800; cursor: pointer }
 
 /* small bubble variants used on slide 0 */
 .bubbles.small .bubble { box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 4px solid rgba(255,255,255,0.9); }
