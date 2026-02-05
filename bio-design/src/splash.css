@@ -117,7 +117,17 @@
 		opacity: 1;
 	}
 }
-body.splash-hidden .phone-preview-bg {
+
+/* ensure content sits inside frame properly */
+.content-area {
+	position: absolute;
+	inset: 0;
+	padding-top: 46px; /* account for status bar */
+	overflow: hidden;
+}
+
+/* animate splash out only (keep device frame visible) */
+body.splash-hidden .splash-inner {
 	opacity: 0;
 	transform: scale(0.98);
 	transition:

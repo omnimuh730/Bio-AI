@@ -3,11 +3,18 @@ import "../splash.css";
 
 export default function Splash({ onFinish }) {
 	useEffect(() => {
+		let finishId;
 		const id = setTimeout(() => {
 			document.body.classList.add("splash-hidden");
-			if (typeof onFinish === "function") onFinish();
+			finishId = setTimeout(() => {
+				if (typeof onFinish === "function") onFinish();
+			}, 420);
 		}, 1800);
-		return () => clearTimeout(id);
+
+		return () => {
+			clearTimeout(id);
+			clearTimeout(finishId);
+		};
 	}, [onFinish]);
 
 	return (

@@ -1,5 +1,4 @@
 import "./index.css";
-<<<<<<< HEAD
 import "./splash.css";
 import Splash from "./components/Splash";
 import Welcome from "./components/Welcome";
@@ -22,23 +21,20 @@ export default function App() {
 					</div>
 				</div>
 
-				{/* content */}
-				{screen === "splash" && <div className="content-area"><Splash onFinish={() => setScreen("welcome")} /></div>}
-				{screen === "welcome" && <div className="content-area"><Welcome onGetStarted={() => setScreen("home")} /></div>}
-				{screen === "home" && <div className="content-area"><Boti /></div>}
+				{/* content area (screens will render here) */}
+				<div className="content-area">
+					{screen === "splash" && (
+						<Splash onFinish={() => setScreen("welcome")} />
+					)}
+					{screen === "welcome" && (
+						<Welcome onGetStarted={() => setScreen("home")} />
+					)}
+					{screen === "home" && <Boti />}
+				</div>
 
 				{/* home indicator */}
 				<div className="home-indicator" />
 			</div>
 		</div>
-	)
+	);
 }
-
-=======
-import "./boti.css";
-import Boti from "./components/Boti";
-
-export default function App() {
-	return <Boti />;
-}
->>>>>>> cd3c13f3d31f2dcea79926859a80ba280e1821d4
