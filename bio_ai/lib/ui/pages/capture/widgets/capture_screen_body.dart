@@ -14,7 +14,7 @@ import 'package:bio_ai/ui/pages/capture/widgets/capture_offline_banner.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_quick_switch.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_reticle.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/capture_top_overlay.dart';
-import 'package:bio_ai/ui/pages/capture/widgets/capture_nutrition_card.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/food_data_tree_view.dart';
 import 'package:bio_ai/ui/pages/capture/widgets/pitch_indicator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -175,24 +175,28 @@ class CaptureScreenBody extends StatelessWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            top: 100,
-            child: PageView.builder(
-              itemCount: scanResults.length,
-              itemBuilder: (context, index) {
-                final foodData = scanResults[index];
-                return Center(
-                  child: LiquidGlassNutritionCard(
-                    foodData: foodData,
-                    onAdd: () {
-                      onAddScanResultItem(foodData);
-                      if (index == scanResults.length - 1) {
-                        onCloseScanResult();
-                      }
-                    },
-                    onClose: onCloseScanResult,
-                  ),
-                );
-              },
+            top: 60,
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: PageView.builder(
+                itemCount: scanResults.length,
+                itemBuilder: (context, index) {
+                  final foodData = scanResults[index];
+                  return Center(
+                    child: FoodDataTreeView(
+                      foodData: foodData,
+                      title: 'Food ${index + 1} of ${scanResults.length}',
+                      onAdd: () {
+                        onAddScanResultItem(foodData);
+                        if (index == scanResults.length - 1) {
+                          onCloseScanResult();
+                        }
+                      },
+                      onClose: onCloseScanResult,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         if (scanProcessing)

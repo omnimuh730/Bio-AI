@@ -114,18 +114,12 @@ class CaptureScreenController {
         // FatSecret returns 'food_response' not 'foods'
         final foods = recognition['food_response'] as List?;
         if (foods != null && foods.isNotEmpty) {
-          // Store recognized foods and show nutrition cards
-          // Extract the nested 'food' object from each item for the nutrition card
+          // Store ALL recognized food data (entire response item including food_id, eaten, suggested_serving, food)
           // Use deepConvertMap to properly convert all nested Map<dynamic,dynamic> to Map<String,dynamic>
           final foodMaps = <Map<String, dynamic>>[];
           for (final item in foods) {
-            final itemMap = item as Map;
-            // The nutrition card expects food_name, servings at top level
-            // which are inside the 'food' nested object
-            final foodObj = itemMap['food'];
-            if (foodObj != null) {
-              foodMaps.add(deepConvertMap(foodObj));
-            }
+            // Pass the ENTIRE item with all fields (food_id, food_entry_name, eaten, suggested_serving, food)
+            foodMaps.add(deepConvertMap(item));
           }
 
           if (foodMaps.isNotEmpty) {

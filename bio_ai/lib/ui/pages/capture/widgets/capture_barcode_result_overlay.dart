@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bio_ai/ui/pages/capture/capture_models.dart';
-import 'package:bio_ai/ui/pages/capture/widgets/capture_nutrition_card.dart';
+import 'package:bio_ai/ui/pages/capture/widgets/food_data_tree_view.dart';
 
 class CaptureBarcodeResultOverlay extends StatelessWidget {
   final Map<String, dynamic> foodData;
@@ -22,8 +22,9 @@ class CaptureBarcodeResultOverlay extends StatelessWidget {
       child: Container(
         color: Colors.black.withValues(alpha: 0.7),
         child: Center(
-          child: LiquidGlassNutritionCard(
+          child: FoodDataTreeView(
             foodData: foodData,
+            title: 'Barcode Result',
             onAdd: item != null ? onAdd : () {},
             onClose: onClose,
           ),
