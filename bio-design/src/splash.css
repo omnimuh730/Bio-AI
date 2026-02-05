@@ -162,4 +162,6 @@ body.splash-hidden .splash-inner {
 	transition:
 		opacity 420ms ease,
 		transform 420ms ease;
+	/* ensure the hidden splash doesn't block input to newly-rendered screens */
+	pointer-events: none;
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import "../onboarding.css";
 
 const GOALS = [
@@ -27,15 +27,96 @@ export default function Onboarding({ onFinish }) {
 	const [tagState, setTagState] = useState(() => ({}));
 	const steps = 5;
 
-	useEffect(() => {
-		// If already completed onboarding once, silently finish
-		try {
-			const done = localStorage.getItem("bioai:onboarded");
-			if (done && typeof onFinish === "function") onFinish();
-		} catch (err) {
-			console.warn("onboarding check failed", err);
+	// refs for swipe handling
+	const slidesRef = React.useRef(null);
+	const dragRef = React.useRef({
+		active: false,
+		startX: 0,
+		deltaX: 0,
+		width: 0,
+		pointerId: null,
+	});
+
+	const updateTransform = React.useCallback((s, delta = 0) => {
+		if (!slidesRef.current) return;
+		const w = slidesRef.current.clientWidth;
+		slidesRef.current.style.transform = `translateX(${-(s * w) + delta}px)`;
+	}, []);
+
+	const onPointerDown = (e) => {
+		// If the pointerdown starts on an interactive control, don't start a drag
+		const el = e.target;
+		if (el && el.closest && el.closest("button, input, label, .ghost, .dot, .chip, .option-card")) {
+			return;
 		}
-	}, [onFinish]);
+		if (!slidesRef.current) return;
+		dragRef.current = {
+			active: true,
+			startX: e.clientX,
+			deltaX: 0,
+			width: slidesRef.current.clientWidth,
+			pointerId: e.pointerId,
+			captured: false,
+		};
+		slidesRef.current.style.transition = "none";
+	};
+
+	const onPointerMove = (e) => {
+		if (!dragRef.current.active) return;
+		const delta = e.clientX - dragRef.current.startX;
+		dragRef.current.deltaX = delta;
+		// only engage capture when a clear horizontal drag starts; this prevents
+		// accidental capture on taps so buttons remain clickable
+		if (!dragRef.current.captured && Math.abs(delta) > 8) {
+			try {
+				slidesRef.current.setPointerCapture?.(e.pointerId);
+				dragRef.current.captured = true;
+				slidesRef.current.classList.add("dragging");
+			} catch {
+				/* ignore */
+			}
+		}
+		if (dragRef.current.captured) {
+			// lock to horizontal when user drags horizontally
+			e.preventDefault();
+			updateTransform(step, delta);
+		}
+	};
+
+	const onPointerUp = () => {
+		if (!dragRef.current.active || !slidesRef.current) return;
+		const { deltaX, width, pointerId, captured } = dragRef.current;
+		// if we never engaged capture, treat this as a tap and do nothing
+		if (!captured) {
+			dragRef.current = { active: false, startX: 0, deltaX: 0, width: 0, pointerId: null };
+			return;
+		}
+		slidesRef.current.classList.remove("dragging");
+		slidesRef.current.style.transition = "transform 320ms ease";
+		try { slidesRef.current.releasePointerCapture?.(pointerId); } catch { /* ignore */ }
+
+		const threshold = Math.max(50, width * 0.18);
+		if (deltaX < -threshold && step < steps - 1) {
+			setStep((s) => s + 1);
+		} else if (deltaX > threshold && step > 0) {
+			setStep((s) => s - 1);
+		} else {
+			updateTransform(step, 0);
+		}
+		dragRef.current = { active: false, startX: 0, deltaX: 0, width: 0, pointerId: null };
+	};
+
+	// sync visual position when step changes (if not dragging)
+	React.useEffect(() => {
+		if (dragRef.current.active) return;
+		if (slidesRef.current) slidesRef.current.style.transition = "transform 320ms ease";
+		updateTransform(step, 0);
+	}, [step, updateTransform]);
+
+	// NOTE: We intentionally do NOT auto-finish onboarding even if a previous
+	// completion flag exists. This makes the flow re-discoverable for users
+	// who want to reconfigure preferences. Previously we auto-called onFinish
+	// here which caused onboarding to show and then immediately disappear.
 
 	const toggleAllergy = (a) => {
 		setAllergies((cur) =>
@@ -56,7 +137,9 @@ export default function Onboarding({ onFinish }) {
 	const skip = () => {
 		try {
 			localStorage.setItem("bioai:onboarded", "1");
-		} catch (err) { console.warn("skip save failed", err); }
+		} catch (err) {
+			console.warn("skip save failed", err);
+		}
 		if (typeof onFinish === "function") onFinish();
 	};
 
@@ -65,7 +148,9 @@ export default function Onboarding({ onFinish }) {
 		try {
 			localStorage.setItem("bioai:onboarded", "1");
 			localStorage.setItem("bioai:profile", JSON.stringify(payload));
-		} catch (err) { console.warn("save profile failed", err); }
+		} catch (err) {
+			console.warn("save profile failed", err);
+		}
 		if (typeof onFinish === "function") onFinish();
 	};
 
@@ -87,7 +172,14 @@ export default function Onboarding({ onFinish }) {
 				/>
 			</div>
 
-			<div className={`slides step-${step}`}>
+			<div
+			ref={slidesRef}
+			className={`slides step-${step}`}
+			onPointerDown={onPointerDown}
+			onPointerMove={onPointerMove}
+			onPointerUp={onPointerUp}
+			onPointerCancel={onPointerUp}
+		>
 				{/* 0 - Intro */}
 				<div className="slide">
 					<div className="onboarding-card">
