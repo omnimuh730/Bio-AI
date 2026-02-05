@@ -1,4 +1,5 @@
 import "./index.css";
+<<<<<<< HEAD
 import "./splash.css";
 import Splash from "./components/Splash";
 import Welcome from "./components/Welcome";
@@ -33,3 +34,11 @@ export default function App() {
 	)
 }
 
+=======
+import "./boti.css";
+import Boti from "./components/Boti";
+
+export default function App() {
+	return <Boti />;
+}
+>>>>>>> cd3c13f3d31f2dcea79926859a80ba280e1821d4
