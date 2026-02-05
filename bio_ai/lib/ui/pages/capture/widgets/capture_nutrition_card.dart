@@ -18,8 +18,19 @@ class LiquidGlassNutritionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final food = foodData;
-    final servings = food['servings']?['serving'] as List?;
-    final primaryServing = servings?.first ?? {};
+    final servingsData = food['servings'];
+    final servingList = servingsData is Map ? servingsData['serving'] : null;
+
+    // Handle both List and single serving object
+    Map<String, dynamic> primaryServing = {};
+    if (servingList is List && servingList.isNotEmpty) {
+      final first = servingList.first;
+      if (first is Map) {
+        primaryServing = Map<String, dynamic>.from(first);
+      }
+    } else if (servingList is Map) {
+      primaryServing = Map<String, dynamic>.from(servingList);
+    }
 
     return Container(
       width: double.infinity,

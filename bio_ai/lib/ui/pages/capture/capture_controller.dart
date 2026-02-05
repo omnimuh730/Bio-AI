@@ -111,16 +111,37 @@ class CaptureScreenController {
 
       final recognition = result['recognition'];
       if (recognition != null) {
-        final foods = recognition['foods'] as List?;
+        // FatSecret returns 'food_response' not 'foods'
+        final foods = recognition['food_response'] as List?;
         if (foods != null && foods.isNotEmpty) {
           // Store recognized foods and show nutrition cards
-          setState(() {
-            state.scanResults = foods.cast<Map<String, dynamic>>();
-            state.scanResultOpen = true;
-            state.scanProcessing = false;
-          });
-          if (isMounted()) {
-            showSnackBar('Found ${foods.length} food item(s)!');
+          // Extract the nested 'food' object from each item for the nutrition card
+          // Use deepConvertMap to properly convert all nested Map<dynamic,dynamic> to Map<String,dynamic>
+          final foodMaps = <Map<String, dynamic>>[];
+          for (final item in foods) {
+            final itemMap = item as Map;
+            // The nutrition card expects food_name, servings at top level
+            // which are inside the 'food' nested object
+            final foodObj = itemMap['food'];
+            if (foodObj != null) {
+              foodMaps.add(deepConvertMap(foodObj));
+            }
+          }
+
+          if (foodMaps.isNotEmpty) {
+            setState(() {
+              state.scanResults = foodMaps;
+              state.scanResultOpen = true;
+              state.scanProcessing = false;
+            });
+            if (isMounted()) {
+              showSnackBar('Found ${foodMaps.length} food item(s)!');
+            }
+          } else {
+            if (isMounted()) {
+              setState(() => state.scanProcessing = false);
+              showSnackBar('No food data in response');
+            }
           }
         } else {
           if (isMounted()) {
