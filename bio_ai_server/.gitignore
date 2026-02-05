@@ -1,5 +1,6 @@
 .venv/
 app/__pycache__/
+app/db/__pycache__/
 app/routers/__pycache__/
 bio_ai_server.db
 models/
