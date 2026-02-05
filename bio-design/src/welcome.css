@@ -57,22 +57,22 @@
 	margin: 0 0 8px 0;
 	font-family: "Fraunces", "Manrope", "Segoe UI", sans-serif;
 	font-size: 22px;
-	color: #ff6b45;
+	color: var(--accent);
 }
 .welcome-body .muted {
-	color: #666;
+	color: var(--muted);
 	margin-bottom: 18px;
 }
 .get-started {
-	background: #ff6b45;
-	color: #fff;
+	background: var(--accent);
+	color: var(--surface);
 	border: none;
 	padding: 12px 22px;
 	border-radius: 28px;
 	font-weight: 700;
 	letter-spacing: 0.6px;
 	cursor: pointer;
-	box-shadow: 0 10px 18px rgba(255, 107, 69, 0.25);
+	box-shadow: 0 10px 18px rgba(255, 107, 69, 0.18);
 }
 .get-started:active {
 	transform: translateY(1px);
@@ -82,7 +82,7 @@
 	font-size: 18px;
 }
 .accent {
-	color: #ff6b45;
+	color: var(--accent);
 }
 
 @keyframes float {

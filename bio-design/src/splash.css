@@ -1,6 +1,6 @@
 /* Splash / Device styles */
 :root {
-	--splash-orange: #ff6b45;
+	--splash-orange: var(--accent);
 }
 
 .phone-preview-bg {
@@ -97,7 +97,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: linear-gradient(160deg, #ff7a55, #ff5c3b 65%, #ff7f5c);
+	background: linear-gradient(160deg, var(--accent-cta), var(--accent) 65%);
 }
 .splash-card {
 	text-align: center;
