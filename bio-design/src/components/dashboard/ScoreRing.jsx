@@ -60,9 +60,8 @@ export default function ScoreRing({ value = 88 }) {
 	const cx = W / 2;
 	const cy = W / 2;
 	const R = 90;
-	const SW = 18;
-	const guideR = R + 18;
-	const guideCirc = 2 * Math.PI * guideR;
+	const SW = 20; // Thicker stroke
+	const guideR = R + 22; // Push guidelines out
 
 	// Gauge geometry: 270 degree sweep from 225 (bottom-left) to 135 (bottom-right)
 	const startAngle = 225;
@@ -76,13 +75,13 @@ export default function ScoreRing({ value = 88 }) {
 
 	// Indicator position
 	const indicatorDeg = (startAngle + currentSweep) % 360;
-	const indicatorR = R + SW / 2 - 2;
+	const indicatorR = R; // Center on track
 	const indicatorPos = posOnCircle(cx, cy, indicatorR, indicatorDeg);
 
 	const shownValue = Math.round(displayValue);
 
-	// Label positions
-	const labelR = guideR + 14;
+	// Label positions - pushed out slightly
+	const labelR = guideR + 12;
 	const lowPos = posOnCircle(cx, cy, labelR, 260);
 	const medPos = posOnCircle(cx, cy, labelR, 0);
 	const highPos = posOnCircle(cx, cy, labelR, 100);
@@ -103,72 +102,38 @@ export default function ScoreRing({ value = 88 }) {
 						x2="100%"
 						y2="0%"
 					>
-						<stop offset="0%" stopColor="#6fb8ff" />
-						<stop offset="50%" stopColor="#4a8fff" />
-						<stop offset="100%" stopColor="#2b6fff" />
+						<stop offset="0%" stopColor="#3b82f6" />
+						<stop offset="100%" stopColor="#2563eb" />
 					</linearGradient>
-					<filter
-						id="score-inner-shadow"
-						x="-30%"
-						y="-30%"
-						width="160%"
-						height="160%"
-					>
-						<feDropShadow
-							dx="0"
-							dy="4"
-							stdDeviation="4"
-							floodColor="#d6dde7"
-							floodOpacity="0.7"
-						/>
-					</filter>
 				</defs>
 
-				{/* Dashed outer guide circle */}
+				{/* Dashed outer guide circle - simplified */}
 				<circle
 					cx={cx}
 					cy={cy}
 					r={guideR}
 					fill="none"
-					stroke="#dde4ed"
-					strokeWidth={1.5}
+					stroke="#e2e8f0"
+					strokeWidth={1}
 					strokeDasharray="4 4"
-					strokeDashoffset={guideCirc * 0.1}
 				/>
 
-				{/* Background Track (full 270 sweep) */}
+				{/* Background Track (full 270 sweep) - lighter color */}
 				<path
 					d={arcPath(cx, cy, R, startAngle, endAngle)}
 					fill="none"
-					stroke="#e2e8f0"
+					stroke="#f1f5f9"
 					strokeWidth={SW}
 					strokeLinecap="round"
 				/>
 
-				{/* Foreground Value Arc */}
+				{/* Foreground Value Arc - vibrant */}
 				<path
 					d={arcPath(cx, cy, R, startAngle, currentEndAngle)}
 					fill="none"
 					stroke="url(#scoreGradient)"
 					strokeWidth={SW}
 					strokeLinecap="round"
-				/>
-
-				{/* Inner white circle background */}
-				<circle
-					cx={cx}
-					cy={cy}
-					r={R - SW / 2 - 6}
-					fill="white"
-					filter="url(#score-inner-shadow)"
-				/>
-				<circle
-					cx={cx}
-					cy={cy}
-					r={R - SW / 2 - 6}
-					fill="none"
-					stroke="#f0f3f7"
-					strokeWidth={1}
 				/>
 			</svg>
 
@@ -195,7 +160,11 @@ export default function ScoreRing({ value = 88 }) {
 			{/* Indicator Dot */}
 			<div
 				className="score-indicator"
-				style={{ left: indicatorPos.x, top: indicatorPos.y }}
+				style={{
+					left: indicatorPos.x,
+					top: indicatorPos.y,
+					opacity: displayValue > 0 ? 1 : 0,
+				}}
 				aria-hidden="true"
 			/>
 
@@ -207,11 +176,6 @@ export default function ScoreRing({ value = 88 }) {
 					Asklepios Score <FiInfo size={11} />
 				</div>
 			</div>
-
-			{/* Plus FAB */}
-			<button className="score-fab" aria-label="Add">
-				<FiPlus size={20} strokeWidth={3} />
-			</button>
 		</div>
 	);
 }
