@@ -1,15 +1,31 @@
 import React from "react";
 import {
-	FiUser,
-	FiSmartphone,
-	FiTarget,
-	FiHelpCircle,
-	FiSettings,
 	FiChevronRight,
 	FiLogOut,
+	FiUser,
+	FiTarget,
+	FiHelpCircle,
+	FiSmartphone,
 } from "react-icons/fi";
+import "./settings/settings.css";
+import DevicesPanel from "./settings/DevicesPanel";
+import PreferencesPanel from "./settings/PreferencesPanel";
+import GoalsPanel from "./settings/GoalsPanel";
+import ProfileForm from "./settings/ProfileForm";
+import HelpPanel from "./settings/HelpPanel";
+import LogoutModal from "./settings/LogoutModal";
 
 export default function Settings() {
+	const [openPanel, setOpenPanel] = React.useState(null);
+	const [devicesActiveCount, setDevicesActiveCount] = React.useState(2);
+	const [toast, setToast] = React.useState(null);
+	const [logoutOpen, setLogoutOpen] = React.useState(false);
+
+	function showToast(msg) {
+		setToast(msg);
+		setTimeout(() => setToast(null), 2000);
+	}
+
 	return (
 		<div className="settings-root">
 			<div className="settings-header">
@@ -17,141 +33,250 @@ export default function Settings() {
 			</div>
 
 			<div className="settings-scroll">
-				{/* Profile Section */}
-				<div className="profile-section">
-					<img
-						src="https://ui-avatars.com/api/?name=Dekomori&background=eef6ff&color=2b6fff&size=128"
-						className="big-avatar"
-						alt="profile"
-					/>
-					<h2>Dekomori</h2>
-					<p>Premium Member</p>
-				</div>
-
-				<div className="menu-group">
-					<div className="menu-item">
-						<div className="icon">
-							<FiUser />
+				{/* Profile Bar */}
+				<div
+					className="profile-bar"
+					role="button"
+					tabIndex={0}
+					onClick={() => setOpenPanel("profile")}
+				>
+					<div className="profile-avatar">DE</div>
+					<div className="profile-meta">
+						<div className="profile-name">
+							Dekomori{" "}
+							<span
+								style={{
+									color: "#3b82f6",
+									fontWeight: 700,
+									fontSize: 13,
+								}}
+							>
+								Premium Member
+							</span>
 						</div>
-						<div className="label">Profile & Body Stats</div>
-						<FiChevronRight className="arrow" />
+						<div className="profile-badges">
+							<div className="badge">Daily Plan</div>
+							<div className="badge">Auto Log</div>
+						</div>
 					</div>
-					<div className="menu-item">
-						<div className="icon">
-							<FiTarget />
-						</div>
-						<div className="label">Nutritional Goals</div>
-						<FiChevronRight className="arrow" />
-					</div>
-					<div className="menu-item">
-						<div className="icon">
-							<FiSettings />
-						</div>
-						<div className="label">Preferences</div>
-						<FiChevronRight className="arrow" />
+					<div className="item-right">
+						<div className="setting-sub">Manage account</div>
+						<FiChevronRight />
 					</div>
 				</div>
 
-				<div className="menu-group">
-					<div className="menu-item">
-						<div className="icon">
-							<FiSmartphone />
+				<div className="settings-list">
+					<div
+						className="setting-item"
+						onClick={() => setOpenPanel("profile")}
+					>
+						<div
+							style={{
+								display: "flex",
+								gap: 12,
+								alignItems: "center",
+							}}
+						>
+							<div className="setting-icon">
+								<FiUser />
+							</div>
+							<div>
+								<div className="setting-title">
+									Profile & Body Stats
+								</div>
+								<div className="setting-sub">
+									Edit name, weight, height
+								</div>
+							</div>
 						</div>
-						<div className="label">Connected Devices</div>
-						<div className="sub-tag">2 Active</div>
-						<FiChevronRight className="arrow" />
-					</div>
-					<div className="menu-item">
-						<div className="icon">
-							<FiHelpCircle />
+						<div className="item-right">
+							<FiChevronRight />
 						</div>
-						<div className="label">Help & Support</div>
-						<FiChevronRight className="arrow" />
 					</div>
-				</div>
 
-				<div className="menu-group danger">
-					<div className="menu-item">
-						<div className="icon">
+					<div
+						className="setting-item"
+						onClick={() => setOpenPanel("goals")}
+					>
+						<div
+							style={{
+								display: "flex",
+								gap: 12,
+								alignItems: "center",
+							}}
+						>
+							<div className="setting-icon">🎯</div>
+							<div>
+								<div className="setting-title">
+									Nutritional Goals
+								</div>
+								<div className="setting-sub">
+									Set calorie & macros targets
+								</div>
+							</div>
+						</div>
+						<div className="item-right">
+							<FiChevronRight />
+						</div>
+					</div>
+
+					<div
+						className="setting-item"
+						onClick={() => setOpenPanel("preferences")}
+					>
+						<div
+							style={{
+								display: "flex",
+								gap: 12,
+								alignItems: "center",
+							}}
+						>
+							<div className="setting-icon">⚙️</div>
+							<div>
+								<div className="setting-title">Preferences</div>
+								<div className="setting-sub">
+									App, notifications, privacy
+								</div>
+							</div>
+						</div>
+						<div className="item-right">
+							<FiChevronRight />
+						</div>
+					</div>
+
+					<div
+						className="setting-item"
+						onClick={() => setOpenPanel("devices")}
+					>
+						<div
+							style={{
+								display: "flex",
+								gap: 12,
+								alignItems: "center",
+							}}
+						>
+							<div className="setting-icon">
+								<FiSmartphone />
+							</div>
+							<div>
+								<div className="setting-title">
+									Connected Devices
+								</div>
+								<div className="setting-sub">
+									{devicesActiveCount} Active
+								</div>
+							</div>
+						</div>
+						<div className="item-right">
+							<div className="active-badge">
+								{devicesActiveCount} Active
+							</div>
+							<FiChevronRight />
+						</div>
+					</div>
+
+					<div
+						className="setting-item"
+						onClick={() => setOpenPanel("help")}
+					>
+						<div
+							style={{
+								display: "flex",
+								gap: 12,
+								alignItems: "center",
+							}}
+						>
+							<div className="setting-icon">
+								<FiHelpCircle />
+							</div>
+							<div>
+								<div className="setting-title">
+									Help & Support
+								</div>
+								<div className="setting-sub">
+									Get help or open a support ticket
+								</div>
+							</div>
+						</div>
+						<div className="item-right">
+							<FiChevronRight />
+						</div>
+					</div>
+
+					<div
+						className="setting-item"
+						onClick={() => setLogoutOpen(true)}
+					>
+						<div
+							style={{
+								display: "flex",
+								gap: 12,
+								alignItems: "center",
+							}}
+						>
+							<div className="setting-icon">⎋</div>
+							<div>
+								<div className="setting-title logout">
+									Log Out
+								</div>
+								<div className="setting-sub">
+									Sign out of this device
+								</div>
+							</div>
+						</div>
+						<div className="item-right">
 							<FiLogOut />
 						</div>
-						<div className="label">Log Out</div>
 					</div>
 				</div>
-
-				<div className="version">Bio AI v0.8.2 (Beta)</div>
 			</div>
 
-			<style>{`
-				.settings-root {
-					height: 100vh;
-					background: #f8fafc;
-					display: flex;
-					flex-direction: column;
-				}
-				.settings-header {
-					padding: 24px 20px 16px;
-					background: #f8fafc;
-				}
-				.settings-header h1 { margin: 0; font-size: 24px; color: #0f172a; }
-				
-				.settings-scroll {
-					flex: 1;
-					overflow-y: auto;
-					padding: 0 20px 100px;
-				}
-				
-				.profile-section {
-					display: flex; flexDirection: column; alignItems: center;
-					margin-bottom: 32px;
-				}
-				.big-avatar {
-					width: 80px; height: 80px; border-radius: 24px;
-					box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
-					margin-bottom: 12px;
-					border: 4px solid white;
-				}
-				.profile-section h2 { margin: 0; font-size: 20px; color: #0f172a; }
-				.profile-section p { margin: 4px 0 0; color: #3b82f6; font-size: 13px; font-weight: 600; }
+			{/* Panels */}
+			<DevicesPanel
+				open={openPanel === "devices"}
+				onClose={() => setOpenPanel(null)}
+				onUpdateBadge={(c) => {
+					setDevicesActiveCount(c);
+					showToast(`${c} devices active`);
+				}}
+			/>
+			<PreferencesPanel
+				open={openPanel === "preferences"}
+				onClose={() => {
+					setOpenPanel(null);
+					showToast("Preferences saved");
+				}}
+			/>
+			<ProfileForm
+				open={openPanel === "profile"}
+				onClose={() => {
+					setOpenPanel(null);
+					showToast("Profile updated");
+				}}
+			/>
+			<HelpPanel
+				open={openPanel === "help"}
+				onClose={() => {
+					setOpenPanel(null);
+					showToast("Support request sent");
+				}}
+			/>
+			<GoalsPanel
+				open={openPanel === "goals"}
+				onClose={() => {
+					setOpenPanel(null);
+					showToast("Goals saved");
+				}}
+			/>
 
-				.menu-group {
-					background: white;
-					border-radius: 16px;
-					overflow: hidden;
-					margin-bottom: 16px;
-					box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-					border: 1px solid #f1f5f9;
-				}
-				.menu-item {
-					display: flex; align-items: center; gap: 16px;
-					padding: 16px;
-					cursor: pointer;
-					border-bottom: 1px solid #f8fafc;
-				}
-				.menu-item:last-child { border-bottom: none; }
-				.menu-item:active { background: #f8fafc; }
-				
-				.menu-item .icon {
-					width: 36px; height: 36px; background: #f1f5f9;
-					border-radius: 10px; display: flex; align-items: center; justify-content: center;
-					color: #64748b;
-				}
-				.menu-item .label {
-					flex: 1; font-size: 14px; font-weight: 600; color: #334155;
-				}
-				.menu-item .arrow { color: #cbd5e1; }
-				.sub-tag {
-					font-size: 11px; color: #10b981; background: #ecfdf5;
-					padding: 4px 8px; border-radius: 6px; font-weight: 600;
-				}
+			<LogoutModal
+				open={logoutOpen}
+				onClose={() => setLogoutOpen(false)}
+			/>
 
-				.menu-group.danger .menu-item .icon { background: #fee2e2; color: #ef4444; }
-				.menu-group.danger .menu-item .label { color: #ef4444; }
-
-				.version {
-					text-align: center; color: #94a3b8; font-size: 11px; margin-top: 24px; opacity: 0.6;
-				}
-			`}</style>
+			<div className={`toast ${toast ? "show" : ""}`} role="status">
+				{toast}
+			</div>
 		</div>
 	);
 }
