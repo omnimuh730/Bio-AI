@@ -42,6 +42,8 @@
 	display: block;
 	width: 100%;
 	height: 100%;
+	position: relative;
+	z-index: 1;
 }
 
 /* Labels around the ring */
@@ -64,6 +66,7 @@
 	transform: translate(-50%, -50%);
 	text-align: center;
 	pointer-events: none;
+	z-index: 2;
 }
 .score-num {
 	font-weight: 900;
@@ -86,6 +89,19 @@
 	gap: 4px;
 }
 
+.score-indicator {
+	position: absolute;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: white;
+	border: 3px solid #2b6fff;
+	box-shadow: 0 8px 16px rgba(31, 42, 55, 0.18);
+	transform: translate(-50%, -50%);
+	z-index: 3;
+	pointer-events: none;
+}
+
 /* Plus FAB at 6 o'clock */
 .score-fab {
 	position: absolute;
@@ -102,6 +118,7 @@
 	place-items: center;
 	box-shadow: 0 8px 20px rgba(74, 144, 255, 0.35);
 	cursor: pointer;
+	z-index: 3;
 }
 
 .db-header .icon-bell {
