@@ -1,15 +1,6 @@
 import React from "react";
 import { FiPlus, FiInfo } from "react-icons/fi";
 
-/**
- * Attempt to match the Asklepios Score gauge:
- *   - 3 thick rounded arc segments (LOW, MEDIUM, HIGH) around a 270-degree sweep
- *   - Dashed outer guide circle
- *   - Labels positioned outside the arcs
- *   - Large centered score number
- *   - Blue + FAB at 6 o'clock
- */
-
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 // Arc helper: builds an SVG arc path from angle A to B (degrees, 0 = 12 o'clock, CW)
@@ -65,44 +56,36 @@ export default function ScoreRing({ value = 88 }) {
 		};
 	}, [value]);
 
-	const W = 240; // SVG viewBox width/height
+	const W = 240;
 	const cx = W / 2;
 	const cy = W / 2;
-	const R = 90; // main arc radius
-	const SW = 18; // arc stroke width
-	const guideR = R + 18; // dashed guide circle radius
+	const R = 90;
+	const SW = 18;
+	const guideR = R + 18;
 	const guideCirc = 2 * Math.PI * guideR;
 
-	// The gauge opens at bottom (180 degrees). Sweep = 270 degrees.
-	// Start at 225 degrees (bottom-left), end at 135 degrees (bottom-right) going CW.
-	// With 10 degree gaps between segments:
-	//   LOW:     225 -> 310 (85 degrees, left side)
-	//   gap:     310 -> 320
-	//   MEDIUM:  320 -> 40  (80 degrees, top)
-	//   gap:     40  -> 50
-	//   HIGH:    50  -> 135 (85 degrees, right side)
+	// Gauge geometry: 270 degree sweep from 225 (bottom-left) to 135 (bottom-right)
+	const startAngle = 225;
+	const maxSweep = 270;
+	const endAngle = startAngle + maxSweep;
 
-	const segments = [
-		{ start: 225, end: 310, color: "#6fb8ff" }, // LOW - light blue
-		{ start: 320, end: 353, color: "#4a8fff" }, // MEDIUM left half
-		{ start: 7, end: 40, color: "#4a8fff" }, // MEDIUM right half
-		{ start: 50, end: 135, color: "#2b6fff" }, // HIGH - bold blue
-	];
+	// Calculate filled arc
+	const currentSweep = (displayValue / 100) * maxSweep;
+	// Ensure end angle doesn't go backwards if sweep is 0
+	const currentEndAngle = startAngle + Math.max(0.1, currentSweep);
 
-	// Label positions (outside the guide circle)
-	const labelR = guideR + 14;
-	const lowPos = posOnCircle(cx, cy, labelR, 267); // left
-	const medPos = posOnCircle(cx, cy, labelR, 0); // top
-	const highPos = posOnCircle(cx, cy, labelR, 93); // right
-
-	const clampedDisplay = clamp(displayValue, 0, 100);
-	const gaugeStart = 225;
-	const gaugeSweep = 270;
-	const indicatorDeg =
-		(gaugeStart + (clampedDisplay / 100) * gaugeSweep) % 360;
+	// Indicator position
+	const indicatorDeg = (startAngle + currentSweep) % 360;
 	const indicatorR = R + SW / 2 - 2;
 	const indicatorPos = posOnCircle(cx, cy, indicatorR, indicatorDeg);
-	const shownValue = Math.round(clampedDisplay);
+
+	const shownValue = Math.round(displayValue);
+
+	// Label positions
+	const labelR = guideR + 14;
+	const lowPos = posOnCircle(cx, cy, labelR, 260);
+	const medPos = posOnCircle(cx, cy, labelR, 0);
+	const highPos = posOnCircle(cx, cy, labelR, 100);
 
 	return (
 		<div className="score-ring-wrapper">
@@ -113,6 +96,17 @@ export default function ScoreRing({ value = 88 }) {
 				className="score-ring-svg"
 			>
 				<defs>
+					<linearGradient
+						id="scoreGradient"
+						x1="0%"
+						y1="0%"
+						x2="100%"
+						y2="0%"
+					>
+						<stop offset="0%" stopColor="#6fb8ff" />
+						<stop offset="50%" stopColor="#4a8fff" />
+						<stop offset="100%" stopColor="#2b6fff" />
+					</linearGradient>
 					<filter
 						id="score-inner-shadow"
 						x="-30%"
@@ -130,7 +124,7 @@ export default function ScoreRing({ value = 88 }) {
 					</filter>
 				</defs>
 
-				{/* Dashed outer guide circle (full 360 degrees) */}
+				{/* Dashed outer guide circle */}
 				<circle
 					cx={cx}
 					cy={cy}
@@ -142,26 +136,23 @@ export default function ScoreRing({ value = 88 }) {
 					strokeDashoffset={guideCirc * 0.1}
 				/>
 
-				{/* Three arc segments */}
-				{segments.map((seg, i) => {
-					const end = seg.end < seg.start ? seg.end + 360 : seg.end;
-					return (
-						<path
-							key={i}
-							d={arcPath(
-								cx,
-								cy,
-								R,
-								seg.start,
-								end > 360 ? end - 360 + 360 : end,
-							)}
-							fill="none"
-							stroke={seg.color}
-							strokeWidth={SW}
-							strokeLinecap="round"
-						/>
-					);
-				})}
+				{/* Background Track (full 270 sweep) */}
+				<path
+					d={arcPath(cx, cy, R, startAngle, endAngle)}
+					fill="none"
+					stroke="#e2e8f0"
+					strokeWidth={SW}
+					strokeLinecap="round"
+				/>
+
+				{/* Foreground Value Arc */}
+				<path
+					d={arcPath(cx, cy, R, startAngle, currentEndAngle)}
+					fill="none"
+					stroke="url(#scoreGradient)"
+					strokeWidth={SW}
+					strokeLinecap="round"
+				/>
 
 				{/* Inner white circle background */}
 				<circle
@@ -181,27 +172,27 @@ export default function ScoreRing({ value = 88 }) {
 				/>
 			</svg>
 
-			{/* Labels around the ring */}
+			{/* Labels */}
 			<span
-				className="ring-lbl ring-lbl-low"
+				className="ring-lbl"
 				style={{ left: lowPos.x, top: lowPos.y }}
 			>
 				LOW
 			</span>
 			<span
-				className="ring-lbl ring-lbl-med"
+				className="ring-lbl"
 				style={{ left: medPos.x, top: medPos.y }}
 			>
 				MEDIUM
 			</span>
 			<span
-				className="ring-lbl ring-lbl-high"
+				className="ring-lbl"
 				style={{ left: highPos.x, top: highPos.y }}
 			>
 				HIGH
 			</span>
 
-			{/* Score indicator */}
+			{/* Indicator Dot */}
 			<div
 				className="score-indicator"
 				style={{ left: indicatorPos.x, top: indicatorPos.y }}

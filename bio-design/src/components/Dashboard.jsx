@@ -8,7 +8,6 @@ import LiveVitals from "./dashboard/LiveVitals";
 import Hydration from "./dashboard/Hydration";
 import QuickLog from "./dashboard/QuickLog";
 import SetupCard from "./dashboard/SetupCard";
-import BottomNav from "./dashboard/BottomNav";
 
 export default function Dashboard() {
 	return (
@@ -29,7 +28,6 @@ export default function Dashboard() {
 					</div>
 				</div>
 			</div>
-			<BottomNav />
 		</div>
 	);
 }

@@ -11,7 +11,10 @@ export default function Header() {
 				</div>
 				<div className="header-actions">
 					<div className="user-avatar">
-						<img src="https://ui-avatars.com/api/?name=Dekomori&background=eef6ff&color=2b6fff" alt="User" />
+						<img
+							src="https://ui-avatars.com/api/?name=Dekomori&background=eef6ff&color=2b6fff"
+							alt="User"
+						/>
 					</div>
 					<div className="icon-bell">
 						<FiBell size={20} />
