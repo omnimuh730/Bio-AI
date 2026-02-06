@@ -23,12 +23,18 @@
 	transition: width 320ms ease;
 }
 
+
+.slides-viewport {
+	width: 100%;
+	flex: 1;
+	overflow: hidden;
+	position: relative;
+}
+
 .slides {
 	display: flex;
 	flex-direction: row;
-	width: 100%;
-	height: calc(100% - 140px); /* leave room for controls */
-	overflow: hidden;
+	height: 100%;
 	touch-action: pan-y;
 	will-change: transform;
 	transition: transform 320ms ease;
@@ -40,6 +46,7 @@
 .slide {
 	position: relative;
 	min-width: 100%;
+	flex-shrink: 0;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -86,7 +93,8 @@
 .check input { margin-right:6px }
 
 .tiles { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; justify-content:center }
-.chip { padding:8px 12px; border-radius: 20px; background: rgba(0,0,0,0.03); border: none; font-weight:600; }
+.chip { padding:8px 12px; border-radius: 20px; background: rgba(0,0,0,0.03); border: none; font-weight:600; transition: transform 140ms ease, box-shadow 140ms ease; }
+.chip.pressing { transform: scale(0.96); box-shadow: 0 6px 14px rgba(0,0,0,0.06) inset; }
 .chip.liked { background: rgba(17, 153, 63, 0.16); color: #0b5f2f; box-shadow: 0 6px 14px rgba(12, 90, 44, 0.06); }
 .chip.disliked { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.6); text-decoration: line-through }
 

@@ -9,7 +9,7 @@ export default function Splash({ onFinish }) {
 			finishId = setTimeout(() => {
 				if (typeof onFinish === "function") onFinish();
 			}, 420);
-		}, 1800);
+		}, 2500);
 
 		return () => {
 			clearTimeout(id);

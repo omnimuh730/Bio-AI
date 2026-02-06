@@ -3,7 +3,7 @@ import "./splash.css";
 import "./App.css";
 import Splash from "./components/Splash";
 import Onboarding from "./components/Onboarding";
-import Boti from "./components/Boti";
+import Home from "./components/Home";
 import { useState } from "react";
 
 export default function App() {
@@ -26,12 +26,13 @@ export default function App() {
 				{/* content area (screens will render here) */}
 				<div className="content-area">
 					{screen === "splash" && (
-					<Splash onFinish={() => setScreen("onboarding")} />
-				)}
-				{screen === "onboarding" && (
-					<Onboarding onFinish={() => setScreen("home")} />
-				)}
-			</div>
+						<Splash onFinish={() => setScreen("onboarding")} />
+					)}
+					{screen === "onboarding" && (
+						<Onboarding onFinish={() => setScreen("home")} />
+					)}
+					{screen === "home" && <Home />}
+				</div>
 				<div className="home-indicator" />
 			</div>
 		</div>
