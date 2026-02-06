@@ -1,0 +1,271 @@
+/* Dashboard specific styles */
+.dashboard-root {
+	background: #f4f6f8;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+}
+.db-header {
+	padding: 18px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	justify-content: space-between;
+}
+.db-header .sync {
+	color: #9fa8b2;
+	font-size: 12px;
+}
+.db-header .greeting {
+	flex: 1;
+	margin-left: 12px;
+}
+.db-header h1 {
+	margin: 0;
+	font-size: 20px;
+	color: #1f2a37;
+}
+.db-header .setup {
+	margin-top: 8px;
+	background: #eef5fb;
+	padding: 8px 12px;
+	border-radius: 12px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.db-header .continue {
+	background: #1f80ff;
+	color: white;
+	border: none;
+	padding: 6px 10px;
+	border-radius: 10px;
+}
+.db-header .icon-bell {
+	width: 40px;
+	text-align: center;
+}
+
+.dashboard-scroll {
+	padding: 0 16px 120px 16px;
+	overflow: auto;
+	flex: 1;
+}
+.card {
+	background: white;
+	border-radius: 14px;
+	margin-top: 16px;
+	padding: 14px;
+	box-shadow: 0 8px 20px rgba(31, 42, 55, 0.04);
+}
+.card-title {
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.ai-suggestion .meta {
+	color: #9aa6b0;
+	font-size: 12px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.ai-row {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	margin-top: 12px;
+}
+.ai-row img {
+	width: 56px;
+	height: 56px;
+	border-radius: 28px;
+	object-fit: cover;
+}
+.ai-info .title {
+	font-weight: 800;
+	font-size: 16px;
+}
+.ai-info .sub {
+	color: #9aa6b0;
+	font-size: 13px;
+}
+.ai-actions {
+	display: flex;
+	gap: 12px;
+	margin-top: 12px;
+}
+.ai-actions .repeat {
+	background: #eef6ff;
+	border-radius: 10px;
+	padding: 8px;
+	border: none;
+}
+.ai-actions .eat {
+	flex: 1;
+	background: #366fff;
+	color: white;
+	border: none;
+	padding: 10px 12px;
+	border-radius: 12px;
+}
+
+.daily-fuel .fuel-row {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+.cal-circle {
+	width: 86px;
+	height: 86px;
+	border-radius: 50%;
+	background: linear-gradient(180deg, #f4fbff, #eef6ff);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+}
+.cal-circle span {
+	font-size: 11px;
+	color: #6b7a88;
+}
+.daily-fuel .bars {
+	flex: 1;
+}
+.bar {
+	margin-bottom: 8px;
+}
+.bar .label {
+	font-size: 12px;
+	color: #9aa6b0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.bar .label .meta {
+	font-size: 11px;
+	color: #c0c9d0;
+	font-weight: 700;
+}
+.bar .meter {
+	height: 8px;
+	background: #f2f6f9;
+	border-radius: 6px;
+	margin-top: 6px;
+	overflow: hidden;
+}
+.bar .meter .fill {
+	height: 100%;
+	width: 0%;
+	background: linear-gradient(90deg, #ffb86b, #ff6b45);
+	border-radius: 6px;
+	transition: width 0.6s ease;
+}
+
+.hydration .hydration-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.hydration .drop {
+	font-size: 24px;
+}
+.hydration .amount {
+	font-weight: 800;
+}
+.hydration .btns button {
+	margin-left: 8px;
+	background: #f4f7fb;
+	border-radius: 8px;
+	border: none;
+	padding: 8px 10px;
+}
+
+.quick-log .row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.quick-log .copy {
+	background: #eef6ff;
+	border: none;
+	padding: 8px 12px;
+	border-radius: 10px;
+}
+
+.db-bottom-nav {
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 92%;
+	max-width: 420px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: white;
+	padding: 10px 16px;
+	border-radius: 26px;
+	box-shadow: 0 18px 30px rgba(31, 42, 55, 0.08);
+}
+.db-bottom-nav .fab {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: #0b63ff;
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 28px;
+	margin-top: -30px;
+	box-shadow: 0 18px 30px rgba(11, 99, 255, 0.18);
+}
+
+/* Icon & small element tweaks */
+.db-header .sync svg,
+.db-header .icon-bell svg,
+.ai-suggestion .badge svg,
+.quick-log .copy svg,
+.hydration .btns svg,
+.ai-actions .repeat svg,
+.ai-actions .eat svg {
+	vertical-align: middle;
+	margin-right: 8px;
+}
+.ai-suggestion .badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: #fff7ea;
+	padding: 6px 8px;
+	border-radius: 12px;
+	color: #ff7a3f;
+	font-weight: 700;
+}
+.quick-log .copy {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+}
+.hydration .btns button {
+	display: inline-flex;
+	gap: 8px;
+	align-items: center;
+}
+.ai-actions .eat {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	justify-content: center;
+}
+
+@media (min-width: 700px) {
+	.dashboard-scroll {
+		max-width: 420px;
+		margin: 0 auto;
+	}
+}
