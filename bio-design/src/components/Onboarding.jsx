@@ -42,29 +42,43 @@ export default function Onboarding({ onFinish }) {
 		velocity: 0,
 	});
 
-	const updateProgress = React.useCallback((s, delta = 0) => {
-		if (!slidesRef.current || !progressRef.current) return;
-		const w = slidesRef.current.parentElement?.clientWidth || slidesRef.current.clientWidth || 1;
-		const fractional = Math.min(
-			steps - 1,
-			Math.max(0, s - delta / w)
-		);
-		const pct = (fractional / (steps - 1)) * 100;
-		progressRef.current.style.width = `${pct}%`;
-	}, [steps]);
+	const updateProgress = React.useCallback(
+		(s, delta = 0) => {
+			if (!slidesRef.current || !progressRef.current) return;
+			const w =
+				slidesRef.current.parentElement?.clientWidth ||
+				slidesRef.current.clientWidth ||
+				1;
+			const fractional = Math.min(steps - 1, Math.max(0, s - delta / w));
+			const pct = (fractional / (steps - 1)) * 100;
+			progressRef.current.style.width = `${pct}%`;
+		},
+		[steps],
+	);
 
-	const updateTransform = React.useCallback((s, delta = 0) => {
-		if (!slidesRef.current) return;
-		const w = slidesRef.current.parentElement?.clientWidth || slidesRef.current.clientWidth;
-		const tx = Math.round(-(s * w) + delta);
-	slidesRef.current.style.transform = `translateX(${tx}px)`;
-		updateProgress(s, delta);
-	}, [updateProgress]);
+	const updateTransform = React.useCallback(
+		(s, delta = 0) => {
+			if (!slidesRef.current) return;
+			const w =
+				slidesRef.current.parentElement?.clientWidth ||
+				slidesRef.current.clientWidth;
+			const tx = Math.round(-(s * w) + delta);
+			slidesRef.current.style.transform = `translateX(${tx}px)`;
+			updateProgress(s, delta);
+		},
+		[updateProgress],
+	);
 
 	const onPointerDown = (e) => {
 		// If the pointerdown starts on an interactive control, don't start a drag
 		const el = e.target;
-		if (el && el.closest && el.closest("button, input, label, .ghost, .dot, .chip, .option-card")) {
+		if (
+			el &&
+			el.closest &&
+			el.closest(
+				"button, input, label, .ghost, .dot, .chip, .option-card",
+			)
+		) {
 			return;
 		}
 		if (!slidesRef.current) return;
@@ -72,7 +86,9 @@ export default function Onboarding({ onFinish }) {
 			active: true,
 			startX: e.clientX,
 			deltaX: 0,
-			width: slidesRef.current.parentElement?.clientWidth || slidesRef.current.clientWidth,
+			width:
+				slidesRef.current.parentElement?.clientWidth ||
+				slidesRef.current.clientWidth,
 			pointerId: e.pointerId,
 			captured: false,
 			lastX: e.clientX,
@@ -111,15 +127,26 @@ export default function Onboarding({ onFinish }) {
 
 	const onPointerUp = () => {
 		if (!dragRef.current.active || !slidesRef.current) return;
-		const { deltaX, width, pointerId, captured, velocity } = dragRef.current;
+		const { deltaX, width, pointerId, captured, velocity } =
+			dragRef.current;
 		// if we never engaged capture, treat this as a tap and do nothing
 		if (!captured) {
-			dragRef.current = { active: false, startX: 0, deltaX: 0, width: 0, pointerId: null };
+			dragRef.current = {
+				active: false,
+				startX: 0,
+				deltaX: 0,
+				width: 0,
+				pointerId: null,
+			};
 			return;
 		}
 		slidesRef.current.classList.remove("dragging");
 		slidesRef.current.style.transition = "transform 320ms ease";
-		try { slidesRef.current.releasePointerCapture?.(pointerId); } catch { /* ignore */ }
+		try {
+			slidesRef.current.releasePointerCapture?.(pointerId);
+		} catch {
+			/* ignore */
+		}
 
 		const threshold = Math.max(50, width * 0.18);
 		const projected = deltaX + velocity * 220;
@@ -130,13 +157,20 @@ export default function Onboarding({ onFinish }) {
 		} else {
 			updateTransform(step, 0);
 		}
-		dragRef.current = { active: false, startX: 0, deltaX: 0, width: 0, pointerId: null };
+		dragRef.current = {
+			active: false,
+			startX: 0,
+			deltaX: 0,
+			width: 0,
+			pointerId: null,
+		};
 	};
 
 	// sync visual position when step changes (if not dragging)
 	React.useEffect(() => {
 		if (dragRef.current.active) return;
-		if (slidesRef.current) slidesRef.current.style.transition = "transform 320ms ease";
+		if (slidesRef.current)
+			slidesRef.current.style.transition = "transform 320ms ease";
 		updateTransform(step, 0);
 	}, [step, updateTransform]);
 
@@ -206,131 +240,135 @@ export default function Onboarding({ onFinish }) {
 				/>
 			</div>
 			<div className="slides-viewport">
-			<div
-				ref={slidesRef}
-				className={`slides step-${step}`}
-				onPointerDown={onPointerDown}
-				onPointerMove={onPointerMove}
-				onPointerUp={onPointerUp}
-				onPointerCancel={onPointerUp}
-			>
-				{/* 0 - Intro */}
-				<div className="slide">
-					<div className="onboarding-card">
-						<h2>
-							Welcome to <span className="accent">bioai</span>
-						</h2>
-						<p className="muted">
-							We'll ask a few quick questions to personalize
-							recommendations.
-						</p>
-						<button className="next-btn" onClick={next}>
-							Get started
-						</button>
-					</div>
-				</div>
-
-				{/* 1 - Goal */}
-				<div className="slide">
-					<div className="onboarding-card">
-						<h3>What's your main goal?</h3>
-						<div className="options-row">
-							{GOALS.map((g) => (
-								<button
-									key={g.id}
-									className={`option-card ${goal === g.id ? "active" : ""}`}
-									onClick={() => setGoal(g.id)}
-								>
-									{g.label}
-								</button>
-							))}
-						</div>
-						<div className="hint muted">
-							You can change this later.
-						</div>
-					</div>
-				</div>
-
-				{/* 2 - Allergies */}
-				<div className="slide">
-					<div className="onboarding-card">
-						<h3>Any allergies?</h3>
-						<div className="options-col">
-							{ALLERGIES.map((a) => (
-								<label
-									key={a}
-									className={`check ${allergies.includes(a) ? "checked" : ""}`}
-								>
-									<input
-										type="checkbox"
-										checked={allergies.includes(a)}
-										onChange={() => toggleAllergy(a)}
-									/>
-									<span>{a}</span>
-								</label>
-							))}
-						</div>
-						<div className="hint muted">
-							We'll hide items you're allergic to.
-						</div>
-					</div>
-				</div>
-
-				{/* 3 - Likes / Dislikes */}
-				<div className="slide">
-					<div className="onboarding-card">
-						<h3>Tell us what you like (tap to like/dislike)</h3>
-						<div className="tiles">
-							{TAGS.map((t) => (
-								<button
-									key={t}
-									className={`chip ${pressedTag === t ? "pressing" : ""} ${tagState[t] === 1 ? "liked" : tagState[t] === -1 ? "disliked" : ""}`}
-									onPointerDown={() => setPressedTag(t)}
-									onPointerUp={() => setPressedTag(null)}
-									onPointerLeave={() => setPressedTag(null)}
-									onClick={() => toggleTag(t)}
-								>
-									{t}
-								</button>
-							))}
-						</div>
-						<div className="hint muted">
-							Green = like, muted = dislike.
-						</div>
-					</div>
-				</div>
-
-				{/* 4 - Summary */}
-				<div className="slide">
-					<div className="onboarding-card">
-						<h3>All set!</h3>
-						<div className="summary">
-							<p>
-								<strong>Goal:</strong> {goal || "Not set"}
+				<div
+					ref={slidesRef}
+					className={`slides step-${step}`}
+					onPointerDown={onPointerDown}
+					onPointerMove={onPointerMove}
+					onPointerUp={onPointerUp}
+					onPointerCancel={onPointerUp}
+				>
+					{/* 0 - Intro */}
+					<div className="slide">
+						<div className="onboarding-card">
+							<h2>
+								Welcome to <span className="accent">bioai</span>
+							</h2>
+							<p className="muted">
+								We'll ask a few quick questions to personalize
+								recommendations.
 							</p>
-							<p>
-								<strong>Allergies:</strong>{" "}
-								{allergies.length
-									? allergies.join(", ")
-									: "None"}
-							</p>
-							<p>
-								<strong>Likes:</strong>{" "}
-								{likedTags.length ? likedTags.join(", ") : "—"}
-							</p>
-							<p>
-								<strong>Dislikes:</strong>{" "}
-								{dislikedTags.length
-									? dislikedTags.join(", ")
-									: "—"}
-							</p>
+							<button className="next-btn" onClick={next}>
+								Get started
+							</button>
 						</div>
-						<button className="next-btn" onClick={finish}>
-							Finish
-						</button>
+					</div>
+
+					{/* 1 - Goal */}
+					<div className="slide">
+						<div className="onboarding-card">
+							<h3>What's your main goal?</h3>
+							<div className="options-row">
+								{GOALS.map((g) => (
+									<button
+										key={g.id}
+										className={`option-card ${goal === g.id ? "active" : ""}`}
+										onClick={() => setGoal(g.id)}
+									>
+										{g.label}
+									</button>
+								))}
+							</div>
+							<div className="hint muted">
+								You can change this later.
+							</div>
+						</div>
+					</div>
+
+					{/* 2 - Allergies */}
+					<div className="slide">
+						<div className="onboarding-card">
+							<h3>Any allergies?</h3>
+							<div className="options-col">
+								{ALLERGIES.map((a) => (
+									<label
+										key={a}
+										className={`check ${allergies.includes(a) ? "checked" : ""}`}
+									>
+										<input
+											type="checkbox"
+											checked={allergies.includes(a)}
+											onChange={() => toggleAllergy(a)}
+										/>
+										<span>{a}</span>
+									</label>
+								))}
+							</div>
+							<div className="hint muted">
+								We'll hide items you're allergic to.
+							</div>
+						</div>
+					</div>
+
+					{/* 3 - Likes / Dislikes */}
+					<div className="slide">
+						<div className="onboarding-card">
+							<h3>Tell us what you like (tap to like/dislike)</h3>
+							<div className="tiles">
+								{TAGS.map((t) => (
+									<button
+										key={t}
+										className={`chip ${pressedTag === t ? "pressing" : ""} ${tagState[t] === 1 ? "liked" : tagState[t] === -1 ? "disliked" : ""}`}
+										onPointerDown={() => setPressedTag(t)}
+										onPointerUp={() => setPressedTag(null)}
+										onPointerLeave={() =>
+											setPressedTag(null)
+										}
+										onClick={() => toggleTag(t)}
+									>
+										{t}
+									</button>
+								))}
+							</div>
+							<div className="hint muted">
+								Green = like, muted = dislike.
+							</div>
+						</div>
+					</div>
+
+					{/* 4 - Summary */}
+					<div className="slide">
+						<div className="onboarding-card">
+							<h3>All set!</h3>
+							<div className="summary">
+								<p>
+									<strong>Goal:</strong> {goal || "Not set"}
+								</p>
+								<p>
+									<strong>Allergies:</strong>{" "}
+									{allergies.length
+										? allergies.join(", ")
+										: "None"}
+								</p>
+								<p>
+									<strong>Likes:</strong>{" "}
+									{likedTags.length
+										? likedTags.join(", ")
+										: "—"}
+								</p>
+								<p>
+									<strong>Dislikes:</strong>{" "}
+									{dislikedTags.length
+										? dislikedTags.join(", ")
+										: "—"}
+								</p>
+							</div>
+							<button className="next-btn" onClick={finish}>
+								Finish
+							</button>
+						</div>
 					</div>
 				</div>
-			</div>
 			</div>
 
 			<div className="onboarding-controls">
