@@ -14,13 +14,17 @@ export default function Home() {
 		<div className="home-root">
 			<div className="home-content">
 				{tab === "dashboard" && <Dashboard />}
-				{tab === "capture" && <Capture />}
+				{tab === "capture" && (
+					<Capture onClose={() => setTab("dashboard")} />
+				)}
 				{tab === "planner" && <Planner />}
 				{tab === "analytics" && <Analytics />}
 				{tab === "settings" && <Settings />}
 			</div>
 
-			<BottomNav active={tab} onTabChange={setTab} />
+			{tab !== "capture" && (
+				<BottomNav active={tab} onTabChange={setTab} />
+			)}
 		</div>
 	);
 }

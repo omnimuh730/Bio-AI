@@ -7,8 +7,32 @@ import { FiImage } from "react-icons/fi";
 // In a real mobile app this would be a CameraPreview widget
 // Since this is web-based, we'll simulate a camera interface
 
-export default function Capture() {
+export default function Capture({ onClose }) {
 	const [mode, setMode] = React.useState("camera"); // camera | barcode | search
+	const [angle, setAngle] = React.useState(45);
+	const [inRange, setInRange] = React.useState(true);
+	const [flash, setFlash] = React.useState(false);
+
+	// Simulate realistic rapid human movement (around target 45)
+	React.useEffect(() => {
+		let current = 40 + Math.random() * 10; // start near 40-50
+		setAngle(Math.round(current));
+		const id = setInterval(() => {
+			// small jitter plus occasional larger shifts
+			let jitter = (Math.random() - 0.5) * 8; // +/-4 deg
+			if (Math.random() < 0.02) jitter += (Math.random() - 0.5) * 40; // rare jump
+			current = Math.max(0, Math.min(90, current + jitter));
+			setAngle(Math.round(current));
+			setInRange(current >= 40 && current <= 50);
+		}, 80); // ~12-15 updates per second
+		return () => clearInterval(id);
+	}, []);
+
+	function doCapture() {
+		if (!inRange) return;
+		setFlash(true);
+		setTimeout(() => setFlash(false), 300);
+	}
 
 	return (
 		<div className="capture-root">
@@ -17,7 +41,10 @@ export default function Capture() {
 				<div className="camera-overlay">
 					{/* Top Controls */}
 					<div className="top-controls">
-						<button className="icon-btn">
+						<button
+							className="icon-btn"
+							onClick={() => onClose && onClose()}
+						>
 							<FiX size={24} />
 						</button>
 						<div className="mode-pill">AI Vision Alpha</div>
@@ -33,10 +60,19 @@ export default function Capture() {
 						<div className="pitch-indicator">
 							<div
 								className="pitch-bubble"
-								style={{ transform: "translateY(-10px)" }}
+								style={{
+									background: inRange ? "#4ade80" : "#f87171",
+									transform: `translateY(${(angle - 45) * 1.4 - 10}px)`,
+								}}
+								title={`Angle ${angle}°`}
 							></div>
 						</div>
-						<div className="hint-text">Hold steady at 45°</div>
+						<div
+							className="hint-text"
+							style={{ color: inRange ? "#bbf7d0" : "#fecaca" }}
+						>
+							{`Hold steady at 45° • ${angle}°`}
+						</div>
 					</div>
 
 					{/* Bottom Controls */}
@@ -66,8 +102,20 @@ export default function Capture() {
 							<button className="mini-btn">
 								<FiSearch />
 							</button>
-							<button className="shutter-btn">
-								<div className="shutter-inner"></div>
+							<button
+								className="shutter-btn"
+								onClick={doCapture}
+								disabled={!inRange}
+								aria-disabled={!inRange}
+							>
+								<div
+									className="shutter-inner"
+									style={{
+										background: inRange
+											? "white"
+											: "rgba(255,255,255,0.6)",
+									}}
+								></div>
 							</button>
 							<button className="mini-btn">
 								<FiMaximize />
@@ -81,6 +129,17 @@ export default function Capture() {
 					className="camera-feed-img"
 					alt="camera feed"
 				/>
+				{/* Capture flash */}
+				{flash && (
+					<div
+						style={{
+							position: "absolute",
+							inset: 0,
+							background: "rgba(255,255,255,0.6)",
+							zIndex: 20,
+						}}
+					/>
+				)}
 			</div>
 
 			<style>{`
@@ -173,7 +232,6 @@ export default function Capture() {
 				.pitch-bubble {
 					width: 10px;
 					height: 10px;
-					background: #4ade80; /* Green alignment */
 					border-radius: 50%;
 					position: absolute;
 					left: -2px;
@@ -191,8 +249,6 @@ export default function Capture() {
 					flex-direction: column;
 					gap: 24px;
 					padding-bottom: 30px; 
-					/* Space for BottomNav, although capture usually hides it or overlays it */
-					/* In this design, we'll keep it visible or let Home manage it */
 				}
 				.mode-switcher {
 					display: flex;
@@ -231,10 +287,15 @@ export default function Capture() {
 					padding: 4px;
 					cursor: pointer;
 				}
+				.shutter-btn[disabled] {
+					opacity: 0.5;
+					border-color: rgba(255,255,255,0.15);
+					cursor: not-allowed;
+				}
+				.shutter-btn[disabled] .shutter-inner { background: rgba(255,255,255,0.6); }
 				.shutter-inner {
 					width: 100%;
 					height: 100%;
-					background: white;
 					border-radius: 50%;
 					transition: transform 0.1s;
 				}
