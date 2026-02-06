@@ -56,7 +56,8 @@ export default function Onboarding({ onFinish }) {
 	const updateTransform = React.useCallback((s, delta = 0) => {
 		if (!slidesRef.current) return;
 		const w = slidesRef.current.parentElement?.clientWidth || slidesRef.current.clientWidth;
-		slidesRef.current.style.transform = `translateX(${-(s * w) + delta}px)`;
+		const tx = Math.round(-(s * w) + delta);
+	slidesRef.current.style.transform = `translateX(${tx}px)`;
 		updateProgress(s, delta);
 	}, [updateProgress]);
 
