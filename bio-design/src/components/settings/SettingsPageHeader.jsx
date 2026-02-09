@@ -1,7 +1,7 @@
 import React from "react";
 import { FiArrowLeft } from "react-icons/fi";
 
-export default function SettingsPageHeader({ title, subtitle, onBack }) {
+export default function SettingsPageHeader({ onBack }) {
 	return (
 		<div className="settings-page-header">
 			<button

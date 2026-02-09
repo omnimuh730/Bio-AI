@@ -1,7 +1,6 @@
 import "./dashboard.css";
 import Header from "./dashboard/Header";
 import ScoreRing from "./dashboard/ScoreRing";
-import AISuggestion from "./dashboard/AISuggestion";
 import LiveVitals from "./dashboard/LiveVitals";
 import QuickLog from "./dashboard/QuickLog";
 import RecommendedCard from "./dashboard/RecommendedCard";
@@ -23,13 +22,12 @@ export default function Dashboard({ onNavigate }) {
 					<ScoreRing value={88} />
 				</div>
 				<div className="widgets-grid">
-					<AISuggestion />
+					<RecommendedCard
+						onOpen={() => handleNavigate("recommended")}
+					/>
 					<LiveVitals />
 					<div className="dual-row">
 						<QuickLog />
-						<RecommendedCard
-							onOpen={() => handleNavigate("recommended")}
-						/>
 					</div>
 				</div>
 			</div>
