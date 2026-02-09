@@ -1,406 +1,489 @@
-/**
- * LiveVitals.jsx
- * - Dashboard component showing extended watch-style metrics (HR, SpO2, Steps, VO2, etc.)
- * - Includes an animated, streaming heart-rate chart that can Start/Stop live streaming.
- * - Streaming simulation appends new HR points at intervals, animates a left-shift of the chart,
- *   trims old points, and updates metric tiles to mimic a real live stream.
- *
- * To integrate a real live source, replace the simulated interval with a WebSocket / EventSource
- * or subscribe to your streaming API and push values into `addHrPoint()` as they arrive.
- */
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	FiRefreshCw,
 	FiActivity,
 	FiCpu,
 	FiHeart,
-	FiFlag,
-	FiSun,
-	FiBatteryCharging,
+	FiWind,
+	FiZap,
+	FiMoon,
+	FiDroplet,
+	FiThermometer,
 } from "react-icons/fi";
 
-// Extended mock metrics similar to Apple Watch / Garmin / Fitbit
+// --- Configuration ---
+const CONFIG = {
+	colors: {
+		primary: "#f43f5e", // Rose
+	},
+};
+
 const initialVitals = [
 	{
-		key: "resting_hr",
-		label: "Resting HR",
-		value: 58,
-		unit: "bpm",
-		icon: <FiHeart />,
-		color: "#ef4444",
-	},
-	{
 		key: "hrv",
-		label: "HRV (SDNN)",
+		label: "HRV",
 		value: 42,
 		unit: "ms",
 		icon: <FiActivity />,
 		color: "#8b5cf6",
+		bg: "#f5f3ff",
 	},
 	{
 		key: "stress",
 		label: "Stress",
-		value: "Low",
-		unit: "12%",
+		value: "12",
+		unit: "%",
 		icon: <FiCpu />,
 		color: "#10b981",
+		bg: "#ecfdf5",
 	},
 	{
 		key: "spo2",
 		label: "SpO2",
 		value: 98,
 		unit: "%",
-		icon: <FiFlag />,
+		icon: <FiWind />,
 		color: "#06b6d4",
+		bg: "#ecfeff",
 	},
 	{
 		key: "steps",
 		label: "Steps",
-		value: 8245,
-		unit: "steps",
-		icon: <FiSun />,
+		value: "8,245",
+		unit: "",
+		icon: <FiZap />,
 		color: "#f59e0b",
-	},
-	{
-		key: "active_cal",
-		label: "Active Cal",
-		value: 512,
-		unit: "kcal",
-		icon: <FiBatteryCharging />,
-		color: "#ef4444",
+		bg: "#fffbeb",
 	},
 	{
 		key: "sleep",
 		label: "Sleep",
 		value: "7h 12m",
 		unit: "",
-		icon: <FiFlag />,
-		color: "#a78bfa",
+		icon: <FiMoon />,
+		color: "#6366f1",
+		bg: "#eef2ff",
 	},
 	{
 		key: "vo2",
 		label: "VO2 Max",
 		value: 44,
-		unit: "ml/kg/min",
-		icon: <FiActivity />,
-		color: "#6366f1",
+		unit: "",
+		icon: <FiDroplet />,
+		color: "#3b82f6",
+		bg: "#eff6ff",
 	},
 	{
 		key: "resp",
 		label: "Resp Rate",
 		value: 14,
 		unit: "rpm",
-		icon: <FiActivity />,
-		color: "#06b6d4",
+		icon: <FiWind />,
+		color: "#14b8a6",
+		bg: "#f0fdfa",
 	},
 	{
 		key: "temp",
-		label: "Body Temp",
+		label: "Temp",
 		value: 36.6,
 		unit: "°C",
-		icon: <FiSun />,
-		color: "#fb7185",
+		icon: <FiThermometer />,
+		color: "#f43f5e",
+		bg: "#fff1f2",
 	},
 ];
 
-function HeartRateChart({
-	data = [],
-	color = "#ef4444",
-	isShifting = false,
-	animationMs = 300,
-	maxWidth = 300,
-}) {
-	// Streaming-friendly SVG chart:
-	// - When `data` has one extra point (incoming), a left translate of the plot by `dx` pixels
-	//   animates a smooth shift. After the animation completes the parent should trim the first point.
-	const width = maxWidth;
-	const height = 60;
-	const padding = 8;
-	if (!data.length) return null;
+/**
+ * Smoothes points into a bezier curve path for SVG
+ */
+function getSplinePath(data, width, height, padding = 0) {
+	if (data.length === 0) return "";
+	const max = Math.max(...data, 100);
+	const min = Math.min(...data, 40);
+	const range = max - min || 1;
 
-	const max = Math.max(...data);
-	const min = Math.min(...data);
-	const points = data.map((d, i) => {
-		const x = (i / (data.length - 1)) * (width - padding * 2) + padding;
+	const points = data.map((val, i) => {
+		const x = (i / (data.length - 1)) * width;
 		const y =
-			((max - d) / (max - min || 1)) * (height - padding * 2) + padding;
-		return `${x},${y}`;
+			height - ((val - min) / range) * (height - padding * 2) - padding;
+		return [x, y];
 	});
-	const pathD = `M${points.join(" L")}`;
-	const dx = (width - padding * 2) / Math.max(1, data.length - 1);
+
+	const controlPoint = (current, previous, next, reverse) => {
+		const p = previous || current;
+		const n = next || current;
+		const smoothing = 0.2;
+		const o = line(p, n);
+		const angle = o.angle + (reverse ? Math.PI : 0);
+		const length = o.length * smoothing;
+		const x = current[0] + Math.cos(angle) * length;
+		const y = current[1] + Math.sin(angle) * length;
+		return [x, y];
+	};
+
+	const line = (pointA, pointB) => {
+		const lengthX = pointB[0] - pointA[0];
+		const lengthY = pointB[1] - pointA[1];
+		return {
+			length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
+			angle: Math.atan2(lengthY, lengthX),
+		};
+	};
+
+	return points.reduce((acc, point, i, a) => {
+		if (i === 0) return `M ${point[0]},${point[1]}`;
+		const cps = controlPoint(a[i - 1], a[i - 2], point);
+		const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
+		return `${acc} C ${cps[0]},${cps[1]} ${cpe[0]},${cpe[1]} ${point[0]},${point[1]}`;
+	}, "");
+}
+
+function HeartRateHero({ data, isLive }) {
+	const containerRef = useRef(null);
+	const [dims, setDims] = useState({ width: 0, height: 120 });
+
+	// Handle Resize safely to prevent overflow
+	useEffect(() => {
+		const updateDims = () => {
+			if (containerRef.current) {
+				setDims({
+					width: containerRef.current.getBoundingClientRect().width,
+					height: 120,
+				});
+			}
+		};
+
+		// Initial size
+		updateDims();
+
+		window.addEventListener("resize", updateDims);
+		return () => window.removeEventListener("resize", updateDims);
+	}, []);
+
+	const pathD =
+		dims.width > 0 ? getSplinePath(data, dims.width, dims.height, 10) : "";
+	// FIX: Ensure we round the displayed value so it doesn't break layout
+	const lastVal = Math.round(data[data.length - 1]);
 
 	return (
-		<div className="hr-chart">
-			<svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-				<defs>
-					<linearGradient id="grad" x1="0" x2="1">
-						<stop
-							offset="0%"
-							stopColor={color}
-							stopOpacity="0.25"
+		<div className="hero-card">
+			<div className="hero-header">
+				<div className="hero-left">
+					<div className="hero-icon">
+						<FiHeart />
+					</div>
+					<div className="hero-text">
+						<div className="hero-label">Resting HR</div>
+						<div className="hero-meta">
+							{isLive && <span className="live-dot" />}
+							{isLive ? "Live" : "1m ago"}
+						</div>
+					</div>
+				</div>
+
+				<div className="hero-value-container">
+					<span className="hero-value">{lastVal}</span>
+					<span className="hero-unit">bpm</span>
+				</div>
+			</div>
+
+			<div className="hero-chart" ref={containerRef}>
+				{dims.width > 0 && (
+					<svg
+						width={dims.width}
+						height={dims.height}
+						viewBox={`0 0 ${dims.width} ${dims.height}`}
+						preserveAspectRatio="none"
+						className="chart-svg"
+					>
+						<defs>
+							<linearGradient
+								id="gradientDetails"
+								x1="0"
+								x2="0"
+								y1="0"
+								y2="1"
+							>
+								<stop
+									offset="0%"
+									stopColor={CONFIG.colors.primary}
+									stopOpacity="0.3"
+								/>
+								<stop
+									offset="100%"
+									stopColor={CONFIG.colors.primary}
+									stopOpacity="0.0"
+								/>
+							</linearGradient>
+						</defs>
+						<path
+							d={`${pathD} L ${dims.width},${dims.height} L 0,${dims.height} Z`}
+							fill="url(#gradientDetails)"
 						/>
-						<stop offset="100%" stopColor={color} stopOpacity="0" />
-					</linearGradient>
-				</defs>
-				{/* group we translate to produce the left-shift animation */}
-				<g
-					className={`plot ${isShifting ? "shifting" : ""}`}
-					style={{
-						transform: isShifting ? `translateX(-${dx}px)` : "none",
-					}}
-				>
-					<path
-						d={pathD}
-						fill="none"
-						stroke={color}
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d={`${pathD} L ${width - padding},${height} L ${padding},${height} Z`}
-						fill="url(#grad)"
-						opacity="0.75"
-					/>
-				</g>
-			</svg>
+						<path
+							d={pathD}
+							fill="none"
+							stroke={CONFIG.colors.primary}
+							strokeWidth="3"
+							strokeLinecap="round"
+						/>
+					</svg>
+				)}
+			</div>
+
 			<style>{`
-				.hr-chart { width: 100%; max-width: ${width}px; margin: 8px 0; }
-				.plot { transition: none; }
-				.plot.shifting { transition: transform ${animationMs}ms linear; }
-			`}</style>
+        .hero-card {
+          background: white;
+          border-radius: 24px;
+          padding: 20px;
+          box-shadow: 0 10px 30px -10px rgba(244, 63, 94, 0.15);
+          border: 1px solid rgba(244, 63, 94, 0.1);
+          margin-bottom: 20px;
+          position: relative;
+          overflow: hidden; /* Critical for containing chart overflow */
+        }
+
+        .hero-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .hero-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0; /* Flexbox shrink fix */
+        }
+
+        .hero-icon { 
+          width: 40px; height: 40px; flex-shrink: 0;
+          border-radius: 12px; 
+          background: #fff1f2; color: #f43f5e; 
+          display: flex; align-items: center; justify-content: center; 
+          font-size: 20px;
+        }
+
+        .hero-text {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .hero-label { font-size: 13px; font-weight: 600; color: #64748b; }
+        .hero-meta { font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+
+        .hero-value-container {
+          text-align: right;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        
+        .hero-value { font-size: 32px; font-weight: 800; color: #0f172a; letter-spacing: -1px; line-height: 1; }
+        .hero-unit { font-size: 13px; font-weight: 600; color: #94a3b8; margin-left: 4px; }
+        
+        .live-dot { width: 6px; height: 6px; background: #f43f5e; border-radius: 50%; animation: pulseRed 1.5s infinite; }
+        @keyframes pulseRed {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+          70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+        }
+        
+        .hero-chart { height: 120px; width: 100%; margin-top: -15px; }
+        .chart-svg { display: block; overflow: visible; }
+      `}</style>
 		</div>
 	);
 }
 
 export default function LiveVitals() {
-	const [loading, setLoading] = React.useState(false);
-	const [vitals, setVitals] = React.useState(initialVitals);
-	const MAX_POINTS = 40;
-	const ANIM_MS = 300; // animation duration for shift
-	const [hrSeries, setHrSeries] = React.useState(() => {
-		// fill initial series to MAX_POINTS with smoothing
-		const base = [68, 70, 72, 69, 75, 80, 76, 74, 72, 70];
-		while (base.length < MAX_POINTS) base.unshift(base[0]);
-		return base;
-	});
+	const [isLive, setIsLive] = useState(false);
+	// FIX: Initialize with rounded integers to prevent initial flash of decimals
+	const [hrData, setHrData] = useState(() =>
+		Array.from({ length: 30 }, () => Math.round(60 + Math.random() * 10)),
+	);
+	const [vitals, setVitals] = useState(initialVitals);
+	const [loading, setLoading] = useState(false);
+	const intervalRef = useRef(null);
 
-	const [animateKey, setAnimateKey] = React.useState("k0");
-	const [isLive, setIsLive] = React.useState(false);
-	const [isShiftingChart, setIsShiftingChart] = React.useState(false);
-	const intervalRef = React.useRef(null);
+	useEffect(() => {
+		if (isLive) {
+			intervalRef.current = setInterval(() => {
+				setHrData((prev) => {
+					const last = prev[prev.length - 1];
+					// Ensure calculation results in integer
+					const nextVal = last + (Math.random() - 0.5) * 8;
+					const clamped = Math.max(50, Math.min(180, nextVal));
+					const rounded = Math.round(clamped);
 
-	// helper to append a new HR point and animate shift
-	const addHrPoint = (newHr) => {
-		// append new point (series grows by 1)
-		setHrSeries((prev) => {
-			const next = prev.concat([newHr]);
-			return next;
-		});
-		// trigger shift animation
-		setIsShiftingChart(true);
-		// after animation, remove the oldest point and stop shifting
+					return [...prev.slice(1), rounded];
+				});
+
+				if (Math.random() > 0.7) {
+					setVitals((prev) =>
+						prev.map((v) =>
+							v.key === "steps"
+								? {
+										...v,
+										value: (
+											parseInt(
+												v.value
+													.toString()
+													.replace(/,/g, ""),
+											) + Math.ceil(Math.random() * 5)
+										).toLocaleString(),
+									}
+								: v,
+						),
+					);
+				}
+			}, 800);
+		} else {
+			if (intervalRef.current) clearInterval(intervalRef.current);
+		}
+		return () => clearInterval(intervalRef.current);
+	}, [isLive]);
+
+	const toggleLive = () => setIsLive(!isLive);
+	const refresh = () => {
+		setLoading(true);
 		setTimeout(() => {
-			setHrSeries((p) => p.slice(1));
-			setIsShiftingChart(false);
-			// update visible resting HR tile to latest value
-			setVitals((prev) =>
-				prev.map((x) =>
-					x.key === "resting_hr" ? { ...x, value: newHr } : x,
+			// FIX: Ensure refresh data is also rounded
+			setHrData(
+				Array.from({ length: 30 }, () =>
+					Math.round(60 + Math.random() * 10),
 				),
 			);
-		}, ANIM_MS);
-	};
-
-	const startLive = () => {
-		if (intervalRef.current) return;
-		setIsLive(true);
-		intervalRef.current = setInterval(() => {
-			// streaming tick: generate HR with small random walk
-			setHrSeries((prev) => {
-				const last = prev[prev.length - 1] || 70;
-				const nextHr = Math.max(
-					40,
-					Math.min(
-						190,
-						last +
-							(Math.random() > 0.5 ? 1 : -1) *
-								Math.round(Math.random() * 3),
-					),
-				);
-				// we don't mutate here — call addHrPoint to ensure consistent animation timing
-				addHrPoint(nextHr);
-				return prev; // addHrPoint already handles state changes
-			});
-			// update a couple of other tiles occasionally to simulate streaming updates
-			setVitals((prev) =>
-				prev.map((p) => {
-					if (p.key === "steps")
-						return {
-							...p,
-							value: p.value + Math.round(Math.random() * 30),
-						};
-					if (p.key === "active_cal")
-						return {
-							...p,
-							value: p.value + Math.round(Math.random() * 3),
-						};
-					return p;
-				}),
-			);
+			setLoading(false);
 		}, 1000);
 	};
 
-	const stopLive = () => {
-		setIsLive(false);
-		if (intervalRef.current) {
-			clearInterval(intervalRef.current);
-			intervalRef.current = null;
-		}
-	};
-
-	React.useEffect(() => {
-		return () => stopLive();
-	}, []);
-
-	const handleRefresh = () => {
-		setLoading(true);
-		// quick snapshot refresh (non-streaming)
-		setTimeout(() => {
-			setVitals((prev) =>
-				prev.map((p) => {
-					if (p.key === "resting_hr")
-						return {
-							...p,
-							value: Math.round(58 + Math.random() * 10),
-						};
-					if (p.key === "spo2")
-						return {
-							...p,
-							value: Math.max(
-								94,
-								Math.min(
-									100,
-									p.value + (Math.random() > 0.5 ? 1 : -1),
-								),
-							),
-						};
-					if (p.key === "steps")
-						return {
-							...p,
-							value: p.value + Math.round(Math.random() * 120),
-						};
-					return p;
-				}),
-			);
-
-			// snapshot HR series refresh
-			setHrSeries((s) =>
-				s.slice(-9).concat([Math.round(60 + Math.random() * 40)]),
-			);
-			setAnimateKey(`k${Date.now()}`);
-			setLoading(false);
-		}, 800);
-	};
-
 	return (
-		<div className="card live-vitals">
-			<div className="card-title">
-				Live Vitals
-				<div
-					style={{
-						display: "inline-flex",
-						gap: 8,
-						marginLeft: 12,
-						alignItems: "center",
-					}}
-				>
+		<div className="dashboard-container">
+			<div className="dashboard-header">
+				<h2 className="title">My Vitals</h2>
+				<div className="actions">
 					<button
-						className={`refresh ${loading ? "spinning" : ""}`}
-						onClick={handleRefresh}
-						title="Refresh"
+						className={`btn-icon ${loading ? "spin" : ""}`}
+						onClick={refresh}
 					>
 						<FiRefreshCw />
 					</button>
 					<button
-						className={`live-toggle ${isLive ? "live-on" : ""}`}
-						onClick={() => (isLive ? stopLive() : startLive())}
+						className={`btn-pill ${isLive ? "active" : ""}`}
+						onClick={toggleLive}
 					>
-						{isLive ? "Stop Live" : "Start Live"}
+						{isLive ? "Stop Live" : "Go Live"}
 					</button>
 				</div>
 			</div>
 
-			{/* Heart rate chart + current HR highlight */}
-			<div className="chart-row">
-				<div className="chart-left">
-					<div className="hr-current">
-						<div className="hr-val">
-							{hrSeries[hrSeries.length - 1]}{" "}
-							<span className="unit">bpm</span>
-						</div>
-						<div className="hr-label">
-							Resting HR {isLive ? "• live" : ""}
-						</div>
-					</div>
-					<HeartRateChart
-						data={hrSeries}
-						color={vitals.find((v) => v.key === "resting_hr").color}
-						isShifting={isShiftingChart}
-						animationMs={ANIM_MS}
-						maxWidth={460}
-					/>
-				</div>
-				<div className="chart-right">
-					<div className="spark-grid">
-						{vitals.slice(0, 9).map((item) => (
-							<div key={item.key} className="vital-item small">
-								<div
-									className="vital-icon"
-									style={{
-										color: item.color,
-										backgroundColor: `${item.color}15`,
-									}}
-								>
-									{item.icon}
-								</div>
-								<div className="vital-data">
-									<div className="val">
-										{item.value}{" "}
-										<span className="unit">
-											{item.unit}
-										</span>
-									</div>
-									<div className="lbl">{item.label}</div>
-								</div>
+			<HeartRateHero data={hrData} isLive={isLive} />
+
+			<div className="vitals-grid">
+				{vitals.map((item) => (
+					<div key={item.key} className="vital-card">
+						<div className="card-top">
+							<div
+								className="icon-box"
+								style={{
+									color: item.color,
+									background: item.bg,
+								}}
+							>
+								{item.icon}
 							</div>
-						))}
+							{item.key === "stress" && (
+								<span className="badge-low">Low</span>
+							)}
+						</div>
+						<div className="card-content">
+							<div className="card-value">
+								{item.value}
+								<span className="card-unit">{item.unit}</span>
+							</div>
+							<div className="card-label">{item.label}</div>
+						</div>
 					</div>
-				</div>
+				))}
 			</div>
 
 			<style>{`
-				.chart-row { display: flex; gap: 12px; align-items: center; }
-				.chart-left { flex: 1; }
-				.chart-right { width: 340px; }
-				.hr-current { display: flex; align-items: baseline; gap: 12px; }
-				.hr-val { font-weight: 900; font-size: 28px; color: #0f172a; }
-				.hr-val .unit { font-size: 12px; color: #94a3b8; font-weight: 700; }
-				.hr-label { color: #64748b; font-weight: 700; font-size: 12px; }
-				.spark-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-				.vital-item.small { display: flex; align-items: center; gap: 8px; padding: 8px; background: #fbfcfe; border-radius: 10px; }
-				.vital-item.small .vital-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-				.vital-item.small .val { font-weight: 800; font-size: 13px; }
+        /* Global Reset for box-sizing */
+        * { box-sizing: border-box; }
 
-				/* Live toggle */
-				.live-toggle { background: transparent; border: 1px solid #e2e8f0; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight: 700; }
-				.live-toggle.live-on { background: linear-gradient(90deg,#ef4444,#f59e0b); color: white; border: none; }
+        .dashboard-container {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          width: 100%;
+          max-width: 480px; 
+          margin: 0 auto;
+          background: #f8fafc;
+          padding: 20px;
+          border-radius: 32px;
+          overflow-x: hidden; /* Prevents container scroll */
+        }
+        
+        .dashboard-header {
+          display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+        }
+        .title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.5px; }
+        .actions { display: flex; gap: 10px; }
 
-				/* Responsive tweaks */
-				@media (max-width: 880px) { .chart-row { flex-direction: column; } .chart-right { width: 100%; } }
-				/* refresh animation */
-				.spinning { transform: rotate(360deg); transition: transform 1s linear; }
-			`}</style>
+        .btn-icon {
+          background: white; border: 1px solid #e2e8f0; color: #64748b;
+          width: 36px; height: 36px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center; cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .btn-icon.spin svg { animation: spin 0.8s linear infinite; }
+        
+        .btn-pill {
+          background: #0f172a; color: white; border: none;
+          padding: 0 16px; height: 36px; border-radius: 18px;
+          font-size: 13px; font-weight: 600; cursor: pointer;
+          transition: all 0.2s ease; white-space: nowrap;
+        }
+        .btn-pill.active { background: #f43f5e; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
+
+        .vitals-grid {
+          display: grid; 
+          grid-template-columns: repeat(2, 1fr); 
+          gap: 12px;
+        }
+
+        .vital-card {
+          background: white; border-radius: 20px; padding: 16px;
+          display: flex; flex-direction: column; gap: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+          border: 1px solid #f1f5f9;
+        }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .icon-box {
+          width: 36px; height: 36px; border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 18px;
+        }
+        .badge-low {
+          background: #ecfdf5; color: #10b981; font-size: 10px; font-weight: 700;
+          padding: 4px 8px; border-radius: 10px; text-transform: uppercase;
+        }
+
+        .card-content { display: flex; flex-direction: column; gap: 2px; }
+        
+        /* Prevent overflow in small cards */
+        .card-value { 
+          font-size: 18px; font-weight: 700; color: #0f172a; 
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+        .card-unit { font-size: 12px; color: #94a3b8; font-weight: 600; margin-left: 2px; }
+        .card-label { font-size: 12px; font-weight: 500; color: #64748b; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+      `}</style>
 		</div>
 	);
 }
