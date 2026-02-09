@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { FiChevronLeft, FiHeart, FiPlus } from "react-icons/fi";
+import { FiChevronLeft, FiPlus, FiX, FiCheck } from "react-icons/fi";
 
 const CATEGORIES = [
 	"Sandwiches",
@@ -17,10 +17,14 @@ function makeItem(cat, idx) {
 	return {
 		id: `${cat}-${Date.now()}-${idx}`,
 		title: `${cat} Deluxe ${idx + 1}`,
-		desc: "Fresh ingredients • 350g",
-		calories: `${200 + (idx % 5) * 50} kcal`,
-		price: `$${(5 + (idx % 10)).toFixed(2)}`,
-		img: `https://picsum.photos/seed/${cat}-${idx}/400/300`, // Higher res for retina
+		desc: "A premium selection of organic ingredients, carefully sourced for maximum freshness and flavor.",
+		calories: 200 + (idx % 5) * 50,
+		macros: {
+			p: 12 + (idx % 5),
+			c: 24 + (idx % 8),
+			f: 8 + (idx % 3),
+		},
+		img: `https://picsum.photos/seed/${cat}-${idx}/500/500`, // Square-ish high res
 	};
 }
 
@@ -28,18 +32,19 @@ export default function RecommendedFoods({ onBack }) {
 	const [active, setActive] = useState(0);
 	const [items, setItems] = useState(() =>
 		CATEGORIES.map((c) =>
-			Array.from({ length: 6 }, (_, i) => makeItem(c, i)),
+			Array.from({ length: 12 }, (_, i) => makeItem(c, i)),
 		),
 	);
 	const [loading, setLoading] = useState(false);
+	const [selectedItem, setSelectedItem] = useState(null); // For Modal
 
-	// Refs for gestures and scrolling
+	// Refs
 	const touchStartX = useRef(0);
 	const touchStartY = useRef(0);
 	const containerRef = useRef(null);
 	const tabsRef = useRef(null);
 
-	// --- Scroll Active Tab into View ---
+	// --- Scroll Tab into View ---
 	useEffect(() => {
 		if (tabsRef.current) {
 			const tabNode = tabsRef.current.children[active];
@@ -53,15 +58,13 @@ export default function RecommendedFoods({ onBack }) {
 		}
 	}, [active]);
 
-	// --- Infinite Scroll Logic ---
+	// --- Infinite Scroll ---
 	function loadMoreFor(index) {
 		if (loading) return;
 		setLoading(true);
-
-		// Simulate network delay
 		setTimeout(() => {
 			setItems((prev) => {
-				const copy = [...prev]; // Shallow copy array
+				const copy = [...prev];
 				const currentList = copy[index];
 				const nextItems = Array.from({ length: 6 }, (_, i) =>
 					makeItem(CATEGORIES[index], currentList.length + i),
@@ -70,18 +73,17 @@ export default function RecommendedFoods({ onBack }) {
 				return copy;
 			});
 			setLoading(false);
-		}, 1200);
+		}, 1000);
 	}
 
 	function onScrollPanel(e) {
 		const el = e.target;
-		// Trigger load slightly before bottom (150px)
-		if (el.scrollTop + el.clientHeight >= el.scrollHeight - 150) {
+		if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
 			loadMoreFor(active);
 		}
 	}
 
-	// --- Swipe Logic (Horizontal Only) ---
+	// --- Swipe Logic ---
 	function onTouchStart(e) {
 		touchStartX.current = e.touches[0].clientX;
 		touchStartY.current = e.touches[0].clientY;
@@ -90,25 +92,16 @@ export default function RecommendedFoods({ onBack }) {
 	function onTouchEnd(e) {
 		const dx = e.changedTouches[0].clientX - touchStartX.current;
 		const dy = e.changedTouches[0].clientY - touchStartY.current;
-
-		// Only trigger swipe if horizontal movement is dominant
-		if (Math.abs(dx) > Math.abs(dy)) {
-			if (dx > 70 && active > 0) setActive((a) => a - 1);
-			else if (dx < -70 && active < CATEGORIES.length - 1)
+		if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+			if (dx > 0 && active > 0) setActive((a) => a - 1);
+			else if (dx < 0 && active < CATEGORIES.length - 1)
 				setActive((a) => a + 1);
 		}
 	}
 
-	// --- Long Press Logic for Cards ---
-	const handleLongPress = (item) => {
-		// In a real app, this might open a quick-add menu or trigger haptics
-		if (navigator.vibrate) navigator.vibrate(50);
-		alert(`Quick Action: Added ${item.title} to Favorites!`);
-	};
-
 	return (
 		<div className="rec-root">
-			{/* 1. Glassmorphism Sticky Header */}
+			{/* --- Header --- */}
 			<header className="rec-header">
 				<div className="rec-top-bar">
 					<button className="icon-btn" onClick={onBack}>
@@ -123,8 +116,6 @@ export default function RecommendedFoods({ onBack }) {
 						/>
 					</button>
 				</div>
-
-				{/* Scrollable Pills */}
 				<div className="rec-tabs-wrapper" ref={tabsRef}>
 					{CATEGORIES.map((cat, idx) => (
 						<button
@@ -138,7 +129,7 @@ export default function RecommendedFoods({ onBack }) {
 				</div>
 			</header>
 
-			{/* 2. Swipeable Container */}
+			{/* --- Main Slider Viewport --- */}
 			<div
 				className="rec-viewport"
 				onTouchStart={onTouchStart}
@@ -159,298 +150,307 @@ export default function RecommendedFoods({ onBack }) {
 									<FoodCard
 										key={item.id}
 										item={item}
-										onLongPress={() =>
-											handleLongPress(item)
-										}
+										onClick={() => setSelectedItem(item)}
 									/>
 								))}
-
-								{/* Skeleton Loaders (Visual Placeholder) */}
 								{loading && catIdx === active && (
-									<>
-										<SkeletonCard />
-										<SkeletonCard />
-									</>
+									<SkeletonGrid />
 								)}
 							</div>
-
-							{/* Bottom Spacer for safe scrolling */}
 							<div style={{ height: 100 }} />
 						</div>
 					))}
 				</div>
 			</div>
 
+			{/* --- Detail Modal --- */}
+			{selectedItem && (
+				<FoodModal
+					item={selectedItem}
+					onClose={() => setSelectedItem(null)}
+				/>
+			)}
+
 			<style>{`
-        /* --- Layout --- */
+        /* Global Reset */
         .rec-root {
           position: fixed; inset: 0;
           background: #f8fafc;
           display: flex; flex-direction: column;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           color: #1e293b;
         }
 
-        /* --- Header --- */
+        /* Header */
         .rec-header {
           position: relative; z-index: 20;
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(0,0,0,0.05);
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(20px);
           padding-bottom: 12px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         }
-
-        .rec-top-bar {
-          display: flex; align-items: center;
-          padding: 16px 20px;
-          height: 60px;
-        }
-
-        .rec-top-bar h1 {
-          font-size: 20px; font-weight: 800; margin-left: 16px;
-          background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
+        .rec-top-bar { display: flex; align-items: center; padding: 12px 20px; height: 56px; }
+        .rec-top-bar h1 { font-size: 22px; font-weight: 800; margin-left: 12px; letter-spacing: -0.5px; color: #0f172a; }
         .spacer { flex: 1; }
+        .icon-btn { border: none; background: transparent; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; color: #334155; }
+        .profile-btn img { width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-        .icon-btn {
-          border: none; background: transparent;
-          width: 40px; height: 40px;
-          display: flex; align-items: center; justify-content: center;
-          border-radius: 50%;
-          cursor: pointer;
-          color: #334155;
-          transition: background 0.2s;
-        }
-        .icon-btn:active { background: rgba(0,0,0,0.05); }
-
-        .profile-btn img {
-          width: 32px; height: 32px; border-radius: 50%;
-          border: 2px solid #fff;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        /* --- Tabs --- */
-        .rec-tabs-wrapper {
-          display: flex; gap: 12px;
-          overflow-x: auto;
-          padding: 0 20px;
-          scrollbar-width: none; /* Firefox */
-        }
+        /* Tabs */
+        .rec-tabs-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 0 20px; scrollbar-width: none; }
         .rec-tabs-wrapper::-webkit-scrollbar { display: none; }
-
         .rec-tab {
-          flex: 0 0 auto;
-          padding: 8px 20px;
-          border-radius: 24px;
-          border: none;
-          font-size: 14px; font-weight: 600;
-          background: transparent;
-          color: #64748b;
-          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          padding: 8px 16px; border-radius: 20px; border: none;
+          font-size: 13px; font-weight: 600; background: transparent; color: #94a3b8;
+          white-space: nowrap; transition: all 0.3s ease;
         }
-        
-        .rec-tab.active {
-          background: #3b82f6;
-          color: #fff;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-          transform: scale(1.05);
-        }
+        .rec-tab.active { background: #0f172a; color: #fff; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.3); }
 
-        /* --- Viewport & Slider --- */
-        .rec-viewport {
-          flex: 1;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .rec-slider {
-          display: flex;
-          width: 100%; height: 100%;
-          transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-          will-change: transform;
-        }
+        /* Slider/Grid */
+        .rec-viewport { flex: 1; position: relative; overflow: hidden; }
+        .rec-slider { display: flex; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; }
+        .rec-panel { flex: 0 0 100%; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; box-sizing: border-box; }
+        .rec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        @media (min-width: 600px) { .rec-grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .rec-panel {
-          flex: 0 0 100%;
-          width: 100%;
-          height: 100%;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-          padding: 20px;
-          box-sizing: border-box;
-        }
-
-        /* --- Grid --- */
-        .rec-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          padding-bottom: 40px;
-        }
-
-        @media (min-width: 600px) {
-           .rec-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
-        /* --- Food Card Style --- */
+        /* --- COMPACT LUXURY CARD --- */
         .food-card {
-          position: relative;
           background: #fff;
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02);
-          transition: transform 0.2s, box-shadow 0.2s;
-          user-select: none;
-          /* GPU accel for smooth gesture animation */
-          transform: translateZ(0); 
+          box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+          transition: transform 0.15s ease-out;
+          position: relative;
+          cursor: pointer;
         }
+        .food-card:active { transform: scale(0.96); }
 
-        .food-card:active {
-          transform: scale(0.96);
-        }
-
-        .img-wrapper {
+        .card-image-wrap {
           position: relative;
           width: 100%;
-          padding-top: 85%; /* Aspect Ratio */
+          padding-top: 100%; /* 1:1 Aspect Ratio */
+          background: #e2e8f0;
         }
-        
-        .img-wrapper img {
+        .card-image-wrap img {
+          position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        }
+
+        /* Overlay Gradient for text legibility if needed, mostly clean though */
+        .card-overlay {
           position: absolute; inset: 0;
-          width: 100%; height: 100%;
-          object-fit: cover;
+          background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.05) 100%);
         }
 
-        /* Gradient overlay for text readability if over image */
-        .card-badge {
-          position: absolute; top: 10px; right: 10px;
-          background: rgba(255,255,255,0.9);
+        /* Floating Badge Top Left */
+        .card-cal-badge {
+          position: absolute; top: 10px; left: 10px;
+          background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+          padding: 4px 8px; border-radius: 10px;
+          font-size: 10px; font-weight: 700; color: #0f172a;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        /* Floating Action Button Bottom Right */
+        .card-fab {
+          position: absolute; bottom: 8px; right: 8px;
+          width: 32px; height: 32px;
+          border-radius: 12px;
+          background: rgba(15, 23, 42, 0.9);
           backdrop-filter: blur(4px);
-          padding: 4px 8px;
-          border-radius: 8px;
-          font-size: 10px; font-weight: 700;
-          color: #3b82f6;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          color: white; border: none;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          z-index: 2;
         }
 
-        .card-content {
-          padding: 12px;
+        .card-details {
+          padding: 10px 12px;
         }
-
         .card-title {
-          font-size: 15px; font-weight: 700;
-          margin-bottom: 4px;
+          font-size: 14px; font-weight: 700; color: #1e293b;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        .card-desc {
-          font-size: 11px; color: #94a3b8;
-          margin-bottom: 8px;
+        .card-sub {
+          font-size: 11px; font-weight: 500; color: #94a3b8; margin-top: 2px;
         }
 
-        .card-footer {
-          display: flex; align-items: center; justify-content: space-between;
+        /* --- SKELETON --- */
+        .sk-card { background: #fff; border-radius: 20px; overflow: hidden; }
+        .sk-img { padding-top: 100%; background: #f1f5f9; animation: pulse 1.5s infinite; }
+        .sk-txt { height: 10px; background: #f1f5f9; margin: 10px 12px; border-radius: 5px; width: 60%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 50% { opacity: 0.6; } }
+
+        /* --- LUXURY MODAL --- */
+        .modal-overlay {
+          position: fixed; inset: 0; z-index: 100;
+          background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+          display: flex; align-items: flex-end; justify-content: center;
+          animation: fadeIn 0.3s ease;
         }
         
-        .card-price {
-          font-size: 14px; font-weight: 800; color: #334155;
-        }
-        
-        .add-btn {
-          width: 28px; height: 28px;
-          border-radius: 50%;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
-        }
-
-        /* --- Skeleton --- */
-        .skeleton-card {
-          background: #fff; border-radius: 20px; 
+        .modal-card {
+          width: 100%; max-width: 500px;
+          background: #fff;
+          border-radius: 32px 32px 0 0;
           overflow: hidden;
-          padding: 10px;
+          box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex; flex-direction: column;
+          max-height: 90vh;
         }
-        .sk-img {
-          width: 100%; height: 120px; 
-          background: #e2e8f0; border-radius: 14px; margin-bottom: 10px;
-          animation: pulse 1.5s infinite ease-in-out;
-        }
-        .sk-line {
-          height: 10px; background: #e2e8f0; border-radius: 5px;
-          margin-bottom: 6px;
-          animation: pulse 1.5s infinite ease-in-out;
-          width: 80%;
-        }
-        .sk-line.short { width: 50%; }
 
-        @keyframes pulse {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; }
-          100% { opacity: 0.6; }
+        .modal-hero {
+          position: relative;
+          height: 280px;
         }
+        .modal-hero img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .modal-close {
+          position: absolute; top: 16px; right: 16px;
+          width: 36px; height: 36px; background: rgba(0,0,0,0.2);
+          backdrop-filter: blur(4px); border-radius: 50%; border: none;
+          color: white; display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+        }
+
+        .modal-body {
+          padding: 24px;
+          overflow-y: auto;
+        }
+        
+        .modal-title { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 8px; line-height: 1.1; }
+        .modal-cal { font-size: 16px; font-weight: 600; color: #3b82f6; margin-bottom: 20px; }
+        
+        .modal-desc {
+          font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 24px;
+        }
+
+        .macros-row {
+          display: flex; gap: 12px; margin-bottom: 30px;
+        }
+        .macro-chip {
+          flex: 1; background: #f8fafc; padding: 12px; border-radius: 16px;
+          text-align: center; border: 1px solid #e2e8f0;
+        }
+        .macro-val { font-size: 16px; font-weight: 800; color: #334155; display: block; }
+        .macro-lbl { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .modal-cta {
+          width: 100%; padding: 16px;
+          background: #0f172a; color: white; border: none;
+          border-radius: 20px; font-size: 16px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+          cursor: pointer; transition: transform 0.2s;
+        }
+        .modal-cta:active { transform: scale(0.98); }
+
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
 		</div>
 	);
 }
 
-// --- Sub-components for cleaner code ---
-
-function FoodCard({ item, onLongPress }) {
-	// Long press hook implementation
-	const timerRef = useRef(null);
-
-	const startPress = () => {
-		timerRef.current = setTimeout(() => {
-			onLongPress();
-		}, 600); // 600ms long press
-	};
-
-	const endPress = () => {
-		if (timerRef.current) {
-			clearTimeout(timerRef.current);
-			timerRef.current = null;
-		}
-	};
-
+// --- Compact Food Card ---
+function FoodCard({ item, onClick }) {
 	return (
-		<div
-			className="food-card"
-			onTouchStart={startPress}
-			onTouchEnd={endPress}
-			onMouseDown={startPress}
-			onMouseUp={endPress}
-			onMouseLeave={endPress}
-		>
-			<div className="img-wrapper">
+		<div className="food-card" onClick={onClick}>
+			<div className="card-image-wrap">
 				<img src={item.img} alt={item.title} loading="lazy" />
-				<div className="card-badge">{item.calories}</div>
+				<div className="card-overlay" />
+
+				{/* Floating Metadata */}
+				<div className="card-cal-badge">{item.calories} kcal</div>
+
+				{/* Integrated Action Button */}
+				<button
+					className="card-fab"
+					onClick={(e) => {
+						e.stopPropagation();
+						alert("Quick Add!");
+					}}
+				>
+					<FiPlus />
+				</button>
 			</div>
-			<div className="card-content">
+
+			<div className="card-details">
 				<div className="card-title">{item.title}</div>
-				<div className="card-desc">{item.desc}</div>
-				<div className="card-footer">
-					<span className="card-price">{item.price}</span>
-					<button className="add-btn">
-						<FiPlus />
-					</button>
-				</div>
+				<div className="card-sub">Perfect for lunch</div>
 			</div>
 		</div>
 	);
 }
 
-function SkeletonCard() {
+// --- Skeleton Placeholder ---
+function SkeletonGrid() {
 	return (
-		<div className="skeleton-card">
-			<div className="sk-img"></div>
-			<div className="sk-line"></div>
-			<div className="sk-line short"></div>
+		<>
+			{[1, 2].map((i) => (
+				<div className="sk-card" key={i}>
+					<div className="sk-img" />
+					<div className="sk-txt" />
+				</div>
+			))}
+		</>
+	);
+}
+
+// --- Luxury Modal Component ---
+function FoodModal({ item, onClose }) {
+	// Prevent background scroll
+	useEffect(() => {
+		document.body.style.overflow = "hidden";
+		return () => (document.body.style.overflow = "");
+	}, []);
+
+	return (
+		<div className="modal-overlay" onClick={onClose}>
+			<div className="modal-card" onClick={(e) => e.stopPropagation()}>
+				{/* Hero Image */}
+				<div className="modal-hero">
+					<img src={item.img} alt={item.title} />
+					<button className="modal-close" onClick={onClose}>
+						<FiX size={20} />
+					</button>
+				</div>
+
+				{/* Content Body */}
+				<div className="modal-body">
+					<div className="modal-title">{item.title}</div>
+					<div className="modal-cal">
+						{item.calories} kcal · Healthy Choice
+					</div>
+
+					<p className="modal-desc">{item.desc}</p>
+
+					{/* Nutrition Info */}
+					<div className="macros-row">
+						<div className="macro-chip">
+							<span className="macro-val">{item.macros.p}g</span>
+							<span className="macro-lbl">Protein</span>
+						</div>
+						<div className="macro-chip">
+							<span className="macro-val">{item.macros.c}g</span>
+							<span className="macro-lbl">Carbs</span>
+						</div>
+						<div className="macro-chip">
+							<span className="macro-val">{item.macros.f}g</span>
+							<span className="macro-lbl">Fat</span>
+						</div>
+					</div>
+
+					<button
+						className="modal-cta"
+						onClick={() => {
+							alert("Added!");
+							onClose();
+						}}
+					>
+						<FiCheck size={20} />
+						Add to Diary
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }
