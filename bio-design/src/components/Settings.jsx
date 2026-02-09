@@ -1,230 +1,174 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	FiChevronRight,
 	FiLogOut,
 	FiUser,
 	FiTarget,
-	FiHelpCircle,
+	FiSettings,
 	FiSmartphone,
+	FiHelpCircle,
+	FiMoon,
+	FiBell,
 } from "react-icons/fi";
 import "./settings/settings.css";
 import LogoutModal from "./settings/LogoutModal";
 
+const SettingItem = ({
+	icon: Icon,
+	color,
+	title,
+	sub,
+	badge,
+	onClick,
+	isDestructive,
+}) => (
+	<div
+		className={`setting-item interactive ${isDestructive ? "destructive" : ""}`}
+		onClick={onClick}
+	>
+		<div
+			className="setting-icon-box"
+			style={{
+				background: isDestructive ? "rgba(239, 68, 68, 0.1)" : color,
+			}}
+		>
+			<Icon
+				className="icon-svg"
+				style={{ color: isDestructive ? "#ef4444" : "#fff" }}
+			/>
+		</div>
+		<div className="setting-info">
+			<div className="setting-title">{title}</div>
+			{sub && <div className="setting-sub">{sub}</div>}
+		</div>
+		<div className="setting-action">
+			{badge && <span className="setting-badge">{badge}</span>}
+			<FiChevronRight className="chevron" />
+		</div>
+	</div>
+);
+
 export default function Settings({ onNavigate }) {
-	const [devicesActiveCount, setDevicesActiveCount] = React.useState(2);
-	const [toast, setToast] = React.useState(null);
-	const [logoutOpen, setLogoutOpen] = React.useState(false);
+	const [devicesActiveCount] = useState(2);
+	const [toast, setToast] = useState(null);
+	const [logoutOpen, setLogoutOpen] = useState(false);
 
 	function showToast(msg) {
 		setToast(msg);
 		setTimeout(() => setToast(null), 2000);
 	}
 
-	function navigateTo(page) {
-		onNavigate(page);
-	}
-
 	return (
 		<div className="settings-root">
-			<div className="settings-header">
-				<h1>Settings</h1>
-			</div>
+			{/* Animated Background Elements */}
+			<div className="bg-blob blob-1" />
+			<div className="bg-blob blob-2" />
 
-			<div className="settings-scroll">
-				{/* Profile Bar */}
-				<div
-					className="profile-bar"
-					role="button"
-					tabIndex={0}
-					onClick={() => navigateTo("settings-profile")}
-				>
-					<div className="profile-avatar">DE</div>
-					<div className="profile-meta">
-						<div className="profile-name">
-							Dekomori{" "}
-							<span
-								style={{
-									color: "#3b82f6",
-									fontWeight: 700,
-									fontSize: 13,
-								}}
-							>
-								Premium Member
-							</span>
-						</div>
-						<div className="profile-badges">
-							<div className="badge">Daily Plan</div>
-							<div className="badge">Auto Log</div>
-						</div>
-					</div>
-					<div className="item-right">
-						<div className="setting-sub">Manage account</div>
-						<FiChevronRight />
-					</div>
-				</div>
+			<div className="settings-container">
+				<header className="page-header">
+					<h1>Settings</h1>
+				</header>
 
-				<div className="settings-list">
+				<div className="scroll-content">
+					{/* Premium Profile Card */}
 					<div
-						className="setting-item"
-						onClick={() => navigateTo("settings-profile")}
+						className="profile-card interactive"
+						onClick={() => onNavigate("settings-profile")}
 					>
-						<div
-							style={{
-								display: "flex",
-								gap: 12,
-								alignItems: "center",
-							}}
-						>
-							<div className="setting-icon">
-								<FiUser />
-							</div>
-							<div>
-								<div className="setting-title">
-									Profile & Body Stats
+						<div className="profile-glass-layer">
+							<div className="profile-row">
+								<div className="avatar">DE</div>
+								<div className="profile-details">
+									<div className="name">Dekomori</div>
+									<div className="membership">
+										<span className="star-icon">★</span>{" "}
+										Premium Member
+									</div>
 								</div>
-								<div className="setting-sub">
-									Edit name, weight, height
+								<div className="edit-btn">Edit</div>
+							</div>
+							<div className="profile-stats">
+								<div className="stat">
+									<span className="val">12</span>
+									<span className="lbl">Streak</span>
+								</div>
+								<div className="stat">
+									<span className="val">Daily</span>
+									<span className="lbl">Plan</span>
+								</div>
+								<div className="stat">
+									<span className="val">85%</span>
+									<span className="lbl">Goal</span>
 								</div>
 							</div>
-						</div>
-						<div className="item-right">
-							<FiChevronRight />
 						</div>
 					</div>
 
-					<div
-						className="setting-item"
-						onClick={() => navigateTo("settings-goals")}
-					>
-						<div
-							style={{
-								display: "flex",
-								gap: 12,
-								alignItems: "center",
-							}}
-						>
-							<div className="setting-icon">🎯</div>
-							<div>
-								<div className="setting-title">
-									Nutritional Goals
-								</div>
-								<div className="setting-sub">
-									Set calorie & macros targets
-								</div>
-							</div>
-						</div>
-						<div className="item-right">
-							<FiChevronRight />
-						</div>
+					{/* Section: Account */}
+					<div className="section-label">Account</div>
+					<div className="settings-group">
+						<SettingItem
+							icon={FiUser}
+							color="linear-gradient(135deg, #3b82f6, #2563eb)"
+							title="Personal Data"
+							sub="Name, weight, height"
+							onClick={() => onNavigate("settings-profile")}
+						/>
+						<SettingItem
+							icon={FiTarget}
+							color="linear-gradient(135deg, #f97316, #ea580c)"
+							title="Nutritional Goals"
+							sub="Calories & macro targets"
+							onClick={() => onNavigate("settings-goals")}
+						/>
 					</div>
 
-					<div
-						className="setting-item"
-						onClick={() => navigateTo("settings-preferences")}
-					>
-						<div
-							style={{
-								display: "flex",
-								gap: 12,
-								alignItems: "center",
-							}}
-						>
-							<div className="setting-icon">⚙️</div>
-							<div>
-								<div className="setting-title">Preferences</div>
-								<div className="setting-sub">
-									App, notifications, privacy
-								</div>
-							</div>
-						</div>
-						<div className="item-right">
-							<FiChevronRight />
-						</div>
+					{/* Section: App Preferences */}
+					<div className="section-label">Preferences</div>
+					<div className="settings-group">
+						<SettingItem
+							icon={FiBell}
+							color="linear-gradient(135deg, #8b5cf6, #7c3aed)"
+							title="Notifications"
+							sub="Reminders & alerts"
+							onClick={() => onNavigate("settings-preferences")}
+						/>
+						<SettingItem
+							icon={FiSmartphone}
+							color="linear-gradient(135deg, #10b981, #059669)"
+							title="Devices"
+							badge={`${devicesActiveCount} Active`}
+							onClick={() => onNavigate("settings-devices")}
+						/>
+						<SettingItem
+							icon={FiSettings}
+							color="linear-gradient(135deg, #64748b, #475569)"
+							title="General"
+							sub="Language, units, theme"
+							onClick={() => onNavigate("settings-preferences")}
+						/>
 					</div>
 
-					<div
-						className="setting-item"
-						onClick={() => navigateTo("settings-devices")}
-					>
-						<div
-							style={{
-								display: "flex",
-								gap: 12,
-								alignItems: "center",
-							}}
-						>
-							<div className="setting-icon">
-								<FiSmartphone />
-							</div>
-							<div>
-								<div className="setting-title">
-									Connected Devices
-								</div>
-								<div className="setting-sub">
-									{devicesActiveCount} Active
-								</div>
-							</div>
-						</div>
-						<div className="item-right">
-							<div className="active-badge">
-								{devicesActiveCount} Active
-							</div>
-							<FiChevronRight />
-						</div>
+					{/* Section: Support */}
+					<div className="section-label">Support</div>
+					<div className="settings-group">
+						<SettingItem
+							icon={FiHelpCircle}
+							color="linear-gradient(135deg, #ec4899, #db2777)"
+							title="Help & Support"
+							onClick={() => onNavigate("settings-help")}
+						/>
+						<SettingItem
+							icon={FiLogOut}
+							color="transparent"
+							title="Log Out"
+							isDestructive
+							onClick={() => setLogoutOpen(true)}
+						/>
 					</div>
 
-					<div
-						className="setting-item"
-						onClick={() => navigateTo("settings-help")}
-					>
-						<div
-							style={{
-								display: "flex",
-								gap: 12,
-								alignItems: "center",
-							}}
-						>
-							<div className="setting-icon">
-								<FiHelpCircle />
-							</div>
-							<div>
-								<div className="setting-title">
-									Help & Support
-								</div>
-								<div className="setting-sub">
-									Get help or open a support ticket
-								</div>
-							</div>
-						</div>
-						<div className="item-right">
-							<FiChevronRight />
-						</div>
-					</div>
-
-					<div
-						className="setting-item"
-						onClick={() => setLogoutOpen(true)}
-					>
-						<div
-							style={{
-								display: "flex",
-								gap: 12,
-								alignItems: "center",
-							}}
-						>
-							<div className="setting-icon">⎋</div>
-							<div>
-								<div className="setting-title logout">
-									Log Out
-								</div>
-								<div className="setting-sub">
-									Sign out of this device
-								</div>
-							</div>
-						</div>
-						<div className="item-right">
-							<FiLogOut />
-						</div>
+					<div className="version-info">
+						BioAI v2.4.0 • Build 2940
 					</div>
 				</div>
 			</div>
@@ -234,9 +178,7 @@ export default function Settings({ onNavigate }) {
 				onClose={() => setLogoutOpen(false)}
 			/>
 
-			<div className={`toast ${toast ? "show" : ""}`} role="status">
-				{toast}
-			</div>
+			<div className={`toast ${toast ? "show" : ""}`}>{toast}</div>
 		</div>
 	);
 }
