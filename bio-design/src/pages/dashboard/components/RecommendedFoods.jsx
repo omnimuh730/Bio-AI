@@ -1,5 +1,5 @@
 import React from "react";
-import "./dashboard/recommended.css";
+import "../styles/recommended.css";
 import { FiChevronLeft } from "react-icons/fi";
 
 const CATEGORIES = [

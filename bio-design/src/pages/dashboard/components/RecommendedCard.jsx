@@ -1,5 +1,4 @@
-import React from "react";
-import "./recommended.css";
+import "../styles/recommended.css";
 import { FiChevronRight } from "react-icons/fi";
 
 export default function RecommendedCard({ onOpen }) {

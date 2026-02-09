@@ -1,9 +1,9 @@
-import "./dashboard.css";
-import Header from "./dashboard/Header";
-import ScoreRing from "./dashboard/ScoreRing";
-import LiveVitals from "./dashboard/LiveVitals";
-import QuickLog from "./dashboard/QuickLog";
-import RecommendedCard from "./dashboard/RecommendedCard";
+import "./styles/dashboard.css";
+import Header from "./components/Header";
+import ScoreRing from "./components/ScoreRing";
+import LiveVitals from "./components/LiveVitals";
+import QuickLog from "./components/QuickLog";
+import RecommendedCard from "./components/RecommendedCard";
 
 export default function Dashboard({ onNavigate }) {
 	const handleNavigate = (page) => {

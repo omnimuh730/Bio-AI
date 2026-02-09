@@ -1,9 +1,9 @@
 import "./index.css";
 import "./splash.css";
 import "./App.css";
-import Splash from "./components/Splash";
-import Onboarding from "./components/Onboarding";
-import Home from "./components/Home";
+import Splash from "./pages/Splash";
+import Onboarding from "./pages/Onboarding";
+import Home from "./pages/Home";
 import { useState } from "react";
 
 export default function App() {

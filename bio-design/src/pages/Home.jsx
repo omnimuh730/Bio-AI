@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../home.css";
-import Dashboard from "./Dashboard";
+import Dashboard from "./dashboard";
 import Capture from "./Capture";
 import Planner from "./Planner";
 import Analytics from "./Analytics";
@@ -10,8 +10,8 @@ import DevicesPage from "./settings/DevicesPage";
 import PreferencesPage from "./settings/PreferencesPage";
 import GoalsPage from "./settings/GoalsPage";
 import HelpPage from "./settings/HelpPage";
-import RecommendedFoods from "./RecommendedFoods";
-import BottomNav from "./dashboard/BottomNav";
+import RecommendedFoods from "./dashboard/components/RecommendedFoods";
+import BottomNav from "./utils/BottomNav";
 
 export default function Home() {
 	const [tab, setTab] = useState("dashboard");
