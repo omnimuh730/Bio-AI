@@ -1,8 +1,7 @@
 import "./index.css";
-import "./splash.css";
 import "./App.css";
-import Splash from "./pages/Splash";
-import Onboarding from "./pages/Onboarding";
+import Splash from "./pages/splash";
+import Onboarding from "./pages/onboarding";
 import Home from "./pages/Home";
 import { useState } from "react";
 

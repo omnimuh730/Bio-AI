@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import "../home.css";
 import Dashboard from "./dashboard";
-import Capture from "./Capture";
-import Planner from "./Planner";
-import Analytics from "./Analytics";
-import Settings from "./Settings";
-import ProfilePage from "./settings/ProfilePage";
-import DevicesPage from "./settings/DevicesPage";
-import PreferencesPage from "./settings/PreferencesPage";
-import GoalsPage from "./settings/GoalsPage";
-import HelpPage from "./settings/HelpPage";
+import Capture from "./capture";
+import Planner from "./planner";
+import Analytics from "./analytics";
+import Settings from "./settings";
+import ProfilePage from "./settings/components/ProfilePage";
+import DevicesPage from "./settings/components/DevicesPage";
+import PreferencesPage from "./settings/components/PreferencesPage";
+import GoalsPage from "./settings/components/GoalsPage";
+import HelpPage from "./settings/components/HelpPage";
 import RecommendedFoods from "./dashboard/components/RecommendedFoods";
 import BottomNav from "./utils/BottomNav";
 

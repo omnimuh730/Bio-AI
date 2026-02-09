@@ -10,8 +10,8 @@ import {
 	FiMoon,
 	FiBell,
 } from "react-icons/fi";
-import "./settings/settings.css";
-import LogoutModal from "./settings/LogoutModal";
+import "./styles/settings.css";
+import LogoutModal from "./components/LogoutModal";
 
 const SettingItem = ({
 	icon: Icon,

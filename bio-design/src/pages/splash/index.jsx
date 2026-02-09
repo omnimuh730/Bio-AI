@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import "../splash.css";
+import "./splash.css";
 
 import { FiSearch } from "react-icons/fi";
 

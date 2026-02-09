@@ -1,11 +1,5 @@
-import React, {
-	useMemo,
-	useState,
-	useRef,
-	useEffect,
-	useCallback,
-} from "react";
-import "../onboarding.css";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import "./onboarding.css";
 
 const GOALS = [
 	{ id: "lose", label: "Lose Weight" },
