@@ -2,7 +2,16 @@
 
 :root {
 	font-family: "Manrope", "Segoe UI", system-ui, sans-serif;
-	line-height: 1.5;
+	/* Mobile-friendly typographic scale */
+	--fs-xs: 12px;
+	--fs-sm: 13px;
+	--fs-md: 14px; /* base */
+	--fs-lg: 16px;
+	--fs-xl: 18px;
+	--fs-xxl: 24px;
+	--fs-score: 36px; /* prominent gauge */
+
+	line-height: 1.45;
 	font-weight: 400;
 	color: #1f1c1a;
 	background-color: #fff6f2;
@@ -29,7 +38,41 @@ body {
 	margin: 0;
 	min-width: 320px;
 	min-height: 100vh;
-	background: radial-gradient(circle at 20% 10%, #fff9f4, #f4e7df 55%, #efe0d6 100%);
+	font-size: var(--fs-md);
+	color: var(--ink);
+	background: radial-gradient(
+		circle at 20% 10%,
+		#fff9f4,
+		#f4e7df 55%,
+		#efe0d6 100%
+	);
+}
+
+/* Global typographic helpers */
+h1 {
+	font-size: var(--fs-xxl);
+	margin: 0;
+}
+h2 {
+	font-size: var(--fs-xl);
+	margin: 0;
+}
+h3 {
+	font-size: var(--fs-lg);
+	margin: 0;
+}
+.title {
+	font-size: var(--fs-lg);
+}
+.sub {
+	font-size: var(--fs-sm);
+	color: var(--muted);
+}
+.card-title {
+	font-size: var(--fs-lg);
+}
+.label {
+	font-size: var(--fs-sm);
 }
 
 a {

@@ -32,9 +32,20 @@
 .back-button {
 	background: transparent;
 	border: none;
-	font-size: 18px;
+	font-size: var(--fs-lg);
 	cursor: pointer;
 	padding: 6px;
+}
+.tab {
+	font-size: var(--fs-sm);
+}
+.food-title {
+	font-size: var(--fs-lg);
+	font-weight: 700;
+}
+.food-meta {
+	font-size: var(--fs-sm);
+	color: var(--muted);
 }
 
 .category-tabs {
