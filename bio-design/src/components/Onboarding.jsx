@@ -1,10 +1,16 @@
-import React, { useMemo, useState } from "react";
+import React, {
+	useMemo,
+	useState,
+	useRef,
+	useEffect,
+	useCallback,
+} from "react";
 import "../onboarding.css";
 
 const GOALS = [
-	{ id: "lose", label: "Lose weight" },
-	{ id: "maintain", label: "Maintain" },
-	{ id: "build", label: "Build muscle" },
+	{ id: "lose", label: "Lose Weight" },
+	{ id: "maintain", label: "Maintain Health" },
+	{ id: "build", label: "Build Muscle" },
 ];
 
 const ALLERGIES = ["Nuts", "Dairy", "Gluten", "Shellfish", "Eggs"];
@@ -24,201 +30,147 @@ export default function Onboarding({ onFinish }) {
 	const [step, setStep] = useState(0);
 	const [goal, setGoal] = useState(null);
 	const [allergies, setAllergies] = useState([]);
-	const [tagState, setTagState] = useState(() => ({}));
-	const [pressedTag, setPressedTag] = useState(null);
-	const steps = 5;
+	const [tagState, setTagState] = useState({});
+	const totalSteps = 5;
 
-	// refs for swipe handling
-	const slidesRef = React.useRef(null);
-	const progressRef = React.useRef(null);
-	const dragRef = React.useRef({
+	// Refs for drag physics
+	const slidesRef = useRef(null);
+	const viewportRef = useRef(null);
+	const dragRef = useRef({
 		active: false,
 		startX: 0,
-		deltaX: 0,
-		width: 0,
-		pointerId: null,
-		lastX: 0,
-		lastTime: 0,
-		velocity: 0,
+		currentX: 0,
+		startTime: 0,
 	});
 
-	const updateProgress = React.useCallback(
-		(s, delta = 0) => {
-			if (!slidesRef.current || !progressRef.current) return;
-			const w =
-				slidesRef.current.parentElement?.clientWidth ||
-				slidesRef.current.clientWidth ||
-				1;
-			const fractional = Math.min(steps - 1, Math.max(0, s - delta / w));
-			const pct = (fractional / (steps - 1)) * 100;
-			progressRef.current.style.width = `${pct}%`;
-		},
-		[steps],
-	);
+	// --- Animation Logic ---
 
-	const updateTransform = React.useCallback(
-		(s, delta = 0) => {
-			if (!slidesRef.current) return;
-			const w =
-				slidesRef.current.parentElement?.clientWidth ||
-				slidesRef.current.clientWidth;
-			const tx = Math.round(-(s * w) + delta);
-			slidesRef.current.style.transform = `translateX(${tx}px)`;
-			updateProgress(s, delta);
-		},
-		[updateProgress],
-	);
+	// Calculates the CSS transform based on current step and drag delta
+	const updateTransform = useCallback((currentStep, deltaX = 0) => {
+		if (!slidesRef.current || !viewportRef.current) return;
+
+		// Crucial fix: Measure exact visual width of the viewport
+		const width = viewportRef.current.getBoundingClientRect().width;
+
+		// Calculate position: -(Step * Width) + DragDelta
+		const translateX = -(currentStep * width) + deltaX;
+
+		slidesRef.current.style.transform = `translateX(${translateX}px)`;
+	}, []);
+
+	// Handle Resize: Recalculate position if window size changes
+	useEffect(() => {
+		const handleResize = () => updateTransform(step, 0);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, [step, updateTransform]);
+
+	// Sync step changes (when not dragging)
+	useEffect(() => {
+		if (slidesRef.current) {
+			slidesRef.current.style.transition =
+				"transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
+		}
+		updateTransform(step, 0);
+	}, [step, updateTransform]);
+
+	// --- Swipe / Touch Handlers ---
 
 	const onPointerDown = (e) => {
-		// If the pointerdown starts on an interactive control, don't start a drag
-		const el = e.target;
-		if (
-			el &&
-			el.closest &&
-			el.closest(
-				"button, input, label, .ghost, .dot, .chip, .option-card",
-			)
-		) {
-			return;
-		}
-		if (!slidesRef.current) return;
+		// Ignore swipe if clicking a button/interactive element
+		if (e.target.closest("button, input, label, .interactive")) return;
+
 		dragRef.current = {
 			active: true,
 			startX: e.clientX,
-			deltaX: 0,
-			width:
-				slidesRef.current.parentElement?.clientWidth ||
-				slidesRef.current.clientWidth,
-			pointerId: e.pointerId,
-			captured: false,
-			lastX: e.clientX,
-			lastTime: performance.now(),
-			velocity: 0,
+			currentX: e.clientX,
+			startTime: Date.now(),
 		};
-		slidesRef.current.style.transition = "none";
+
+		// Disable transition for instant follow
+		if (slidesRef.current) {
+			slidesRef.current.style.transition = "none";
+		}
 	};
 
 	const onPointerMove = (e) => {
 		if (!dragRef.current.active) return;
+
 		const delta = e.clientX - dragRef.current.startX;
-		const now = performance.now();
-		const dt = Math.max(16, now - dragRef.current.lastTime);
-		dragRef.current.velocity = (e.clientX - dragRef.current.lastX) / dt;
-		dragRef.current.lastX = e.clientX;
-		dragRef.current.lastTime = now;
-		dragRef.current.deltaX = delta;
-		// only engage capture when a clear horizontal drag starts; this prevents
-		// accidental capture on taps so buttons remain clickable
-		if (!dragRef.current.captured && Math.abs(delta) > 8) {
-			try {
-				slidesRef.current.setPointerCapture?.(e.pointerId);
-				dragRef.current.captured = true;
-				slidesRef.current.classList.add("dragging");
-			} catch {
-				/* ignore */
-			}
-		}
-		if (dragRef.current.captured) {
-			// lock to horizontal when user drags horizontally
-			e.preventDefault();
-			updateTransform(step, delta);
-		}
+		dragRef.current.currentX = e.clientX;
+
+		// Prevent dragging past bounds with resistance
+		const isFirst = step === 0 && delta > 0;
+		const isLast = step === totalSteps - 1 && delta < 0;
+
+		const effectiveDelta = isFirst || isLast ? delta * 0.3 : delta; // Resistance
+
+		updateTransform(step, effectiveDelta);
 	};
 
-	const onPointerUp = () => {
-		if (!dragRef.current.active || !slidesRef.current) return;
-		const { deltaX, width, pointerId, captured, velocity } =
-			dragRef.current;
-		// if we never engaged capture, treat this as a tap and do nothing
-		if (!captured) {
-			dragRef.current = {
-				active: false,
-				startX: 0,
-				deltaX: 0,
-				width: 0,
-				pointerId: null,
-			};
-			return;
-		}
-		slidesRef.current.classList.remove("dragging");
-		slidesRef.current.style.transition = "transform 320ms ease";
-		try {
-			slidesRef.current.releasePointerCapture?.(pointerId);
-		} catch {
-			/* ignore */
+	const onPointerUp = (e) => {
+		if (!dragRef.current.active) return;
+		dragRef.current.active = false;
+
+		const delta = e.clientX - dragRef.current.startX;
+		const duration = Date.now() - dragRef.current.startTime;
+		const width =
+			viewportRef.current?.getBoundingClientRect().width ||
+			window.innerWidth;
+
+		// Thresholds for swipe:
+		// 1. Dragged more than 30% of screen
+		// 2. Fast swipe (short duration + moderate distance)
+		const threshold = width * 0.3;
+		const isFastSwipe = duration < 250 && Math.abs(delta) > 20;
+
+		if (slidesRef.current) {
+			slidesRef.current.style.transition =
+				"transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
 		}
 
-		const threshold = Math.max(50, width * 0.18);
-		const projected = deltaX + velocity * 220;
-		if (projected < -threshold && step < steps - 1) {
+		if (
+			(delta < -threshold || (isFastSwipe && delta < 0)) &&
+			step < totalSteps - 1
+		) {
 			setStep((s) => s + 1);
-		} else if (projected > threshold && step > 0) {
+		} else if (
+			(delta > threshold || (isFastSwipe && delta > 0)) &&
+			step > 0
+		) {
 			setStep((s) => s - 1);
 		} else {
+			// Revert
 			updateTransform(step, 0);
 		}
-		dragRef.current = {
-			active: false,
-			startX: 0,
-			deltaX: 0,
-			width: 0,
-			pointerId: null,
-		};
 	};
 
-	// sync visual position when step changes (if not dragging)
-	React.useEffect(() => {
-		if (dragRef.current.active) return;
-		if (slidesRef.current)
-			slidesRef.current.style.transition = "transform 320ms ease";
-		updateTransform(step, 0);
-	}, [step, updateTransform]);
-
-	React.useEffect(() => {
-		const onResize = () => updateTransform(step, 0);
-		window.addEventListener("resize", onResize);
-		return () => window.removeEventListener("resize", onResize);
-	}, [step, updateTransform]);
-
-	// NOTE: We intentionally do NOT auto-finish onboarding even if a previous
-	// completion flag exists. This makes the flow re-discoverable for users
-	// who want to reconfigure preferences. Previously we auto-called onFinish
-	// here which caused onboarding to show and then immediately disappear.
+	// --- Data Handlers ---
 
 	const toggleAllergy = (a) => {
-		setAllergies((cur) =>
-			cur.includes(a) ? cur.filter((x) => x !== a) : [...cur, a],
+		setAllergies((prev) =>
+			prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a],
 		);
 	};
 
 	const toggleTag = (t) => {
-		setTagState((cur) => {
-			const v = cur[t] || 0;
-			const next = v === 0 ? 1 : v === 1 ? -1 : 0; // 0 -> liked(1) -> disliked(-1) -> 0
-			return { ...cur, [t]: next };
+		setTagState((prev) => {
+			const val = prev[t] || 0;
+			// Cycle: 0 (neutral) -> 1 (like) -> -1 (dislike) -> 0
+			const nextVal = val === 0 ? 1 : val === 1 ? -1 : 0;
+			return { ...prev, [t]: nextVal };
 		});
 	};
 
-	const next = () => setStep((s) => Math.min(steps - 1, s + 1));
-	const prev = () => setStep((s) => Math.max(0, s - 1));
-	const skip = () => {
-		try {
-			localStorage.setItem("bioai:onboarded", "1");
-		} catch (err) {
-			console.warn("skip save failed", err);
-		}
-		if (typeof onFinish === "function") onFinish();
-	};
-
-	const finish = () => {
+	const handleFinish = () => {
 		const payload = { goal, allergies, tags: tagState };
 		try {
 			localStorage.setItem("bioai:onboarded", "1");
 			localStorage.setItem("bioai:profile", JSON.stringify(payload));
-		} catch (err) {
-			console.warn("save profile failed", err);
+		} catch (e) {
+			console.warn(e);
 		}
-		if (typeof onFinish === "function") onFinish();
+		if (onFinish) onFinish();
 	};
 
 	const likedTags = useMemo(
@@ -230,169 +182,196 @@ export default function Onboarding({ onFinish }) {
 		[tagState],
 	);
 
+	// --- Render Helpers ---
+
 	return (
 		<div className="onboarding-root">
-			<div className="progress-row">
-				<div
-					ref={progressRef}
-					className="progress"
-					style={{ width: `${(step / (steps - 1)) * 100}%` }}
-				/>
+			{/* 1. Top Progress Bar */}
+			<div className="progress-container">
+				<div className="progress-track">
+					<div
+						className="progress-fill"
+						style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+					/>
+				</div>
 			</div>
-			<div className="slides-viewport">
+
+			{/* 2. Main Slider Viewport */}
+			<div className="slides-viewport" ref={viewportRef}>
 				<div
+					className="slides"
 					ref={slidesRef}
-					className={`slides step-${step}`}
 					onPointerDown={onPointerDown}
 					onPointerMove={onPointerMove}
 					onPointerUp={onPointerUp}
 					onPointerCancel={onPointerUp}
+					onPointerLeave={onPointerUp}
 				>
-					{/* 0 - Intro */}
+					{/* Step 0: Welcome */}
 					<div className="slide">
-						<div className="onboarding-card">
+						<div className="card-content">
 							<h2>
 								Welcome to <span className="accent">bioai</span>
 							</h2>
 							<p className="muted">
-								We'll ask a few quick questions to personalize
-								recommendations.
+								Your personal health companion. Let's get to
+								know you better in just 30 seconds.
 							</p>
-							<button className="next-btn" onClick={next}>
-								Get started
+							<button
+								className="start-btn interactive"
+								onClick={() => setStep(1)}
+							>
+								Get Started
 							</button>
 						</div>
 					</div>
 
-					{/* 1 - Goal */}
+					{/* Step 1: Goal */}
 					<div className="slide">
-						<div className="onboarding-card">
-							<h3>What's your main goal?</h3>
-							<div className="options-row">
+						<div className="card-content">
+							<h3>What's your focus?</h3>
+							<p className="muted">
+								We'll tailor recommendations to this.
+							</p>
+							<div className="options-grid">
 								{GOALS.map((g) => (
 									<button
 										key={g.id}
-										className={`option-card ${goal === g.id ? "active" : ""}`}
+										className={`option-btn interactive ${goal === g.id ? "selected" : ""}`}
 										onClick={() => setGoal(g.id)}
 									>
 										{g.label}
 									</button>
 								))}
 							</div>
-							<div className="hint muted">
-								You can change this later.
-							</div>
 						</div>
 					</div>
 
-					{/* 2 - Allergies */}
+					{/* Step 2: Allergies */}
 					<div className="slide">
-						<div className="onboarding-card">
-							<h3>Any allergies?</h3>
-							<div className="options-col">
+						<div className="card-content">
+							<h3>Any dietary restrictions?</h3>
+							<p className="muted">Select all that apply.</p>
+							<div className="allergy-list">
 								{ALLERGIES.map((a) => (
-									<label
+									<div
 										key={a}
-										className={`check ${allergies.includes(a) ? "checked" : ""}`}
+										className={`allergy-item interactive ${allergies.includes(a) ? "active" : ""}`}
+										onClick={() => toggleAllergy(a)}
 									>
-										<input
-											type="checkbox"
-											checked={allergies.includes(a)}
-											onChange={() => toggleAllergy(a)}
-										/>
 										<span>{a}</span>
-									</label>
+										<div className="checkbox-circle" />
+									</div>
 								))}
 							</div>
-							<div className="hint muted">
-								We'll hide items you're allergic to.
-							</div>
 						</div>
 					</div>
 
-					{/* 3 - Likes / Dislikes */}
+					{/* Step 3: Likes/Dislikes */}
 					<div className="slide">
-						<div className="onboarding-card">
-							<h3>Tell us what you like (tap to like/dislike)</h3>
-							<div className="tiles">
+						<div className="card-content">
+							<h3>Taste Profile</h3>
+							<p className="muted">
+								Tap once to{" "}
+								<span style={{ color: "green" }}>like</span>,
+								twice to{" "}
+								<span style={{ color: "red" }}>dislike</span>.
+							</p>
+							<div className="tag-cloud">
 								{TAGS.map((t) => (
 									<button
 										key={t}
-										className={`chip ${pressedTag === t ? "pressing" : ""} ${tagState[t] === 1 ? "liked" : tagState[t] === -1 ? "disliked" : ""}`}
-										onPointerDown={() => setPressedTag(t)}
-										onPointerUp={() => setPressedTag(null)}
-										onPointerLeave={() =>
-											setPressedTag(null)
-										}
+										className={`tag-chip interactive ${tagState[t] === 1 ? "liked" : tagState[t] === -1 ? "disliked" : ""}`}
 										onClick={() => toggleTag(t)}
 									>
 										{t}
 									</button>
 								))}
 							</div>
-							<div className="hint muted">
-								Green = like, muted = dislike.
-							</div>
 						</div>
 					</div>
 
-					{/* 4 - Summary */}
+					{/* Step 4: Summary */}
 					<div className="slide">
-						<div className="onboarding-card">
+						<div className="card-content">
 							<h3>All set!</h3>
-							<div className="summary">
-								<p>
-									<strong>Goal:</strong> {goal || "Not set"}
-								</p>
-								<p>
-									<strong>Allergies:</strong>{" "}
-									{allergies.length
-										? allergies.join(", ")
-										: "None"}
-								</p>
-								<p>
-									<strong>Likes:</strong>{" "}
-									{likedTags.length
-										? likedTags.join(", ")
-										: "—"}
-								</p>
-								<p>
-									<strong>Dislikes:</strong>{" "}
-									{dislikedTags.length
-										? dislikedTags.join(", ")
-										: "—"}
-								</p>
+							<p className="muted">Here is your BioAI profile.</p>
+
+							<div className="summary-list">
+								<div className="summary-row">
+									<span className="summary-label">Goal</span>
+									<span className="summary-val">
+										{GOALS.find((g) => g.id === goal)
+											?.label || "Not Set"}
+									</span>
+								</div>
+								<div className="summary-row">
+									<span className="summary-label">
+										Allergies
+									</span>
+									<span className="summary-val">
+										{allergies.length
+											? allergies.join(", ")
+											: "None"}
+									</span>
+								</div>
+								<div className="summary-row">
+									<span className="summary-label">Likes</span>
+									<span className="summary-val">
+										{likedTags.length
+											? likedTags.join(", ")
+											: "—"}
+									</span>
+								</div>
+								<div className="summary-row">
+									<span className="summary-label">
+										Dislikes
+									</span>
+									<span className="summary-val">
+										{dislikedTags.length
+											? dislikedTags.join(", ")
+											: "—"}
+									</span>
+								</div>
 							</div>
-							<button className="next-btn" onClick={finish}>
-								Finish
-							</button>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div className="onboarding-controls">
+			{/* 3. Bottom Controls (Navigation) */}
+			<div className="bottom-controls">
 				{step > 0 ? (
-					<button className="ghost" onClick={prev}>
+					<button
+						className="nav-btn"
+						onClick={() => setStep((s) => s - 1)}
+					>
 						Back
 					</button>
 				) : (
-					<button className="ghost" onClick={skip}>
+					<button
+						className="nav-btn"
+						onClick={() => {
+							// Logic to skip or just do nothing
+							handleFinish();
+						}}
+					>
 						Skip
 					</button>
 				)}
-				<div className="dots">
-					{[0, 1, 2, 3, 4].map((i) => (
-						<span
-							key={i}
-							className={`dot ${i === step ? "active" : ""}`}
-							onClick={() => setStep(i)}
-						/>
-					))}
-				</div>
-				<button className="ghost" onClick={step === 4 ? finish : next}>
-					{step === 4 ? "Finish" : "Next"}
-				</button>
+
+				{step > 0 && (
+					<button
+						className={`primary-btn ${step === totalSteps - 1 ? "finish" : ""}`}
+						onClick={
+							step === totalSteps - 1
+								? handleFinish
+								: () => setStep((s) => s + 1)
+						}
+					>
+						{step === totalSteps - 1 ? "Finish Setup" : "Continue"}
+					</button>
+				)}
 			</div>
 		</div>
 	);
