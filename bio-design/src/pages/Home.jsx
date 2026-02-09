@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../home.css";
+import "./home.css";
 import Dashboard from "./dashboard";
 import Capture from "./capture";
 import Planner from "./planner";

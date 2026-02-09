@@ -173,7 +173,7 @@ export default function ScoreRing({ value = 88 }) {
 				<div className="score-num">{shownValue}</div>
 				<div className="score-of">Out of 100</div>
 				<div className="score-name">
-					Asklepios Score <FiInfo size={11} />
+					Score <FiInfo size={11} />
 				</div>
 			</div>
 		</div>
