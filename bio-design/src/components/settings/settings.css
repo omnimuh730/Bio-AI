@@ -309,6 +309,73 @@
 	color: #fff;
 }
 
+/* Page transition helpers */
+.settings-page {
+	position: absolute;
+	inset: 0;
+	background: #f8fafc;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	opacity: 0;
+	transform: translateY(6px);
+	transition:
+		opacity 360ms cubic-bezier(0.2, 0.9, 0.3, 1),
+		transform 360ms cubic-bezier(0.2, 0.9, 0.3, 1);
+	z-index: 110;
+}
+.settings-page.enter {
+	opacity: 1;
+	transform: translateY(0px);
+}
+.settings-page-exit {
+	opacity: 0;
+	transform: translateY(6px);
+}
+
+.settings-page-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 18px;
+	border-bottom: 1px solid #f1f5f9;
+	background: linear-gradient(180deg, #fff, #fbfdff);
+}
+.back-button {
+	border: none;
+	background: transparent;
+	padding: 8px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+.header-content h2 {
+	margin: 0;
+}
+.header-subtitle {
+	margin: 0;
+	font-size: 13px;
+	color: #64748b;
+}
+.settings-page-content {
+	padding: 18px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.settings-page-actions {
+	padding: 14px 18px;
+	border-top: 1px solid #f1f5f9;
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	background: white;
+}
+
 /* Responsive tweaks */
 @media (max-width: 520px) {
 	.slide-panel {
@@ -317,5 +384,160 @@
 	.profile-avatar {
 		width: 56px;
 		height: 56px;
+	}
+}
+
+/* Settings Pages (Full-page view with fade animations) */
+.settings-page {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	animation: fadeIn 400ms ease-out;
+	background: #f8fafc;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes fadeOut {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+.settings-page-header {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 20px;
+	border-bottom: 1px solid #f1f5f9;
+	background: #fff;
+}
+
+.back-button {
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+	border: none;
+	background: #f1f5f9;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #0f172a;
+	transition:
+		background-color 200ms ease,
+		transform 160ms ease;
+	flex-shrink: 0;
+}
+
+.back-button:hover {
+	background: #e6eef8;
+	transform: translateX(-2px);
+}
+
+.back-button:active {
+	transform: translateX(-2px) scale(0.98);
+}
+
+.header-content {
+	flex: 1;
+}
+
+.header-content h2 {
+	margin: 0;
+	font-size: 22px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.header-subtitle {
+	margin: 4px 0 0 0;
+	font-size: 13px;
+	color: #64748b;
+}
+
+.settings-page-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+}
+
+.settings-page-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid #f1f5f9;
+}
+
+.settings-page-actions .btn {
+	padding: 12px 16px;
+	border-radius: 10px;
+	background: #f1f5f9;
+	border: none;
+	font-weight: 700;
+	cursor: pointer;
+	transition:
+		background-color 200ms ease,
+		transform 160ms ease;
+}
+
+.settings-page-actions .btn:hover {
+	background: #e6eef8;
+}
+
+.settings-page-actions .btn.primary {
+	background: #2563eb;
+	color: white;
+}
+
+.settings-page-actions .btn.primary:hover {
+	background: #1d4ed8;
+}
+
+/* Smooth fade exit when navigating back */
+@media (prefers-reduced-motion: no-preference) {
+	.settings-page {
+		animation: fadeIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+}
+
+/* Responsive adjustments for settings pages */
+@media (max-width: 520px) {
+	.settings-page-header {
+		padding: 16px;
+		gap: 12px;
+	}
+
+	.header-content h2 {
+		font-size: 18px;
+	}
+
+	.settings-page-content {
+		padding: 16px;
+	}
+
+	.settings-page-actions {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.settings-page-actions .btn {
+		width: 100%;
+		padding: 12px 14px;
 	}
 }

@@ -8,15 +8,9 @@ import {
 	FiSmartphone,
 } from "react-icons/fi";
 import "./settings/settings.css";
-import DevicesPanel from "./settings/DevicesPanel";
-import PreferencesPanel from "./settings/PreferencesPanel";
-import GoalsPanel from "./settings/GoalsPanel";
-import ProfileForm from "./settings/ProfileForm";
-import HelpPanel from "./settings/HelpPanel";
 import LogoutModal from "./settings/LogoutModal";
 
-export default function Settings() {
-	const [openPanel, setOpenPanel] = React.useState(null);
+export default function Settings({ onNavigate }) {
 	const [devicesActiveCount, setDevicesActiveCount] = React.useState(2);
 	const [toast, setToast] = React.useState(null);
 	const [logoutOpen, setLogoutOpen] = React.useState(false);
@@ -24,6 +18,10 @@ export default function Settings() {
 	function showToast(msg) {
 		setToast(msg);
 		setTimeout(() => setToast(null), 2000);
+	}
+
+	function navigateTo(page) {
+		onNavigate(page);
 	}
 
 	return (
@@ -38,7 +36,7 @@ export default function Settings() {
 					className="profile-bar"
 					role="button"
 					tabIndex={0}
-					onClick={() => setOpenPanel("profile")}
+					onClick={() => navigateTo("settings-profile")}
 				>
 					<div className="profile-avatar">DE</div>
 					<div className="profile-meta">
@@ -68,7 +66,7 @@ export default function Settings() {
 				<div className="settings-list">
 					<div
 						className="setting-item"
-						onClick={() => setOpenPanel("profile")}
+						onClick={() => navigateTo("settings-profile")}
 					>
 						<div
 							style={{
@@ -96,7 +94,7 @@ export default function Settings() {
 
 					<div
 						className="setting-item"
-						onClick={() => setOpenPanel("goals")}
+						onClick={() => navigateTo("settings-goals")}
 					>
 						<div
 							style={{
@@ -122,7 +120,7 @@ export default function Settings() {
 
 					<div
 						className="setting-item"
-						onClick={() => setOpenPanel("preferences")}
+						onClick={() => navigateTo("settings-preferences")}
 					>
 						<div
 							style={{
@@ -146,7 +144,7 @@ export default function Settings() {
 
 					<div
 						className="setting-item"
-						onClick={() => setOpenPanel("devices")}
+						onClick={() => navigateTo("settings-devices")}
 					>
 						<div
 							style={{
@@ -177,7 +175,7 @@ export default function Settings() {
 
 					<div
 						className="setting-item"
-						onClick={() => setOpenPanel("help")}
+						onClick={() => navigateTo("settings-help")}
 					>
 						<div
 							style={{
@@ -230,44 +228,6 @@ export default function Settings() {
 					</div>
 				</div>
 			</div>
-
-			{/* Panels */}
-			<DevicesPanel
-				open={openPanel === "devices"}
-				onClose={() => setOpenPanel(null)}
-				onUpdateBadge={(c) => {
-					setDevicesActiveCount(c);
-					showToast(`${c} devices active`);
-				}}
-			/>
-			<PreferencesPanel
-				open={openPanel === "preferences"}
-				onClose={() => {
-					setOpenPanel(null);
-					showToast("Preferences saved");
-				}}
-			/>
-			<ProfileForm
-				open={openPanel === "profile"}
-				onClose={() => {
-					setOpenPanel(null);
-					showToast("Profile updated");
-				}}
-			/>
-			<HelpPanel
-				open={openPanel === "help"}
-				onClose={() => {
-					setOpenPanel(null);
-					showToast("Support request sent");
-				}}
-			/>
-			<GoalsPanel
-				open={openPanel === "goals"}
-				onClose={() => {
-					setOpenPanel(null);
-					showToast("Goals saved");
-				}}
-			/>
 
 			<LogoutModal
 				open={logoutOpen}
