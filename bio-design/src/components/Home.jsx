@@ -10,6 +10,7 @@ import DevicesPage from "./settings/DevicesPage";
 import PreferencesPage from "./settings/PreferencesPage";
 import GoalsPage from "./settings/GoalsPage";
 import HelpPage from "./settings/HelpPage";
+import RecommendedFoods from "./RecommendedFoods";
 import BottomNav from "./dashboard/BottomNav";
 
 export default function Home() {
@@ -26,7 +27,17 @@ export default function Home() {
 	return (
 		<div className="home-root">
 			<div className="home-content">
-				{tab === "dashboard" && <Dashboard />}
+				{tab === "dashboard" && (
+					<Dashboard
+						onNavigate={(page) => {
+							console.log("Navigating to", page);
+							setTab(page);
+						}}
+					/>
+				)}
+				{tab === "recommended" && (
+					<RecommendedFoods onBack={() => setTab("dashboard")} />
+				)}
 				{tab === "capture" && (
 					<Capture onClose={() => setTab("dashboard")} />
 				)}
@@ -52,9 +63,11 @@ export default function Home() {
 				)}
 			</div>
 
-			{!tab.startsWith("settings-") && tab !== "capture" && (
-				<BottomNav active={tab} onTabChange={setTab} />
-			)}
+			{!tab.startsWith("settings-") &&
+				tab !== "capture" &&
+				tab !== "recommended" && (
+					<BottomNav active={tab} onTabChange={setTab} />
+				)}
 		</div>
 	);
 }
