@@ -18,6 +18,13 @@ const ProductSchema = new mongoose.Schema(
 		status: { type: String, default: "active" },
 		tags: [String],
 		quality_score: Number,
+		embeddings: {
+			model: String,
+			name_desc: [Number],
+			ingredients: [Number],
+			nutrition: [Number],
+			updated_at: Date,
+		},
 	},
 	{ timestamps: true },
 );

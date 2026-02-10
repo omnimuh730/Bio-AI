@@ -19,6 +19,8 @@ const DataTableView = ({
 	totalProducts = 0,
 	onSyncAll,
 	isSyncingAll = false,
+	onCreateEmbeddings,
+	isCreatingEmbeddings = false,
 }) => {
 	// Server-side pagination: products is already the current page
 	const total = totalProducts || products.length;
@@ -34,6 +36,10 @@ const DataTableView = ({
 
 	const selectedRemoteCount = products.filter(
 		(p) => p.remote && selectedIds.has(p.id),
+	).length;
+
+	const selectedLocalCount = products.filter(
+		(p) => !p.remote && selectedIds.has(p.id),
 	).length;
 
 	const renderSortIcon = (field) => {
@@ -105,24 +111,46 @@ const DataTableView = ({
 							Clear selection
 						</button>
 					</div>
-					{selectedRemoteCount > 0 && (
-						<button
-							className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
-							onClick={onSyncAll}
-							disabled={isSyncingAll}
-						>
-							<i
-								className={`fas fa-cloud-arrow-down ${
-									isSyncingAll ? "animate-spin" : ""
-								}`}
-							></i>
-							<span>
-								{isSyncingAll
-									? "Syncing..."
-									: `Sync All (${selectedRemoteCount})`}
-							</span>
-						</button>
-					)}
+					<div className="flex items-center space-x-2">
+						{selectedLocalCount > 0 && (
+							<button
+								className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+								onClick={onCreateEmbeddings}
+								disabled={isCreatingEmbeddings}
+							>
+								<i
+									className={`fas fa-brain ${
+										isCreatingEmbeddings
+											? "animate-spin"
+											: ""
+									}`}
+								></i>
+								<span>
+									{isCreatingEmbeddings
+										? "Embedding..."
+										: `Create Embeddings (${selectedLocalCount})`}
+								</span>
+							</button>
+						)}
+						{selectedRemoteCount > 0 && (
+							<button
+								className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+								onClick={onSyncAll}
+								disabled={isSyncingAll}
+							>
+								<i
+									className={`fas fa-cloud-arrow-down ${
+										isSyncingAll ? "animate-spin" : ""
+									}`}
+								></i>
+								<span>
+									{isSyncingAll
+										? "Syncing..."
+										: `Sync All (${selectedRemoteCount})`}
+								</span>
+							</button>
+						)}
+					</div>
 				</div>
 			)}
 

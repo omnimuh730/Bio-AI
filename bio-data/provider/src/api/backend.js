@@ -36,3 +36,16 @@ export async function searchRemote(q = "", page = 1, pageSize = 20) {
 	if (!res.ok) throw new Error("remote_search_error");
 	return res.json();
 }
+
+export async function generateEmbeddings(ids = []) {
+	const res = await fetch("http://localhost:4000/api/embeddings/generate", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ ids }),
+	});
+	if (!res.ok) {
+		const error = await res.json().catch(() => ({}));
+		throw new Error(error.error || "embedding_error");
+	}
+	return res.json();
+}

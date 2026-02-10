@@ -11,7 +11,12 @@ import Dashboard from "./components/Dashboard";
 import QualityDashboard from "./components/QualityDashboard";
 import DataTableView from "./components/DataTableView";
 import DataManagement from "./components/DataManagement";
-import { importByBarcode, listProducts, searchRemote } from "./api/backend";
+import {
+	importByBarcode,
+	listProducts,
+	searchRemote,
+	generateEmbeddings,
+} from "./api/backend";
 import CategoryTree from "./components/CategoryTree";
 import CategoryMapping from "./components/CategoryMapping";
 import AuditLogViewer from "./components/AuditLogViewer";
@@ -87,6 +92,7 @@ const App = () => {
 	const [isImporting, setIsImporting] = useState(false);
 	const [isSearching, setIsSearching] = useState(false);
 	const [isSyncingAll, setIsSyncingAll] = useState(false);
+	const [isCreatingEmbeddings, setIsCreatingEmbeddings] = useState(false);
 
 	// Pagination state
 	const [pageSize, setPageSize] = useState(20);
@@ -209,6 +215,29 @@ const App = () => {
 		);
 		setState((s) => ({ ...s, selectedProductIds: new Set() }));
 		if (window.reloadProducts) await window.reloadProducts();
+	}
+
+	async function handleCreateEmbeddings() {
+		const selectedLocal = state.products.filter(
+			(p) => !p.remote && state.selectedProductIds.has(p.id),
+		);
+		if (selectedLocal.length === 0) {
+			alert("No local products selected to embed.");
+			return;
+		}
+		setIsCreatingEmbeddings(true);
+		try {
+			const res = await generateEmbeddings(
+				selectedLocal.map((p) => p.id),
+			);
+			const count = res.updated ?? res.count ?? selectedLocal.length;
+			alert(`Created embeddings for ${count} products.`);
+		} catch (err) {
+			console.warn("Embedding generation failed", err);
+			alert("Embedding generation failed.");
+		} finally {
+			setIsCreatingEmbeddings(false);
+		}
 	}
 
 	const filteredProducts = useMemo(() => {
@@ -614,6 +643,8 @@ const App = () => {
 									totalProducts={totalProducts}
 									onSyncAll={handleSyncAll}
 									isSyncingAll={isSyncingAll}
+									onCreateEmbeddings={handleCreateEmbeddings}
+									isCreatingEmbeddings={isCreatingEmbeddings}
 								/>
 							</div>
 						)}

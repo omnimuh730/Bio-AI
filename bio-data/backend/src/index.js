@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const mongoose = require("mongoose");
 
 const productsRouter = require("./routes/products");
+const embeddingsRouter = require("./routes/embeddings");
 
 const PORT = process.env.PORT || 4000;
 const MONGODB_URI =
@@ -22,6 +23,7 @@ async function main() {
 	app.use(express.json());
 
 	app.use("/api/products", productsRouter);
+	app.use("/api/embeddings", embeddingsRouter);
 
 	app.get("/health", (req, res) => res.json({ ok: true }));
 
