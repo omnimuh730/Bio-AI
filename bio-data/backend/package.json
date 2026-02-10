@@ -5,7 +5,8 @@
 	"main": "src/index.js",
 	"scripts": {
 		"start": "node src/index.js",
-		"dev": "nodemon src/index.js"
+		"dev": "nodemon src/index.js",
+		"lint": "npx eslint 'src/**' --ext .js || true"
 	},
 	"dependencies": {
 		"axios": "^1.4.0",
