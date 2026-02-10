@@ -27,7 +27,7 @@ This project can be used with the small backend located in `../backend` which:
 Quick start:
 
 1. cd `bio-data/backend`
-2. copy `.env.example` → `.env` and confirm `MONGODB_URI` (default `mongodb://localhost:27017/bio_data`)
+2. copy `.env.example` → `.env` and confirm `MONGODB_URI` (default `mongodb://localhost:27017/eatsy`)
 3. `npm install` (or `yarn`)
 4. `npm run dev` to start the backend on port `4000`
 

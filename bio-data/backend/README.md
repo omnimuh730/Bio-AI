@@ -4,7 +4,7 @@ Simple Node/Express backend for storing OpenFoodFacts products in a local MongoD
 
 Quick start
 
-1. Copy `.env.example` to `.env` and adjust `MONGODB_URI` (default `mongodb://localhost:27017/bio_data`).
+1. Copy `.env.example` to `.env` and adjust `MONGODB_URI` (default `mongodb://localhost:27017/eatsy`).
 2. Install deps: `npm install` (or `yarn`)
 3. Run dev: `npm run dev` (requires `nodemon`)
 

@@ -8,13 +8,14 @@ const productsRouter = require("./routes/products");
 
 const PORT = process.env.PORT || 4000;
 const MONGODB_URI =
-	process.env.MONGODB_URI || "mongodb://localhost:27017/bio_data";
+	process.env.MONGODB_URI ||
+	"mongodb+srv://eatsy:Test.1234!@eatsy-cluster.kplwbvn.mongodb.net/eatsy";
 const CORS_ORIGINS = (
 	process.env.CORS_ORIGINS || "http://localhost:5173,http://localhost:8011"
 ).split(",");
 
 async function main() {
-	await mongoose.connect(MONGODB_URI, { dbName: "bio_data" });
+	await mongoose.connect(MONGODB_URI, { dbName: "eatsy" });
 	const app = express();
 	app.use(cors({ origin: CORS_ORIGINS }));
 	app.use(morgan("dev"));
