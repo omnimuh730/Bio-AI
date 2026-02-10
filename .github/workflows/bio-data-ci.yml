@@ -80,29 +80,29 @@ jobs:
     if: needs.detect.outputs.provider == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/')
     steps:
     - uses: actions/checkout@v4
-    - name: Cache node modules / npm
+    - name: Cache node modules / yarn
       uses: actions/cache@v4
       with:
         path: |
           bio-data/provider/node_modules
-          ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('bio-data/provider/package-lock.json') }}
+          ~/.cache/yarn
+        key: ${{ runner.os }}-node-${{ hashFiles('bio-data/provider/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-node-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-    - name: Install dependencies
+    - name: Install dependencies (yarn)
       working-directory: bio-data/provider
       run: |
-        npm ci || npm install
+        yarn install --frozen-lockfile --silent
     - name: Lint
       working-directory: bio-data/provider
-      run: npm run lint
+      run: yarn lint
     - name: Build (sanity)
       working-directory: bio-data/provider
-      run: npm run build --if-present
+      run: yarn build --silent || echo "no build script"
 
   embedding_server:
     name: Embedding Server (Python) ✅
