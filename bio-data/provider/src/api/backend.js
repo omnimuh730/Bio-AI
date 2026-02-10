@@ -27,6 +27,12 @@ export async function getByCode(code) {
 	return res.json();
 }
 
+export async function getById(id) {
+	const res = await fetch(`http://localhost:4000/api/products/${id}`);
+	if (!res.ok) throw new Error("not_found");
+	return res.json();
+}
+
 export async function searchRemote(q = "", page = 1, pageSize = 20) {
 	const url = new URL("http://localhost:4000/api/products/remote/search");
 	url.searchParams.set("q", q);

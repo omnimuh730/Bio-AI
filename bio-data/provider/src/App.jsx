@@ -16,6 +16,7 @@ import {
 	listProducts,
 	searchRemote,
 	generateEmbeddings,
+	getById,
 } from "./api/backend";
 import CategoryTree from "./components/CategoryTree";
 import CategoryMapping from "./components/CategoryMapping";
@@ -43,11 +44,14 @@ const App = () => {
 	React.useEffect(() => {
 		async function load() {
 			try {
+				setIsPageLoading(true);
 				const data = await listProducts("", 1, 20);
 				setState((s) => ({ ...s, products: data.products }));
 				setTotalProducts(data.total ?? data.products.length);
 			} catch (err) {
 				console.warn("Failed to load backend products", err);
+			} finally {
+				setIsPageLoading(false);
 			}
 		}
 		load();
@@ -56,6 +60,7 @@ const App = () => {
 	// Expose helper to reload local products (used by row sync button)
 	window.reloadProducts = async () => {
 		try {
+			setIsPageLoading(true);
 			const q = state.searchQuery.trim();
 			const backendQ = q === "$all" ? "" : q;
 			const data = await listProducts(backendQ, currentPage, pageSize);
@@ -63,6 +68,8 @@ const App = () => {
 			setTotalProducts(data.total ?? data.products.length);
 		} catch (err) {
 			console.warn("reloadProducts failed", err);
+		} finally {
+			setIsPageLoading(false);
 		}
 	};
 
@@ -93,6 +100,19 @@ const App = () => {
 	const [isSearching, setIsSearching] = useState(false);
 	const [isSyncingAll, setIsSyncingAll] = useState(false);
 	const [isCreatingEmbeddings, setIsCreatingEmbeddings] = useState(false);
+	const [isPageLoading, setIsPageLoading] = useState(false);
+	const [syncProgress, setSyncProgress] = useState({
+		active: false,
+		total: 0,
+		done: 0,
+		failed: 0,
+	});
+	const [embeddingProgress, setEmbeddingProgress] = useState({
+		active: false,
+		total: 0,
+		done: 0,
+		failed: 0,
+	});
 
 	// Pagination state
 	const [pageSize, setPageSize] = useState(20);
@@ -106,36 +126,45 @@ const App = () => {
 		size,
 		includeRemote = state.includeRemote,
 	) {
-		const query = (q || "").trim();
-		const backendQ = query === "$all" ? "" : query;
+		setIsPageLoading(true);
+		try {
+			const query = (q || "").trim();
+			const backendQ = query === "$all" ? "" : query;
 
-		// For text searches (not $all / empty), fetch local and remote conditionally
-		if (backendQ) {
-			// Always fetch local first
-			const localRes = await listProducts(backendQ, page, size);
-			let local = localRes.products || [];
-			let localTotal = localRes.total ?? local.length;
-			let remote = [];
-			let remoteTotal = 0;
-			if (includeRemote) {
-				try {
-					const remoteRes = await searchRemote(backendQ, page, size);
-					remote = (remoteRes.products || []).filter(
-						(r) => !local.some((l) => l.code === r.code),
-					);
-					remoteTotal = remoteRes.total ?? 0;
-				} catch (err) {
-					console.warn("Remote search failed", err);
+			// For text searches (not $all / empty), fetch local and remote conditionally
+			if (backendQ) {
+				// Always fetch local first
+				const localRes = await listProducts(backendQ, page, size);
+				let local = localRes.products || [];
+				let localTotal = localRes.total ?? local.length;
+				let remote = [];
+				let remoteTotal = 0;
+				if (includeRemote) {
+					try {
+						const remoteRes = await searchRemote(
+							backendQ,
+							page,
+							size,
+						);
+						remote = (remoteRes.products || []).filter(
+							(r) => !local.some((l) => l.code === r.code),
+						);
+						remoteTotal = remoteRes.total ?? 0;
+					} catch (err) {
+						console.warn("Remote search failed", err);
+					}
 				}
+				const combined = [...local, ...remote];
+				setState((s) => ({ ...s, products: combined }));
+				setTotalProducts(localTotal + remoteTotal);
+			} else {
+				// $all or empty — local only
+				const data = await listProducts("", page, size);
+				setState((s) => ({ ...s, products: data.products }));
+				setTotalProducts(data.total ?? data.products.length);
 			}
-			const combined = [...local, ...remote];
-			setState((s) => ({ ...s, products: combined }));
-			setTotalProducts(localTotal + remoteTotal);
-		} else {
-			// $all or empty — local only
-			const data = await listProducts("", page, size);
-			setState((s) => ({ ...s, products: data.products }));
-			setTotalProducts(data.total ?? data.products.length);
+		} finally {
+			setIsPageLoading(false);
 		}
 	}
 
@@ -191,6 +220,12 @@ const App = () => {
 			return;
 		}
 		setIsSyncingAll(true);
+		setSyncProgress({
+			active: true,
+			total: selectedRemote.length,
+			done: 0,
+			failed: 0,
+		});
 		let synced = 0;
 		let failed = 0;
 		for (const p of selectedRemote) {
@@ -204,12 +239,40 @@ const App = () => {
 					},
 				);
 				if (!res.ok) throw new Error("import_failed");
+				const json = await res.json();
+				if (json?.product) {
+					setState((s) => {
+						const idx = s.products.findIndex(
+							(item) => item.code === json.product.code,
+						);
+						const next = [...s.products];
+						if (idx >= 0) {
+							next[idx] = {
+								...next[idx],
+								...json.product,
+								remote: false,
+							};
+						} else {
+							next.unshift(json.product);
+						}
+						return { ...s, products: next };
+					});
+				}
 				synced++;
+				setSyncProgress((prev) => ({
+					...prev,
+					done: prev.done + 1,
+				}));
 			} catch {
 				failed++;
+				setSyncProgress((prev) => ({
+					...prev,
+					failed: prev.failed + 1,
+				}));
 			}
 		}
 		setIsSyncingAll(false);
+		setSyncProgress((prev) => ({ ...prev, active: false }));
 		alert(
 			`Synced ${synced} product(s)${failed ? `, ${failed} failed` : ""}`,
 		);
@@ -226,17 +289,52 @@ const App = () => {
 			return;
 		}
 		setIsCreatingEmbeddings(true);
+		setEmbeddingProgress({
+			active: true,
+			total: selectedLocal.length,
+			done: 0,
+			failed: 0,
+		});
 		try {
-			const res = await generateEmbeddings(
-				selectedLocal.map((p) => p.id),
+			let done = 0;
+			let failed = 0;
+			for (const p of selectedLocal) {
+				try {
+					await generateEmbeddings([p.id]);
+					const refreshed = await getById(p.id);
+					setState((s) => {
+						const idx = s.products.findIndex(
+							(item) => item.id === p.id,
+						);
+						if (idx === -1) return s;
+						const next = [...s.products];
+						next[idx] = { ...next[idx], ...refreshed };
+						return { ...s, products: next };
+					});
+					done++;
+					setEmbeddingProgress((prev) => ({
+						...prev,
+						done: prev.done + 1,
+					}));
+				} catch {
+					failed++;
+					setEmbeddingProgress((prev) => ({
+						...prev,
+						failed: prev.failed + 1,
+					}));
+				}
+			}
+			alert(
+				`Created embeddings for ${done} product(s)${
+					failed ? `, ${failed} failed` : ""
+				}`,
 			);
-			const count = res.updated ?? res.count ?? selectedLocal.length;
-			alert(`Created embeddings for ${count} products.`);
 		} catch (err) {
 			console.warn("Embedding generation failed", err);
 			alert("Embedding generation failed.");
 		} finally {
 			setIsCreatingEmbeddings(false);
+			setEmbeddingProgress((prev) => ({ ...prev, active: false }));
 		}
 	}
 
@@ -645,6 +743,9 @@ const App = () => {
 									isSyncingAll={isSyncingAll}
 									onCreateEmbeddings={handleCreateEmbeddings}
 									isCreatingEmbeddings={isCreatingEmbeddings}
+									isLoading={isSearching || isPageLoading}
+									syncProgress={syncProgress}
+									embeddingProgress={embeddingProgress}
 								/>
 							</div>
 						)}
