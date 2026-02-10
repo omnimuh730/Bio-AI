@@ -1,16 +1,11 @@
 import React, { useState, useMemo } from "react";
-import {
-	MOCK_PRODUCTS,
-	MOCK_AUDIT_LOGS,
-	SAVED_SEGMENTS,
-	PROD_CATEGORIES,
-} from "./constants";
+import { MOCK_PRODUCTS, MOCK_AUDIT_LOGS } from "./constants";
 import NutriScoreBadge from "./components/NutriScoreBadge";
 import ProductDetail from "./components/ProductDetail";
 import Dashboard from "./components/Dashboard";
 import QualityDashboard from "./components/QualityDashboard";
 import DataTableView from "./components/DataTableView";
-import DataManagement from "./components/DataManagement";
+
 import {
 	importByBarcode,
 	listProducts,
@@ -26,14 +21,12 @@ const App = () => {
 	const [state, setState] = useState({
 		products: MOCK_PRODUCTS,
 		auditLogs: MOCK_AUDIT_LOGS,
-		segments: SAVED_SEGMENTS,
 		selectedProduct: null,
 		selectedProductIds: new Set(),
 		searchQuery: "",
 		filterNutriScore: "ALL",
 		categoryFilter: "ALL",
 		activeTab: "inventory",
-		managementSubTab: "merging",
 		viewMode: "table",
 		sortField: "last_modified",
 		sortOrder: "desc",
@@ -431,16 +424,6 @@ const App = () => {
 							label: "Advanced Stats",
 							icon: "fa-chart-line",
 						},
-						{
-							id: "management",
-							label: "Stewardship",
-							icon: "fa-toolbox",
-						},
-						{
-							id: "ai-advisor",
-							label: "AI Optimizer",
-							icon: "fa-brain-circuit",
-						},
 					].map((tab) => (
 						<button
 							key={tab.id}
@@ -454,26 +437,6 @@ const App = () => {
 							></i>
 							<span className="font-bold text-sm tracking-tight">
 								{tab.label}
-							</span>
-						</button>
-					))}
-
-					<div className="mt-10 mb-4 px-4">
-						<h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center">
-							<i className="fas fa-bookmark mr-2"></i> Saved
-							Segments
-						</h4>
-					</div>
-					{state.segments.map((seg) => (
-						<button
-							key={seg.id}
-							className="w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-indigo-400 transition-all group"
-						>
-							<i
-								className={`fas ${seg.icon} w-5 text-center text-xs group-hover:scale-125 transition-transform`}
-							></i>
-							<span className="text-xs font-bold">
-								{seg.name}
 							</span>
 						</button>
 					))}
@@ -766,132 +729,99 @@ const App = () => {
 							<Dashboard products={state.products} />
 						)}
 
-						{state.activeTab === "management" && (
-							<div className="max-w-6xl mx-auto space-y-8 pb-12">
-								<div className="flex bg-white p-2 rounded-2xl border border-slate-100 shadow-sm w-fit mx-auto mb-8">
-									{[
-										{
-											id: "merging",
-											label: "Duplicates",
-											icon: "fa-object-group",
-										},
-										{
-											id: "mapping",
-											label: "Classification",
-											icon: "fa-sitemap",
-										},
-										{
-											id: "audit",
-											label: "Audit Logs",
-											icon: "fa-history",
-										},
-									].map((sub) => (
-										<button
-											key={sub.id}
-											onClick={() =>
-												setState((s) => ({
-													...s,
-													managementSubTab: sub.id,
-												}))
-											}
-											className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${state.managementSubTab === sub.id ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:bg-slate-50"}`}
-										>
-											<i
-												className={`fas ${sub.icon}`}
-											></i>
-											<span>{sub.label}</span>
-										</button>
-									))}
-								</div>
-
-								{state.managementSubTab === "merging" && (
-									<DataManagement
-										products={state.products}
-										onMerge={() => {}}
-										onNormalize={() => {}}
-									/>
-								)}
-								{state.managementSubTab === "mapping" && (
-									<CategoryMapping
-										products={state.products}
-										onMap={handleMapCategory}
-									/>
-								)}
-								{state.managementSubTab === "audit" && (
-									<AuditLogViewer
-										logs={state.auditLogs}
-										products={state.products}
-									/>
-								)}
-							</div>
-						)}
-
-						{state.activeTab === "ai-advisor" && (
-							<div className="max-w-4xl mx-auto space-y-8 pb-12">
-								<div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-100 relative overflow-hidden">
-									<div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
-									<div className="flex items-center space-x-6 mb-10">
-										<div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-200">
-											<i className="fas fa-robot text-2xl"></i>
-										</div>
-										<div>
-											<h3 className="text-3xl font-black text-slate-800 tracking-tighter">
-												AI Knowledge Engine
-											</h3>
-											<p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">
-												Data Science & Dietetics
-											</p>
-										</div>
-									</div>
-
-									<form
-										onSubmit={async (e) => {
-											e.preventDefault();
-											setIsAiLoading(true);
-											const res = null;
-											setAiResponse(res);
-											setIsAiLoading(false);
-										}}
-										className="relative group"
-									>
-										<input
-											type="text"
-											value={aiQuery}
-											onChange={(e) =>
-												setAiQuery(e.target.value)
-											}
-											placeholder="Ask about data normalization, dietetic trends, or category re-mapping..."
-											className="w-full pl-8 pr-44 py-6 bg-slate-50 border border-slate-200 rounded-[2rem] focus:outline-none focus:ring-8 focus:ring-indigo-500/5 transition-all text-lg font-bold placeholder:text-slate-300"
-										/>
-										<button
-											type="submit"
-											disabled={
-												isAiLoading || !aiQuery.trim()
-											}
-											className="absolute right-4 top-4 bottom-4 bg-slate-900 text-white px-10 rounded-[1.5rem] font-black uppercase text-xs tracking-widest hover:bg-indigo-600 disabled:bg-slate-200 transition-all shadow-xl"
-										>
-											{isAiLoading ? (
-												<i className="fas fa-spinner animate-spin"></i>
-											) : (
-												"Execute"
-											)}
-										</button>
-									</form>
-
-									{aiResponse && (
-										<div className="mt-12 animate-in fade-in slide-in-from-top-4">
-											<div className="bg-indigo-50/50 rounded-[2.5rem] p-12 border border-indigo-100/30">
-												<div className="prose prose-indigo max-w-none text-slate-700 leading-relaxed text-lg font-medium">
-													{aiResponse}
-												</div>
-											</div>
-										</div>
-									)}
-								</div>
-							</div>
-						)}
+						{[
+							{
+								id: "merging",
+								label: "Duplicates",
+								icon: "fa-object-group",
+							},
+							{
+								id: "mapping",
+								label: "Classification",
+								icon: "fa-sitemap",
+							},
+							{
+								id: "audit",
+								label: "Audit Logs",
+								icon: "fa-history",
+							},
+						].map((sub) => (
+							<button
+								key={sub.id}
+								onClick={() =>
+									setState((s) => ({
+										...s,
+										managementSubTab: sub.id,
+									}))
+								}
+								className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${state.managementSubTab === sub.id ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:bg-slate-50"}`}
+							>
+								<i className={`fas ${sub.icon}`}></i>
+								<span>{sub.label}</span>
+							</button>
+						))}
 					</div>
+
+					{state.managementSubTab === "merging" && (
+						<DataManagement
+							products={state.products}
+							onMerge={() => {}}
+							onNormalize={() => {}}
+						/>
+					)}
+					{state.managementSubTab === "mapping" && (
+						<CategoryMapping
+							products={state.products}
+							onMap={handleMapCategory}
+						/>
+					)}
+					{state.managementSubTab === "audit" && (
+						<AuditLogViewer
+							logs={state.auditLogs}
+							products={state.products}
+						/>
+					)}
 				</div>
+
+				<form
+					onSubmit={async (e) => {
+						e.preventDefault();
+						setIsAiLoading(true);
+						const res = null;
+						setAiResponse(res);
+						setIsAiLoading(false);
+					}}
+					className="relative group"
+				>
+					<input
+						type="text"
+						value={aiQuery}
+						onChange={(e) => setAiQuery(e.target.value)}
+						placeholder="Ask about data normalization, dietetic trends, or category re-mapping..."
+						className="w-full pl-8 pr-44 py-6 bg-slate-50 border border-slate-200 rounded-[2rem] focus:outline-none focus:ring-8 focus:ring-indigo-500/5 transition-all text-lg font-bold placeholder:text-slate-300"
+					/>
+					<button
+						type="submit"
+						disabled={isAiLoading || !aiQuery.trim()}
+						className="absolute right-4 top-4 bottom-4 bg-slate-900 text-white px-10 rounded-[1.5rem] font-black uppercase text-xs tracking-widest hover:bg-indigo-600 disabled:bg-slate-200 transition-all shadow-xl"
+					>
+						{isAiLoading ? (
+							<i className="fas fa-spinner animate-spin"></i>
+						) : (
+							"Execute"
+						)}
+					</button>
+				</form>
+
+				{aiResponse && (
+					<div className="mt-12 animate-in fade-in slide-in-from-top-4">
+						<div className="bg-indigo-50/50 rounded-[2.5rem] p-12 border border-indigo-100/30">
+							<div className="prose prose-indigo max-w-none text-slate-700 leading-relaxed text-lg font-medium">
+								{aiResponse}
+							</div>
+						</div>
+					</div>
+				)}
 			</main>
 
 			{state.selectedProduct && (
