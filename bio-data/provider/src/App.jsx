@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { importByBarcode } from "./api/backend";
 import CategoryTree from "./components/CategoryTree";
-import Dashboard from "./components/Dashboard";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import ProductDetail from "./components/ProductDetail";
 import QualityDashboard from "./components/QualityDashboard";
 import AiAssistantBar from "./components/app/AiAssistantBar";
@@ -189,29 +189,31 @@ const App = () => {
 						)}
 
 						{state.activeTab === "analytics" && (
-							<Dashboard products={state.products} />
-						)}
+					<AnalyticsDashboard products={state.products} />
+				)}
 
-						<ManagementTabs
-							managementSubTab={state.managementSubTab}
-							onChange={(value) =>
-								setState((s) => ({
-									...s,
-									managementSubTab: value,
-								}))
-							}
-						/>
-					</div>
+				<ManagementTabs
+					managementSubTab={state.managementSubTab}
+					onChange={(value) =>
+						setState((s) => ({
+							...s,
+							managementSubTab: value,
+						}))
+					}
+				/>
 
-					<ManagementPanel
-						managementSubTab={state.managementSubTab}
-						products={state.products}
-						auditLogs={state.auditLogs}
-						onMap={handleMapCategory}
-					/>
+
 				</div>
 
-				<AiAssistantBar
+				<ManagementPanel
+					managementSubTab={state.managementSubTab}
+					products={state.products}
+					auditLogs={state.auditLogs}
+					onMap={handleMapCategory}
+				/>
+			</div>
+
+			<AiAssistantBar
 					aiQuery={aiQuery}
 					onAiQueryChange={setAiQuery}
 					onSubmit={async (e) => {

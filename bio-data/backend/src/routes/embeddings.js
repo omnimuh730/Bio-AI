@@ -85,7 +85,13 @@ router.post("/generate", async (req, res) => {
 
 		const result = await Product.bulkWrite(ops, { ordered: false });
 		const updated = result.modifiedCount || 0;
-		return res.json({ count: embeddings.length, updated, model, skipped });
+
+		// Return the updated product docs (embeddings only) so callers can refresh state
+		const updatedIds = embeddings.map((e) => e.id);
+		const updatedProducts = await Product.find({ _id: { $in: updatedIds } }, { embeddings: 1 }).lean();
+		const updatedProductsFormatted = updatedProducts.map((p) => ({ ...p, id: p._id }));
+
+		return res.json({ count: embeddings.length, updated, model, skipped, updatedProducts: updatedProductsFormatted });
 	} catch (err) {
 		console.error("embedding generate error", err?.message || err);
 		return res.status(500).json({ error: "embedding_generate_failed" });

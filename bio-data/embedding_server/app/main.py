@@ -9,6 +9,7 @@ app = FastAPI(title="Bio Data Embedding Server")
 
 MODEL_NAME = os.getenv("EMBEDDING_MODEL", "intfloat/e5-large-v2")
 MODEL_PREFIX = os.getenv("EMBEDDING_PREFIX", "passage: ")
+BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
 
 model: Optional[SentenceTransformer] = None
 
@@ -114,25 +115,41 @@ async def generate_embeddings(payload: GenerateRequest) -> GenerateResponse:
 	if not payload.products:
 		raise HTTPException(status_code=400, detail="missing_products")
 
-	name_texts = [_build_name_desc(p) for p in payload.products]
-	ingredient_texts = [_build_ingredients(p) for p in payload.products]
-	nutrition_texts = [_build_nutrition(p) for p in payload.products]
-
-	name_vectors = model.encode(name_texts, normalize_embeddings=True)
-	ingredient_vectors = model.encode(ingredient_texts, normalize_embeddings=True)
-	nutrition_vectors = model.encode(nutrition_texts, normalize_embeddings=True)
+	# Process inputs in chunks and encode combined texts (one call per chunk) to maximize throughput
+	CHUNK_SIZE = int(os.getenv("EMBEDDING_CHUNK_SIZE", "256"))
+	import asyncio
+	from functools import partial
+	loop = asyncio.get_running_loop()
+	encode_fn = lambda texts: model.encode(texts, normalize_embeddings=True, batch_size=BATCH_SIZE)
 
 	out: List[EmbeddingOut] = []
-	for idx, product in enumerate(payload.products):
-		out.append(
-			EmbeddingOut(
-				id=product.id,
-				embeddings={
-					"name_desc": [float(v) for v in name_vectors[idx]],
-					"ingredients": [float(v) for v in ingredient_vectors[idx]],
-					"nutrition": [float(v) for v in nutrition_vectors[idx]],
-				},
+	# chunk payload.products to limit memory usage for very large requests
+	for i in range(0, len(payload.products), CHUNK_SIZE):
+		chunk = payload.products[i : i + CHUNK_SIZE]
+		m = len(chunk)
+		name_texts = [_build_name_desc(p) for p in chunk]
+		ingredient_texts = [_build_ingredients(p) for p in chunk]
+		nutrition_texts = [_build_nutrition(p) for p in chunk]
+
+		# Combine lists and encode once per chunk
+		combined_texts = name_texts + ingredient_texts + nutrition_texts
+		vectors = await loop.run_in_executor(None, partial(encode_fn, combined_texts))
+
+		# Split into the three groups
+		name_vectors = vectors[0:m]
+		ingredient_vectors = vectors[m : 2 * m]
+		nutrition_vectors = vectors[2 * m : 3 * m]
+
+		for idx, product in enumerate(chunk):
+			out.append(
+				EmbeddingOut(
+					id=product.id,
+					embeddings={
+						"name_desc": [float(v) for v in name_vectors[idx]],
+						"ingredients": [float(v) for v in ingredient_vectors[idx]],
+						"nutrition": [float(v) for v in nutrition_vectors[idx]],
+					},
+				)
 			)
-		)
 
 	return GenerateResponse(model=MODEL_NAME, count=len(out), embeddings=out)

@@ -1,13 +1,70 @@
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import {
+	ResponsiveContainer,
+	PieChart,
+	Pie,
+	Cell,
+	Tooltip,
+	LineChart,
+	Line,
+} from "recharts";
 
 const QualityDashboard = ({ products, onReviewProduct }) => {
 	const total = products.length;
+	const avgQuality = (
+		products.reduce(
+			(s, p) => s + (p.quality_score ? Number(p.quality_score) : 0),
+			0,
+		) / Math.max(1, total)
+	).toFixed(1);
 	const flagged = products.filter((p) => p.status === "flagged").length;
 	const good = products.filter((p) => p.quality_score > 90).length;
 	const warning = products.filter(
 		(p) => p.quality_score <= 90 && p.quality_score > 70,
 	).length;
 	const critical = products.filter((p) => p.quality_score <= 70).length;
+
+	const completeness = (() => {
+		const fields = [
+			"image_url",
+			"nutriscore_grade",
+			"nutriments",
+			"ingredients_text",
+		];
+		let totalChecks = 0;
+		let present = 0;
+		for (const p of products) {
+			for (const f of fields) {
+				totalChecks++;
+				if (p[f] !== undefined && p[f] !== null && p[f] !== "")
+					present++;
+			}
+		}
+		return totalChecks === 0
+			? 100
+			: Math.round((present / totalChecks) * 100);
+	})();
+
+	const qualitySeries = (() => {
+		const map = new Map();
+		for (const p of products) {
+			const ts =
+				p.last_modified || p.created_at || p.updated_at || Date.now();
+			const d = new Date(ts);
+			const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; // by month
+			if (!map.has(key)) map.set(key, { sum: 0, count: 0 });
+			map.get(key).sum += p.quality_score ? Number(p.quality_score) : 0;
+			map.get(key).count += 1;
+		}
+		const entries = Array.from(map.entries()).sort((a, b) =>
+			a[0] > b[0] ? 1 : -1,
+		);
+		return entries
+			.map(([k, v]) => ({
+				period: k,
+				avg: v.count ? +(v.sum / v.count).toFixed(1) : 0,
+			}))
+			.slice(-8);
+	})();
 
 	const qualityData = [
 		{ name: "Good", value: good, color: "#10B981" }, // Emerald
@@ -29,14 +86,23 @@ const QualityDashboard = ({ products, onReviewProduct }) => {
 							Overall Health
 						</p>
 						<h3 className="text-3xl font-black text-slate-800 mt-1">
-							{(
-								products.reduce(
-									(acc, p) => acc + p.quality_score,
-									0,
-								) / total
-							).toFixed(1)}
-							%
+							{avgQuality}%
 						</h3>
+						<div
+							className="mt-2"
+							style={{ width: 120, height: 36 }}
+						>
+							<ResponsiveContainer width="100%" height="100%">
+								<LineChart data={qualitySeries}>
+									<Line
+										dataKey="avg"
+										stroke="#10B981"
+										strokeWidth={2}
+										dot={false}
+									/>
+								</LineChart>
+							</ResponsiveContainer>
+						</div>
 						<p className="text-xs text-emerald-600 mt-2 font-bold">
 							<i className="fas fa-arrow-up mr-1"></i> 2.4% vs
 							last week
@@ -72,7 +138,7 @@ const QualityDashboard = ({ products, onReviewProduct }) => {
 							Completeness
 						</p>
 						<h3 className="text-3xl font-black text-slate-800 mt-1">
-							94.2%
+							{completeness}%
 						</h3>
 						<p className="text-xs text-slate-500 mt-2 font-medium">
 							Fields populated

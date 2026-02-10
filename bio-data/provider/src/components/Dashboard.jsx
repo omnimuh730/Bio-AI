@@ -12,106 +12,206 @@ import {
 	PolarGrid,
 	PolarAngleAxis,
 	PolarRadiusAxis,
-	ComposedChart,
+	LineChart,
 	Line,
-	Area,
+	PieChart,
+	Pie,
+	Legend,
 } from "recharts";
 import { NUTRI_SCORE_COLORS } from "../constants";
+import {
+	Box,
+	Grid,
+	Card,
+	CardContent,
+	Typography,
+	Button,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableRow,
+} from "@mui/material";
+
+const APP_NOW = Date.now();
+
+function getWeekKey(ts) {
+	const d = new Date(ts);
+	const onejan = new Date(d.getFullYear(), 0, 1);
+	const days = Math.floor((d - onejan) / (24 * 60 * 60 * 1000));
+	const week = Math.ceil((days + onejan.getDay() + 1) / 7);
+	return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
+}
 
 const Dashboard = ({ products }) => {
-	// 1. Nutri-Score Distribution
-	const nutriCounts = products.reduce((acc, p) => {
-		acc[p.nutriscore_grade] = (acc[p.nutriscore_grade] || 0) + 1;
-		return acc;
-	}, {});
+	// Derived metrics
+	const totalProducts = products.length;
+	const avgQuality = (
+		products.reduce(
+			(s, p) => s + (p.quality_score ? Number(p.quality_score) : 0),
+			0,
+		) / Math.max(1, totalProducts)
+	).toFixed(1);
 
-	const nutriChartData = ["A", "B", "C", "D", "E"].map((grade) => ({
-		grade,
-		count: nutriCounts[grade] || 0,
-	}));
+	// Completeness (fields presence)
+	const completeness = (() => {
+		const fields = [
+			"image_url",
+			"nutriscore_grade",
+			"nutriments",
+			"ingredients_text",
+		];
+		let totalChecks = 0;
+		let present = 0;
+		for (const p of products) {
+			for (const f of fields) {
+				totalChecks++;
+				if (p[f] !== undefined && p[f] !== null && p[f] !== "")
+					present++;
+			}
+		}
+		return totalChecks === 0
+			? 100
+			: Math.round((present / totalChecks) * 100);
+	})();
+
+	// Flagged percentage
+	const flaggedCount = products.filter(
+		(p) =>
+			p.status === "flagged" || (p.quality_score && p.quality_score < 60),
+	).length;
+	const flaggedPct = Math.round(
+		(flaggedCount / Math.max(1, totalProducts)) * 100,
+	);
+
+	// Nutri-score distribution
+	const nutriChartData = (() => {
+		const counts = products.reduce((acc, p) => {
+			const g = p.nutriscore_grade || "Unknown";
+			acc[g] = (acc[g] || 0) + 1;
+			return acc;
+		}, {});
+		return ["A", "B", "C", "D", "E", "Unknown"].map((g) => ({
+			grade: g,
+			count: counts[g] || 0,
+		}));
+	})();
+
+	// Time-series: avg quality per week (last 12 weeks)
+	const qualitySeries = (() => {
+		const map = new Map();
+		for (const p of products) {
+			const ts =
+				p.last_modified || p.created_at || p.updated_at || APP_NOW;
+			const key = getWeekKey(ts);
+			if (!map.has(key)) map.set(key, { sum: 0, count: 0 });
+			map.get(key).sum += p.quality_score ? Number(p.quality_score) : 0;
+			map.get(key).count += 1;
+		}
+		const entries = Array.from(map.entries()).sort((a, b) =>
+			a[0] > b[0] ? 1 : -1,
+		);
+		const series = entries.map(([key, v]) => ({
+			week: key,
+			avg: v.count ? +(v.sum / v.count).toFixed(1) : 0,
+		}));
+		return series.slice(-12);
+	})();
 
 	// 2. Average Macros for Radar Chart
 	const avgMacros = products.reduce(
 		(acc, p) => {
-			acc.fat += p.nutriments.fat_100g;
-			acc.carbs += p.nutriments.carbohydrates_100g;
-			acc.protein += p.nutriments.proteins_100g;
-			acc.sugar += p.nutriments.sugars_100g;
-			acc.salt += p.nutriments.salt_100g * 10; // Scaled for visibility
+			acc.fat += p.nutriments?.fat_100g || 0;
+			acc.carbs += p.nutriments?.carbohydrates_100g || 0;
+			acc.protein += p.nutriments?.proteins_100g || 0;
+			acc.sugar += p.nutriments?.sugars_100g || 0;
+			acc.salt += (p.nutriments?.salt_100g || 0) * 10; // scaled
 			return acc;
 		},
 		{ fat: 0, carbs: 0, protein: 0, sugar: 0, salt: 0 },
 	);
 
 	const radarData = [
-		{ subject: "Fat", A: avgMacros.fat / products.length, fullMark: 100 },
+		{
+			subject: "Fat",
+			A: avgMacros.fat / Math.max(1, totalProducts),
+			fullMark: 100,
+		},
 		{
 			subject: "Carbs",
-			A: avgMacros.carbs / products.length,
+			A: avgMacros.carbs / Math.max(1, totalProducts),
 			fullMark: 100,
 		},
 		{
 			subject: "Protein",
-			A: avgMacros.protein / products.length,
+			A: avgMacros.protein / Math.max(1, totalProducts),
 			fullMark: 100,
 		},
 		{
 			subject: "Sugar",
-			A: avgMacros.sugar / products.length,
+			A: avgMacros.sugar / Math.max(1, totalProducts),
 			fullMark: 100,
 		},
 		{
 			subject: "Salt (x10)",
-			A: avgMacros.salt / products.length,
+			A: avgMacros.salt / Math.max(1, totalProducts),
 			fullMark: 100,
 		},
 	];
 
-	return (
-		<div className="space-y-8">
-			{/* Top Stats */}
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-				{[
-					{
-						label: "Total Products",
-						val: products.length,
-						icon: "fa-boxes-stacked",
-						color: "bg-blue-100 text-blue-600",
-					},
-					{
-						label: "Avg Nutri-Score",
-						val: "B+",
-						icon: "fa-heart-pulse",
-						color: "bg-emerald-100 text-emerald-600",
-					},
 
-					{
-						label: "Unique Brands",
-						val: new Set(products.map((p) => p.brands)).size,
-						icon: "fa-tag",
-						color: "bg-purple-100 text-purple-600",
-					},
-				].map((stat, i) => (
-					<div
-						key={i}
-						className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
-					>
-						<div className="flex items-center space-x-4">
-							<div className={`${stat.color} p-3 rounded-lg`}>
-								<i className={`fas ${stat.icon} text-xl`}></i>
-							</div>
-							<div>
-								<p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-									{stat.label}
-								</p>
-								<h3 className="text-2xl font-bold text-slate-800">
-									{stat.val}
-								</h3>
-							</div>
-						</div>
-					</div>
-				))}
-			</div>
+
+
+
+	return (
+		<Box className="space-y-6">
+			{/* Top Stats */}
+			<Grid container spacing={2}>
+				<Grid item xs={12} md={3}>
+					<Card>
+						<CardContent>
+							<Typography variant="caption" color="textSecondary">
+								Total Products
+							</Typography>
+							<Typography variant="h5">
+								{totalProducts}
+							</Typography>
+						</CardContent>
+					</Card>
+				</Grid>
+				<Grid item xs={12} md={3}>
+					<Card>
+						<CardContent>
+							<Typography variant="caption" color="textSecondary">
+								Avg Quality Score
+							</Typography>
+							<Typography variant="h5">{avgQuality}%</Typography>
+						</CardContent>
+					</Card>
+				</Grid>
+				<Grid item xs={12} md={3}>
+					<Card>
+						<CardContent>
+							<Typography variant="caption" color="textSecondary">
+								Completeness
+							</Typography>
+							<Typography variant="h5">
+								{completeness}%
+							</Typography>
+						</CardContent>
+					</Card>
+				</Grid>
+				<Grid item xs={12} md={3}>
+					<Card>
+						<CardContent>
+							<Typography variant="caption" color="textSecondary">
+								Flagged
+							</Typography>
+							<Typography variant="h5">{flaggedPct}%</Typography>
+						</CardContent>
+					</Card>
+				</Grid>
+			</Grid>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 				{/* Nutri-Score Chart */}
@@ -155,6 +255,19 @@ const Dashboard = ({ products }) => {
 									))}
 								</Bar>
 							</BarChart>
+						</ResponsiveContainer>
+					</div>
+					<div className="mt-3" style={{ height: 60 }}>
+						<ResponsiveContainer width="100%" height="100%">
+							<LineChart data={qualitySeries}>
+								<Line
+									dataKey="avg"
+									stroke="#059669"
+									strokeWidth={2}
+									dot={false}
+								/>
+								<Tooltip />
+							</LineChart>
 						</ResponsiveContainer>
 					</div>
 				</div>
@@ -209,7 +322,7 @@ const Dashboard = ({ products }) => {
 					</div>
 				</div>
 			</div>
-		</div>
+		</Box>
 	);
 };
 

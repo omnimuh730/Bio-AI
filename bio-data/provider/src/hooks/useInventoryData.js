@@ -294,35 +294,75 @@ export const useInventoryData = () => {
 			failed: 0,
 		});
 		try {
+			const CHUNK_SIZE = 64; // items per batch (tunable)
+			const MAX_CONCURRENCY = 4; // parallel batches
 			let done = 0;
 			let failed = 0;
-			for (const p of embeddable) {
+
+			function chunkArray(arr, size) {
+				const out = [];
+				for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+				return out;
+			}
+
+			const ids = embeddable.map((p) => p.id);
+			const batches = chunkArray(ids, CHUNK_SIZE);
+
+			async function processBatch(batchIds) {
 				try {
-					// call backend with force=false so existing embeddings are skipped server-side as well
-					await generateEmbeddings([p.id], { force: false });
-					const refreshed = await getById(p.id);
-					setState((s) => {
-						const idx = s.products.findIndex(
-							(item) => item.id === p.id,
-						);
-						if (idx === -1) return s;
-						const next = [...s.products];
-						next[idx] = { ...next[idx], ...refreshed };
-						return { ...s, products: next };
-					});
-					done++;
-					setEmbeddingProgress((prev) => ({
-						...prev,
-						done: prev.done + 1,
-					}));
-				} catch {
-					failed++;
-					setEmbeddingProgress((prev) => ({
-						...prev,
-						failed: prev.failed + 1,
-					}));
+					const resp = await generateEmbeddings(batchIds, { force: false });
+					const count = resp?.count || batchIds.length;
+					done += count;
+					setEmbeddingProgress((prev) => ({ ...prev, done: prev.done + count }));
+
+					// Update local state from returned updatedProducts (preferred)
+					const updated = resp?.updatedProducts || [];
+					if (updated.length > 0) {
+						setState((s) => {
+							const next = [...s.products];
+							for (const u of updated) {
+								const idx = next.findIndex((item) => String(item.id) === String(u.id));
+								if (idx !== -1) {
+									next[idx] = { ...next[idx], embeddings: u.embeddings };
+								}
+							}
+							return { ...s, products: next };
+						});
+					} else if (resp?.embeddings) {
+						// fallback: update from embeddings array
+						setState((s) => {
+							const next = [...s.products];
+							for (const e of resp.embeddings) {
+								const idx = next.findIndex((item) => String(item.id) === String(e.id));
+								if (idx !== -1) next[idx] = { ...next[idx], embeddings: e.embeddings };
+							}
+							return { ...s, products: next };
+						});
+					}
+				} catch (err) {
+					failed += batchIds.length;
+					setEmbeddingProgress((prev) => ({ ...prev, failed: prev.failed + batchIds.length }));
+					console.warn("Embedding batch failed", err);
 				}
 			}
+
+			// Run batches with limited concurrency
+			let inFlight = [];
+			let i = 0;
+			while (i < batches.length) {
+				while (inFlight.length < MAX_CONCURRENCY && i < batches.length) {
+					const p = processBatch(batches[i++]);
+					inFlight.push(p);
+					p.finally(() => {
+						inFlight = inFlight.filter((x) => x !== p);
+					});
+				}
+				// wait for at least one to finish
+				if (inFlight.length > 0) await Promise.race(inFlight);
+			}
+			// wait for remaining
+			await Promise.all(inFlight);
+
 			if (skipped > 0) {
 				console.log(
 					`${skipped} product(s) were already embedded and were skipped.`,
