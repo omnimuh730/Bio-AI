@@ -207,20 +207,18 @@ const App = () => {
 	}
 
 	const filteredProducts = useMemo(() => {
-		const q = state.searchQuery.trim();
-		const skipTextFilter = q === "$all" || q === "";
+		// Server already handles text search — only apply local nutri/category filters
 		let result = state.products.filter((p) => {
-			const matchesSearch =
-				skipTextFilter ||
-				p.product_name.toLowerCase().includes(q.toLowerCase()) ||
-				p.brands.toLowerCase().includes(q.toLowerCase());
 			const matchesNutri =
 				state.filterNutriScore === "ALL" ||
 				p.nutriscore_grade === state.filterNutriScore;
 			const matchesCat =
 				state.categoryFilter === "ALL" ||
-				p.categories.some((c) => c.includes(state.categoryFilter));
-			return matchesSearch && matchesNutri && matchesCat;
+				(Array.isArray(p.categories)
+					? p.categories.some((c) => c.includes(state.categoryFilter))
+					: typeof p.categories === "string" &&
+						p.categories.includes(state.categoryFilter));
+			return matchesNutri && matchesCat;
 		});
 
 		result.sort((a, b) => {
@@ -242,7 +240,6 @@ const App = () => {
 		return result;
 	}, [
 		state.products,
-		state.searchQuery,
 		state.filterNutriScore,
 		state.categoryFilter,
 		state.sortField,

@@ -11,7 +11,7 @@ router.get("/remote/search", async (req, res) => {
 		const axios = require("axios");
 		const base =
 			process.env.OPENFOOD_BASE || "https://world.openfoodfacts.org";
-		const url = `${base}/api/v2/search`;
+		const url = `${base}/cgi/search.pl`;
 		const page = parseInt(req.query.page || "1", 10);
 		const pageSize = parseInt(req.query.pageSize || "20", 10);
 		const resp = await axios.get(url, {
@@ -19,9 +19,9 @@ router.get("/remote/search", async (req, res) => {
 				search_terms: q,
 				page: page,
 				page_size: pageSize,
-				fields: "code,product_name,brands,categories,image_small_url,image_url,nutriments,_tags,nutriscore_grade,nova_group",
+				json: 1,
 			},
-			timeout: 30000,
+			timeout: 60000,
 		});
 		const total = resp.data.count || 0;
 		const products = (resp.data.products || []).map((p) => ({
