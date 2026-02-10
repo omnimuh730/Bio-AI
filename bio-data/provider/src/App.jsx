@@ -63,13 +63,54 @@ const App = () => {
 		}
 	};
 
+	const handleTabChange = (tab) =>
+		setState((s) => ({ ...s, activeTab: tab }));
+
+	const handleCategorySelect = (category) =>
+		setState((s) => ({ ...s, categoryFilter: category }));
+
+	const handleSearchQueryChange = (value) =>
+		setState((s) => ({ ...s, searchQuery: value }));
+
+	const handleIncludeRemoteChange = (value) =>
+		setState((s) => ({ ...s, includeRemote: value }));
+
+	const handleViewModeChange = (mode) =>
+		setState((s) => ({ ...s, viewMode: mode }));
+
+	const handleSelect = (id, selected) => {
+		const next = new Set(state.selectedProductIds);
+		selected ? next.add(id) : next.delete(id);
+		setState((s) => ({ ...s, selectedProductIds: next }));
+	};
+
+	const handleSelectAll = (selected) =>
+		setState((s) => ({
+			...s,
+			selectedProductIds: selected
+				? new Set(filteredProducts.map((p) => p.id))
+				: new Set(),
+		}));
+
+	const handleViewProduct = (product) =>
+		setState((s) => ({ ...s, selectedProduct: product }));
+
+	const handleSort = (field) =>
+		setState((s) => ({
+			...s,
+			sortField: field,
+			sortOrder:
+				s.sortField === field && s.sortOrder === "asc" ? "desc" : "asc",
+		}));
+
+	const handleManagementTabChange = (value) =>
+		setState((s) => ({ ...s, managementSubTab: value }));
+
 	return (
 		<div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans selection:bg-indigo-100">
 			<Sidebar
 				activeTab={state.activeTab}
-				onTabChange={(tab) =>
-					setState((s) => ({ ...s, activeTab: tab }))
-				}
+				onTabChange={handleTabChange}
 				onExport={handleExport}
 			/>
 
@@ -86,9 +127,7 @@ const App = () => {
 					{state.activeTab === "inventory" && (
 						<CategoryTree
 							selectedCategory={state.categoryFilter}
-							onSelectCategory={(c) =>
-								setState((s) => ({ ...s, categoryFilter: c }))
-							}
+							onSelectCategory={handleCategorySelect}
 						/>
 					)}
 
@@ -96,67 +135,20 @@ const App = () => {
 						{state.activeTab === "inventory" && (
 							<InventoryPanel
 								searchQuery={state.searchQuery}
-								onSearchQueryChange={(value) =>
-									setState((s) => ({
-										...s,
-										searchQuery: value,
-									}))
-								}
+								onSearchQueryChange={handleSearchQueryChange}
 								onSearchSubmit={performSearch}
 								includeRemote={state.includeRemote}
-								onIncludeRemoteChange={(value) =>
-									setState((s) => ({
-										...s,
-										includeRemote: value,
-									}))
-								}
+								onIncludeRemoteChange={handleIncludeRemoteChange}
 								viewMode={state.viewMode}
-								onViewModeChange={(mode) =>
-									setState((s) => ({ ...s, viewMode: mode }))
-								}
+								onViewModeChange={handleViewModeChange}
 								filteredProducts={filteredProducts}
 								selectedProductIds={state.selectedProductIds}
-								onSelect={(id, sel) => {
-									const next = new Set(
-										state.selectedProductIds,
-									);
-									sel ? next.add(id) : next.delete(id);
-									setState((s) => ({
-										...s,
-										selectedProductIds: next,
-									}));
-								}}
-								onSelectAll={(sel) =>
-									setState((s) => ({
-										...s,
-										selectedProductIds: sel
-											? new Set(
-													filteredProducts.map(
-														(p) => p.id,
-													),
-												)
-											: new Set(),
-									}))
-								}
-								onViewProduct={(p) =>
-									setState((s) => ({
-										...s,
-										selectedProduct: p,
-									}))
-								}
+								onSelect={handleSelect}
+								onSelectAll={handleSelectAll}
+								onViewProduct={handleViewProduct}
 								sortField={state.sortField}
 								sortOrder={state.sortOrder}
-								onSort={(f) =>
-									setState((s) => ({
-										...s,
-										sortField: f,
-										sortOrder:
-											s.sortField === f &&
-											s.sortOrder === "asc"
-												? "desc"
-												: "asc",
-									}))
-								}
+								onSort={handleSort}
 								pageSize={pageSize}
 								onPageSizeChange={(size) => {
 									setPageSize(size);
@@ -179,41 +171,29 @@ const App = () => {
 						{state.activeTab === "quality" && (
 							<QualityDashboard
 								products={state.products}
-								onReviewProduct={(p) =>
-									setState((s) => ({
-										...s,
-										selectedProduct: p,
-									}))
-								}
+								onReviewProduct={handleViewProduct}
 							/>
 						)}
 
 						{state.activeTab === "analytics" && (
-					<AnalyticsDashboard products={state.products} />
-				)}
+							<AnalyticsDashboard products={state.products} />
+						)}
 
-				<ManagementTabs
-					managementSubTab={state.managementSubTab}
-					onChange={(value) =>
-						setState((s) => ({
-							...s,
-							managementSubTab: value,
-						}))
-					}
-				/>
+						<ManagementTabs
+							managementSubTab={state.managementSubTab}
+							onChange={handleManagementTabChange}
+						/>
+					</div>
 
-
+					<ManagementPanel
+						managementSubTab={state.managementSubTab}
+						products={state.products}
+						auditLogs={state.auditLogs}
+						onMap={handleMapCategory}
+					/>
 				</div>
 
-				<ManagementPanel
-					managementSubTab={state.managementSubTab}
-					products={state.products}
-					auditLogs={state.auditLogs}
-					onMap={handleMapCategory}
-				/>
-			</div>
-
-			<AiAssistantBar
+				<AiAssistantBar
 					aiQuery={aiQuery}
 					onAiQueryChange={setAiQuery}
 					onSubmit={async (e) => {

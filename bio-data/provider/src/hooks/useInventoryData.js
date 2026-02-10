@@ -2,10 +2,35 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MOCK_PRODUCTS, MOCK_AUDIT_LOGS } from "../constants";
 import {
 	generateEmbeddings,
-	getById,
+	importByBarcode,
 	listProducts,
 	searchRemote,
 } from "../api/backend";
+import { chunkArray } from "../utils/array";
+import { mapWithConcurrency } from "../utils/asyncPool";
+
+const DEFAULT_PAGE_SIZE = 20;
+const SYNC_CONCURRENCY = 6;
+const EMBEDDING_BATCH_SIZE = 64;
+const EMBEDDING_CONCURRENCY = 4;
+
+const hasEmbeddings = (product) =>
+	!!(
+		product.embeddings?.updated_at ||
+		(product.embeddings?.name_desc &&
+			product.embeddings.name_desc.length > 0)
+	);
+
+const mergeImportedProduct = (products, imported) => {
+	const idx = products.findIndex((item) => item.code === imported.code);
+	const next = [...products];
+	if (idx >= 0) {
+		next[idx] = { ...next[idx], ...imported, remote: false };
+	} else {
+		next.unshift({ ...imported, remote: false });
+	}
+	return next;
+};
 
 export const useInventoryData = () => {
 	const [state, setState] = useState({
@@ -42,7 +67,7 @@ export const useInventoryData = () => {
 		failed: 0,
 	});
 
-	const [pageSize, setPageSize] = useState(20);
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalProducts, setTotalProducts] = useState(0);
 
@@ -53,7 +78,7 @@ export const useInventoryData = () => {
 		async function load() {
 			try {
 				setIsPageLoading(true);
-				const data = await listProducts("", 1, 20);
+				const data = await listProducts("", 1, DEFAULT_PAGE_SIZE);
 				setState((s) => ({ ...s, products: data.products }));
 				setTotalProducts(data.total ?? data.products.length);
 			} catch (err) {
@@ -208,49 +233,38 @@ export const useInventoryData = () => {
 		});
 		let synced = 0;
 		let failed = 0;
-		for (const p of selectedRemote) {
-			try {
-				const res = await fetch(
-					"http://localhost:4000/api/products/import",
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ barcode: p.code }),
-					},
-				);
-				if (!res.ok) throw new Error("import_failed");
-				const json = await res.json();
-				if (json?.product) {
-					setState((s) => {
-						const idx = s.products.findIndex(
-							(item) => item.code === json.product.code,
-						);
-						const next = [...s.products];
-						if (idx >= 0) {
-							next[idx] = {
-								...next[idx],
-								...json.product,
-								remote: false,
-							};
-						} else {
-							next.unshift(json.product);
-						}
-						return { ...s, products: next };
-					});
+
+		await mapWithConcurrency(
+			selectedRemote,
+			SYNC_CONCURRENCY,
+			async (product) => {
+				try {
+					const res = await importByBarcode(product.code);
+					if (res?.product) {
+						setState((s) => ({
+							...s,
+							products: mergeImportedProduct(
+								s.products,
+								res.product,
+							),
+						}));
+					}
+					synced += 1;
+					setSyncProgress((prev) => ({
+						...prev,
+						done: prev.done + 1,
+					}));
+					return res;
+				} catch (err) {
+					failed += 1;
+					setSyncProgress((prev) => ({
+						...prev,
+						failed: prev.failed + 1,
+					}));
+					throw err;
 				}
-				synced++;
-				setSyncProgress((prev) => ({
-					...prev,
-					done: prev.done + 1,
-				}));
-			} catch {
-				failed++;
-				setSyncProgress((prev) => ({
-					...prev,
-					failed: prev.failed + 1,
-				}));
-			}
-		}
+			},
+		);
 		setIsSyncingAll(false);
 		setSyncProgress((prev) => ({ ...prev, active: false }));
 		console.log(
@@ -270,14 +284,7 @@ export const useInventoryData = () => {
 		}
 
 		// Only include products that don't already have embeddings
-		const embeddable = selectedLocal.filter(
-			(p) =>
-				!(
-					p.embeddings?.updated_at ||
-					(p.embeddings?.name_desc &&
-						p.embeddings.name_desc.length > 0)
-				),
-		);
+		const embeddable = selectedLocal.filter((p) => !hasEmbeddings(p));
 		const skipped = selectedLocal.length - embeddable.length;
 		if (embeddable.length === 0) {
 			console.log(
@@ -294,74 +301,78 @@ export const useInventoryData = () => {
 			failed: 0,
 		});
 		try {
-			const CHUNK_SIZE = 64; // items per batch (tunable)
-			const MAX_CONCURRENCY = 4; // parallel batches
 			let done = 0;
 			let failed = 0;
 
-			function chunkArray(arr, size) {
-				const out = [];
-				for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-				return out;
-			}
-
 			const ids = embeddable.map((p) => p.id);
-			const batches = chunkArray(ids, CHUNK_SIZE);
+			const batches = chunkArray(ids, EMBEDDING_BATCH_SIZE);
+
+			const applyEmbeddingUpdates = (resp) => {
+				const updated = resp?.updatedProducts || [];
+				if (updated.length > 0) {
+					setState((s) => {
+						const next = [...s.products];
+						for (const u of updated) {
+							const idx = next.findIndex(
+								(item) => String(item.id) === String(u.id),
+							);
+							if (idx !== -1) {
+								next[idx] = {
+									...next[idx],
+									embeddings: u.embeddings,
+								};
+							}
+						}
+						return { ...s, products: next };
+					});
+					return;
+				}
+
+				if (!resp?.embeddings) return;
+				setState((s) => {
+					const next = [...s.products];
+					for (const e of resp.embeddings) {
+						const idx = next.findIndex(
+							(item) => String(item.id) === String(e.id),
+						);
+						if (idx !== -1) {
+							next[idx] = {
+								...next[idx],
+								embeddings: e.embeddings,
+							};
+						}
+					}
+					return { ...s, products: next };
+				});
+			};
 
 			async function processBatch(batchIds) {
 				try {
-					const resp = await generateEmbeddings(batchIds, { force: false });
+					const resp = await generateEmbeddings(batchIds, {
+						force: false,
+					});
 					const count = resp?.count || batchIds.length;
 					done += count;
-					setEmbeddingProgress((prev) => ({ ...prev, done: prev.done + count }));
-
-					// Update local state from returned updatedProducts (preferred)
-					const updated = resp?.updatedProducts || [];
-					if (updated.length > 0) {
-						setState((s) => {
-							const next = [...s.products];
-							for (const u of updated) {
-								const idx = next.findIndex((item) => String(item.id) === String(u.id));
-								if (idx !== -1) {
-									next[idx] = { ...next[idx], embeddings: u.embeddings };
-								}
-							}
-							return { ...s, products: next };
-						});
-					} else if (resp?.embeddings) {
-						// fallback: update from embeddings array
-						setState((s) => {
-							const next = [...s.products];
-							for (const e of resp.embeddings) {
-								const idx = next.findIndex((item) => String(item.id) === String(e.id));
-								if (idx !== -1) next[idx] = { ...next[idx], embeddings: e.embeddings };
-							}
-							return { ...s, products: next };
-						});
-					}
+					setEmbeddingProgress((prev) => ({
+						...prev,
+						done: prev.done + count,
+					}));
+					applyEmbeddingUpdates(resp);
 				} catch (err) {
 					failed += batchIds.length;
-					setEmbeddingProgress((prev) => ({ ...prev, failed: prev.failed + batchIds.length }));
+					setEmbeddingProgress((prev) => ({
+						...prev,
+						failed: prev.failed + batchIds.length,
+					}));
 					console.warn("Embedding batch failed", err);
 				}
 			}
 
-			// Run batches with limited concurrency
-			let inFlight = [];
-			let i = 0;
-			while (i < batches.length) {
-				while (inFlight.length < MAX_CONCURRENCY && i < batches.length) {
-					const p = processBatch(batches[i++]);
-					inFlight.push(p);
-					p.finally(() => {
-						inFlight = inFlight.filter((x) => x !== p);
-					});
-				}
-				// wait for at least one to finish
-				if (inFlight.length > 0) await Promise.race(inFlight);
-			}
-			// wait for remaining
-			await Promise.all(inFlight);
+			await mapWithConcurrency(
+				batches,
+				EMBEDDING_CONCURRENCY,
+				processBatch,
+			);
 
 			if (skipped > 0) {
 				console.log(
