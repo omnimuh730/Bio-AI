@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Product } from "../types";
 import {
 	PieChart,
 	Pie,
@@ -9,7 +8,6 @@ import {
 	Legend,
 } from "recharts";
 import NutriScoreBadge from "./NutriScoreBadge";
-import { analyzeProductHealth } from "../services/geminiService";
 
 const ProductDetail = ({ product, onClose }) => {
 	const [analysis, setAnalysis] = useState(null);
@@ -37,7 +35,7 @@ const ProductDetail = ({ product, onClose }) => {
 	useEffect(() => {
 		const fetchAnalysis = async () => {
 			setLoading(true);
-			const result = await analyzeProductHealth(product);
+			const result = null;
 			setAnalysis(result || "No analysis available.");
 			setLoading(false);
 		};

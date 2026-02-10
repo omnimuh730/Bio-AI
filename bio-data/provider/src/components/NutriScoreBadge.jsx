@@ -1,5 +1,3 @@
-import React from "react";
-import { NutriScore } from "../types";
 import { NUTRI_SCORE_COLORS } from "../constants";
 
 const NutriScoreBadge = ({ score, size = "md" }) => {

@@ -1,5 +1,3 @@
-import { Product, AuditLog, SavedSegment } from "./types";
-
 export const PROD_CATEGORIES = [
 	"Sandwich",
 	"Beverage",

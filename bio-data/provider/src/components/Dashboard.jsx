@@ -1,5 +1,3 @@
-import React from "react";
-import { Product } from "../types";
 import {
 	BarChart,
 	Bar,

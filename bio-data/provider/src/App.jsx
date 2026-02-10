@@ -1,12 +1,5 @@
 import React, { useState, useMemo } from "react";
 import {
-	Product,
-	AppState,
-	NutriScore,
-	SortField,
-	SavedSegment,
-} from "./types";
-import {
 	MOCK_PRODUCTS,
 	MOCK_AUDIT_LOGS,
 	SAVED_SEGMENTS,
@@ -21,27 +14,23 @@ import DataManagement from "./components/DataManagement";
 import CategoryTree from "./components/CategoryTree";
 import CategoryMapping from "./components/CategoryMapping";
 import AuditLogViewer from "./components/AuditLogViewer";
-import { getNutritionInsight } from "./services/geminiService";
 
 const App = () => {
-	const [state, setState] =
-		useState <
-		AppState >
-		{
-			products: MOCK_PRODUCTS,
-			auditLogs: MOCK_AUDIT_LOGS,
-			segments: SAVED_SEGMENTS,
-			selectedProduct: null,
-			selectedProductIds: new Set(),
-			searchQuery: "",
-			filterNutriScore: "ALL",
-			categoryFilter: "ALL",
-			activeTab: "inventory",
-			managementSubTab: "merging",
-			viewMode: "table",
-			sortField: "last_modified",
-			sortOrder: "desc",
-		};
+	const [state, setState] = useState({
+		products: MOCK_PRODUCTS,
+		auditLogs: MOCK_AUDIT_LOGS,
+		segments: SAVED_SEGMENTS,
+		selectedProduct: null,
+		selectedProductIds: new Set(),
+		searchQuery: "",
+		filterNutriScore: "ALL",
+		categoryFilter: "ALL",
+		activeTab: "inventory",
+		managementSubTab: "merging",
+		viewMode: "table",
+		sortField: "last_modified",
+		sortOrder: "desc",
+	});
 
 	const [aiQuery, setAiQuery] = useState("");
 	const [aiResponse, setAiResponse] = useState(null);
@@ -450,10 +439,7 @@ const App = () => {
 										onSubmit={async (e) => {
 											e.preventDefault();
 											setIsAiLoading(true);
-											const res =
-												await getNutritionInsight(
-													aiQuery,
-												);
+											const res = null;
 											setAiResponse(res);
 											setIsAiLoading(false);
 										}}

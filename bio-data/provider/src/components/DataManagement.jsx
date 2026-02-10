@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Product } from "../types";
 
 const DataManagement = ({ products }) => {
 	const [selectedForMerge, setSelectedForMerge] = useState([]);
