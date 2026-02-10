@@ -31,6 +31,7 @@ const App = () => {
 		viewMode: "table",
 		sortField: "last_modified",
 		sortOrder: "desc",
+		includeRemote: true,
 	});
 
 	// Load local products from backend on mount
@@ -75,7 +76,7 @@ const App = () => {
 			cancelled = true;
 			clearTimeout(t);
 		};
-	}, [state.searchQuery]);
+	}, [state.searchQuery, state.includeRemote]);
 
 	const [aiQuery, setAiQuery] = useState("");
 	const [aiResponse, setAiResponse] = useState(null);
@@ -93,29 +94,33 @@ const App = () => {
 	const [totalProducts, setTotalProducts] = useState(0);
 
 	// Fetch a page of products from backend (local + remote for searches)
-	async function fetchPage(q, page, size) {
+	async function fetchPage(
+		q,
+		page,
+		size,
+		includeRemote = state.includeRemote,
+	) {
 		const query = (q || "").trim();
 		const backendQ = query === "$all" ? "" : query;
 
-		// For text searches (not $all / empty), fetch both local and remote
+		// For text searches (not $all / empty), fetch local and remote conditionally
 		if (backendQ) {
-			const [localRes, remoteRes] = await Promise.allSettled([
-				listProducts(backendQ, page, size),
-				searchRemote(backendQ, page, size),
-			]);
-			let local = [];
-			let localTotal = 0;
+			// Always fetch local first
+			const localRes = await listProducts(backendQ, page, size);
+			let local = localRes.products || [];
+			let localTotal = localRes.total ?? local.length;
 			let remote = [];
 			let remoteTotal = 0;
-			if (localRes.status === "fulfilled") {
-				local = localRes.value.products || [];
-				localTotal = localRes.value.total ?? local.length;
-			}
-			if (remoteRes.status === "fulfilled") {
-				remote = (remoteRes.value.products || []).filter(
-					(r) => !local.some((l) => l.code === r.code),
-				);
-				remoteTotal = remoteRes.value.total ?? 0;
+			if (includeRemote) {
+				try {
+					const remoteRes = await searchRemote(backendQ, page, size);
+					remote = (remoteRes.products || []).filter(
+						(r) => !local.some((l) => l.code === r.code),
+					);
+					remoteTotal = remoteRes.total ?? 0;
+				} catch (err) {
+					console.warn("Remote search failed", err);
+				}
 			}
 			const combined = [...local, ...remote];
 			setState((s) => ({ ...s, products: combined }));
@@ -136,10 +141,10 @@ const App = () => {
 			return;
 		}
 		const q = state.searchQuery.trim();
-		fetchPage(q, currentPage, pageSize).catch((err) =>
+		fetchPage(q, currentPage, pageSize, state.includeRemote).catch((err) =>
 			console.warn("Page fetch failed", err),
 		);
-	}, [currentPage, pageSize]);
+	}, [currentPage, pageSize, state.includeRemote]);
 
 	// performSearch: query local backend and remote, update product list
 	async function performSearch(q) {
@@ -150,7 +155,7 @@ const App = () => {
 			try {
 				skipNextPageEffect.current = true;
 				setCurrentPage(1);
-				await fetchPage(query, 1, pageSize);
+				await fetchPage(query, 1, pageSize, state.includeRemote);
 			} catch (err) {
 				console.warn("Failed to load products", err);
 			} finally {
@@ -162,7 +167,7 @@ const App = () => {
 		try {
 			skipNextPageEffect.current = true;
 			setCurrentPage(1);
-			await fetchPage(query, 1, pageSize);
+			await fetchPage(query, 1, pageSize, state.includeRemote);
 		} catch (err) {
 			console.warn("Search failed", err);
 		} finally {
@@ -508,6 +513,21 @@ const App = () => {
 										/>
 									</div>
 									<div className="flex items-center space-x-2">
+										<label className="flex items-center text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-xl">
+											<input
+												type="checkbox"
+												className="mr-2"
+												checked={state.includeRemote}
+												onChange={(e) =>
+													setState((s) => ({
+														...s,
+														includeRemote:
+															e.target.checked,
+													}))
+												}
+											/>
+											Include OpenFoodFacts
+										</label>
 										<button className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors">
 											<i className="fas fa-filter mr-2"></i>{" "}
 											Advanced Query

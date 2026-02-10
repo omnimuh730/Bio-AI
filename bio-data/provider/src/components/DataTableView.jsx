@@ -173,7 +173,7 @@ const DataTableView = ({
 								Quality {renderSortIcon("quality_score")}
 							</th>
 							<th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-								Nutri/NOVA
+								Nutri Grade
 							</th>
 							<th
 								className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell cursor-pointer"
@@ -254,7 +254,7 @@ const DataTableView = ({
 											size="sm"
 										/>
 										<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-											NOVA {product.nova_group}
+											{product.nutriscore_grade}
 										</span>
 									</div>
 								</td>

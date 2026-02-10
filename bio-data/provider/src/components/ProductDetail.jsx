@@ -106,7 +106,9 @@ const ProductDetail = ({ product, onClose }) => {
 				const highProtein =
 					(product.nutriments?.proteins_100g || 0) > 10;
 
-				let text = `This product contains ${product.nutriments?.energy_100g || 0} kJ per 100g. `;
+				let text = `This product contains ${
+					product.nutriments?.energy_100g || 0
+				} kJ per 100g. `;
 				if (highProtein)
 					text += "It is a significant source of protein. ";
 				if (highSugar)
@@ -121,11 +123,6 @@ const ProductDetail = ({ product, onClose }) => {
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-			{/* 
-                UPDATED BACKDROP: 
-                1. Removed 'backdrop-blur-sm'
-                2. Changed opacity from /60 to /40 so you can see behind better
-            */}
 			<div
 				className="absolute inset-0 bg-slate-900/40 transition-opacity"
 				onClick={onClose}
@@ -134,7 +131,7 @@ const ProductDetail = ({ product, onClose }) => {
 			{/* Main Card */}
 			<div className="bg-white w-full max-w-6xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10">
 				{/* === LEFT COLUMN: Identity, Barcode, Meta === */}
-				<div className="w-full md:w-[350px] lg:w-[400px] bg-slate-50 border-r border-slate-200 flex flex-col overflow-y-auto">
+				<div className="w-full md:w-[350px] lg:w-[400px] bg-slate-50 border-r border-slate-200 flex flex-col overflow-y-auto shrink-0">
 					<div className="p-6">
 						<button
 							onClick={onClose}
@@ -162,7 +159,7 @@ const ProductDetail = ({ product, onClose }) => {
 						</p>
 
 						{/* Badges */}
-						<div className="flex gap-4 mb-8">
+						<div className="flex flex-col gap-6">
 							<div className="flex flex-col">
 								<span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
 									Nutri-Score
@@ -172,21 +169,8 @@ const ProductDetail = ({ product, onClose }) => {
 									size="md"
 								/>
 							</div>
-							<div className="flex flex-col">
-								<span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-									NOVA
-								</span>
-								<div
-									className={`h-10 px-3 rounded-lg flex items-center justify-center text-lg font-bold border ${product.nova_group === 4 ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-green-50 border-green-200 text-green-600"}`}
-								>
-									{product.nova_group}
-								</div>
-							</div>
-						</div>
 
-						{/* Categories / Meta Chips */}
-						{cleanCategories.length > 0 && (
-							<div className="mb-8">
+							<div>
 								<h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">
 									Categories
 								</h3>
@@ -201,21 +185,22 @@ const ProductDetail = ({ product, onClose }) => {
 									))}
 								</div>
 							</div>
-						)}
 
-						{/* BARCODE SECTION - UPDATED: Removed opacity/blending for clarity */}
-						<div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
-							<h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 self-start">
-								Product Code
-							</h3>
-							<img
-								src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${product.code}&scale=2&incltext&textxalign=center`}
-								alt={`Barcode ${product.code}`}
-								className="w-full h-16 object-contain"
-							/>
+							{/* BARCODE SECTION */}
+							<div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center mt-2">
+								<h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 self-start">
+									Product Code
+								</h3>
+								<img
+									src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${product.code}&scale=2&incltext&textxalign=center`}
+									alt={`Barcode ${product.code}`}
+									className="w-full h-16 object-contain"
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
+				{/* ^^^ FIXED: Left Column closes here now, allowing Right Column to sit next to it */}
 
 				{/* === RIGHT COLUMN: Data & Analytics === */}
 				<div className="flex-1 bg-white p-6 md:p-10 overflow-y-auto custom-scrollbar">
@@ -276,7 +261,11 @@ const ProductDetail = ({ product, onClose }) => {
 								{nutrientsList.map((item, idx) => (
 									<div
 										key={idx}
-										className={`flex justify-between items-center py-2.5 border-b border-slate-200/60 last:border-0 ${item.label.includes("Energy") ? "font-bold text-slate-800" : "text-slate-600"}`}
+										className={`flex justify-between items-center py-2.5 border-b border-slate-200/60 last:border-0 ${
+											item.label.includes("Energy")
+												? "font-bold text-slate-800"
+												: "text-slate-600"
+										}`}
 									>
 										<span>{item.label}</span>
 										<span className="font-mono">

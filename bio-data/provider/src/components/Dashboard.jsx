@@ -67,17 +67,6 @@ const Dashboard = ({ products }) => {
 		},
 	];
 
-	// 3. NOVA Group Distribution
-	const novaCounts = products.reduce((acc, p) => {
-		acc[p.nova_group] = (acc[p.nova_group] || 0) + 1;
-		return acc;
-	}, {});
-
-	const novaChartData = [1, 2, 3, 4].map((group) => ({
-		name: `Group ${group}`,
-		count: novaCounts[group] || 0,
-	}));
-
 	return (
 		<div className="space-y-8">
 			{/* Top Stats */}
@@ -95,12 +84,7 @@ const Dashboard = ({ products }) => {
 						icon: "fa-heart-pulse",
 						color: "bg-emerald-100 text-emerald-600",
 					},
-					{
-						label: "Ultra Processed",
-						val: products.filter((p) => p.nova_group === 4).length,
-						icon: "fa-flask",
-						color: "bg-orange-100 text-orange-600",
-					},
+
 					{
 						label: "Unique Brands",
 						val: new Set(products.map((p) => p.brands)).size,
@@ -202,43 +186,26 @@ const Dashboard = ({ products }) => {
 								<Tooltip />
 							</RadarChart>
 						</ResponsiveContainer>
-					</div>
-				</div>
-
-				{/* Processing Level (NOVA) */}
-				<div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
-					<h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
-						<i className="fas fa-industry mr-2 text-orange-500"></i>{" "}
-						Processing Level Analysis (NOVA)
-					</h3>
-					<div className="h-64">
-						<ResponsiveContainer width="100%" height="100%">
-							<ComposedChart data={novaChartData}>
-								<CartesianGrid
-									stroke="#f1f5f9"
-									vertical={false}
-								/>
-								<XAxis
-									dataKey="name"
-									axisLine={false}
-									tickLine={false}
-								/>
-								<YAxis axisLine={false} tickLine={false} />
-								<Tooltip />
-								<Area
-									type="monotone"
-									dataKey="count"
-									fill="#fee2e2"
-									stroke="#ef4444"
-								/>
-								<Bar
-									dataKey="count"
-									fill="#4f46e5"
-									radius={[4, 4, 0, 0]}
-									barSize={40}
-								/>
-							</ComposedChart>
-						</ResponsiveContainer>
+						<CartesianGrid stroke="#f1f5f9" vertical={false} />
+						<XAxis
+							dataKey="name"
+							axisLine={false}
+							tickLine={false}
+						/>
+						<YAxis axisLine={false} tickLine={false} />
+						<Tooltip />
+						<Area
+							type="monotone"
+							dataKey="count"
+							fill="#fee2e2"
+							stroke="#ef4444"
+						/>
+						<Bar
+							dataKey="count"
+							fill="#4f46e5"
+							radius={[4, 4, 0, 0]}
+							barSize={40}
+						/>
 					</div>
 				</div>
 			</div>
