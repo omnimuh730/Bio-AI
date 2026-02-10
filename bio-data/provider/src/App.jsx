@@ -11,6 +11,7 @@ import Dashboard from "./components/Dashboard";
 import QualityDashboard from "./components/QualityDashboard";
 import DataTableView from "./components/DataTableView";
 import DataManagement from "./components/DataManagement";
+import { importByBarcode, listProducts, searchRemote } from "./api/backend";
 import CategoryTree from "./components/CategoryTree";
 import CategoryMapping from "./components/CategoryMapping";
 import AuditLogViewer from "./components/AuditLogViewer";
@@ -32,9 +33,90 @@ const App = () => {
 		sortOrder: "desc",
 	});
 
+	// Load local products from backend on mount
+	React.useEffect(() => {
+		async function load() {
+			try {
+				const { products } = await listProducts("", 1, 200);
+				setState((s) => ({ ...s, products }));
+			} catch (err) {
+				console.warn("Failed to load backend products", err);
+			}
+		}
+		load();
+	}, []);
+
+	// Expose helper to reload local products (used by row sync button)
+	window.reloadProducts = async () => {
+		try {
+			const { products } = await listProducts("", 1, 200);
+			setState((s) => ({ ...s, products }));
+		} catch (err) {
+			console.warn("reloadProducts failed", err);
+		}
+	};
+
+	// Search: query both local backend and remote OpenFoodFacts and merge results
+	React.useEffect(() => {
+		const q = state.searchQuery.trim();
+		let cancelled = false;
+		const t = setTimeout(async () => {
+			try {
+				await performSearch(q);
+			} catch (err) {
+				if (!cancelled) console.warn("Search failed", err);
+			}
+		}, 300);
+		return () => {
+			cancelled = true;
+			clearTimeout(t);
+		};
+	}, [state.searchQuery]);
+
 	const [aiQuery, setAiQuery] = useState("");
 	const [aiResponse, setAiResponse] = useState(null);
 	const [isAiLoading, setIsAiLoading] = useState(false);
+
+	// Import & search UI state
+	const [importBarcode, setImportBarcode] = useState("");
+	const [isImporting, setIsImporting] = useState(false);
+	const [isSearching, setIsSearching] = useState(false);
+
+	// performSearch: query local backend and remote, update product list
+	async function performSearch(q) {
+		const query = (q || "").trim();
+		if (!query) {
+			// reload full local set
+			try {
+				const { products } = await listProducts("", 1, 200);
+				setState((s) => ({ ...s, products }));
+			} catch (err) {
+				console.warn("Failed to reload products", err);
+			}
+			return;
+		}
+		setIsSearching(true);
+		try {
+			const [localRes, remoteRes] = await Promise.allSettled([
+				listProducts(query, 1, 50),
+				searchRemote(query, 20),
+			]);
+			let local = [];
+			let remote = [];
+			if (localRes.status === "fulfilled")
+				local = localRes.value.products || [];
+			if (remoteRes.status === "fulfilled")
+				remote = (remoteRes.value.products || []).filter(
+					(r) => !local.some((l) => l.code === r.code),
+				);
+			const combined = [...local, ...remote];
+			setState((s) => ({ ...s, products: combined }));
+		} catch (err) {
+			console.warn("Search failed", err);
+		} finally {
+			setIsSearching(false);
+		}
+	}
 
 	const filteredProducts = useMemo(() => {
 		let result = state.products.filter((p) => {
@@ -212,6 +294,52 @@ const App = () => {
 							<i className="fas fa-clock"></i>
 							<span>Last Import: 14m ago</span>
 						</div>
+						{/* Quick Import */}
+						<div className="flex items-center space-x-2">
+							<input
+								type="text"
+								placeholder="Import barcode (e.g. 3017620422003)"
+								className="p-2 pl-3 pr-12 rounded-xl border border-slate-200 text-xs bg-white"
+								value={importBarcode}
+								onChange={(e) =>
+									setImportBarcode(e.target.value)
+								}
+								aria-label="Import barcode"
+							/>
+							<button
+								onClick={async () => {
+									if (!importBarcode)
+										return alert(
+											"Enter a barcode to import",
+										);
+									try {
+										setIsImporting(true);
+										const res =
+											await importByBarcode(
+												importBarcode,
+											);
+										const newP = res.product;
+										setState((s) => ({
+											...s,
+											products: [newP, ...s.products],
+										}));
+										setImportBarcode("");
+									} catch (err) {
+										console.error(err);
+										alert(
+											"Import failed: " +
+												(err.message ||
+													JSON.stringify(err)),
+										);
+									} finally {
+										setIsImporting(false);
+									}
+								}}
+								className="h-10 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-colors"
+							>
+								{isImporting ? "Importing..." : "Import"}
+							</button>
+						</div>{" "}
 						<button className="h-10 w-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-all border border-slate-100">
 							<i className="fas fa-gear"></i>
 						</button>
@@ -244,6 +372,32 @@ const App = () => {
 					<div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
 						{state.activeTab === "inventory" && (
 							<div className="space-y-6 h-full flex flex-col">
+								{state.searchQuery &&
+									filteredProducts.length === 0 && (
+										<div className="bg-white rounded-xl p-6 border border-slate-100 text-center mb-4">
+											<p className="text-slate-500 mb-3">
+												No products matched "
+												{state.searchQuery}".
+											</p>
+											<div className="flex items-center justify-center gap-2">
+												<button
+													className="px-4 py-2 bg-indigo-600 text-white rounded-xl"
+													onClick={() =>
+														performSearch(
+															state.searchQuery,
+														)
+													}
+												>
+													Search remote
+												</button>
+												{isSearching && (
+													<span className="text-slate-400">
+														Searching...
+													</span>
+												)}
+											</div>
+										</div>
+									)}
 								<div className="flex flex-wrap items-center gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
 									<div className="relative flex-1 min-w-[300px]">
 										<i className="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
@@ -252,6 +406,14 @@ const App = () => {
 											placeholder="Smart Search (Name, Brand, Code...)"
 											className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm font-bold placeholder:text-slate-300"
 											value={state.searchQuery}
+											onKeyDown={async (e) => {
+												if (e.key === "Enter") {
+													e.preventDefault();
+													await performSearch(
+														state.searchQuery,
+													);
+												}
+											}}
 											onChange={(e) =>
 												setState((s) => ({
 													...s,

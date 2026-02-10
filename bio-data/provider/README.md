@@ -14,3 +14,21 @@ The React Compiler is currently not compatible with SWC. See [this issue](https:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+---
+
+## Local backend for OpenFoodFacts sync 🔧
+
+This project can be used with the small backend located in `../backend` which:
+
+- imports products from OpenFoodFacts by barcode and stores them in a local MongoDB
+- serves product list and CRUD endpoints to the frontend
+
+Quick start:
+
+1. cd `bio-data/backend`
+2. copy `.env.example` → `.env` and confirm `MONGODB_URI` (default `mongodb://localhost:27017/bio_data`)
+3. `npm install` (or `yarn`)
+4. `npm run dev` to start the backend on port `4000`
+
+The provider frontend calls `http://localhost:4000/api/products` and provides a small import box in the header to import by barcode.
