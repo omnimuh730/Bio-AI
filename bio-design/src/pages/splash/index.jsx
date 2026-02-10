@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
-import "../splash.css";
+import "./splash.css";
+
+import { FiSearch } from "react-icons/fi";
 
 export default function Splash({ onFinish }) {
 	useEffect(() => {
@@ -9,7 +11,7 @@ export default function Splash({ onFinish }) {
 			finishId = setTimeout(() => {
 				if (typeof onFinish === "function") onFinish();
 			}, 420);
-		}, 2500);
+		}, 2200);
 
 		return () => {
 			clearTimeout(id);
@@ -19,8 +21,13 @@ export default function Splash({ onFinish }) {
 	}, [onFinish]);
 
 	return (
-		<div className="splash-inner">
-			<div className="splash-card">
+		<div className="splash-full">
+			<div className="search-bubble" aria-hidden>
+				<FiSearch size={16} />
+				<div className="bubble-text">Drag to search</div>
+			</div>
+
+			<div className="splash-center">
 				<svg
 					className="splash-logo"
 					viewBox="0 0 64 64"
@@ -29,7 +36,7 @@ export default function Splash({ onFinish }) {
 				>
 					<g
 						fill="none"
-						stroke="white"
+						stroke="rgba(255,255,255,0.9)"
 						strokeWidth="3"
 						strokeLinecap="round"
 						strokeLinejoin="round"
@@ -40,7 +47,7 @@ export default function Splash({ onFinish }) {
 						<path d="M36 10c4 0 6 2 6 8v12c0 6-4 10-10 10h-4" />
 					</g>
 				</svg>
-				<div className="splash-title">bioai</div>
+				<div className="splash-title">Eatsy</div>
 			</div>
 		</div>
 	);

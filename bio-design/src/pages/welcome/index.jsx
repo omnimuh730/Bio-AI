@@ -1,5 +1,5 @@
 import React from "react";
-import "../welcome.css";
+import "./welcome.css";
 
 export default function Welcome({ onGetStarted }) {
 	const circles = [

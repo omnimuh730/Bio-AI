@@ -1,0 +1,133 @@
+/* Splash styles (full page layout) */
+:root {
+	--splash-orange: var(--accent);
+}
+
+.splash-bg {
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: radial-gradient(
+		circle at 20% 10%,
+		#fff9f4,
+		#f6e9df 45%,
+		#efe0d6 100%
+	);
+}
+
+/* device frame and notch styles removed for full page layout */
+.splash-full {
+	height: 100vh;
+	width: 100vw;
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+	justify-content:center;
+	background: linear-gradient(160deg,#ff6b45,#ff8b6b 65%);
+	position:relative;
+}
+
+/* floating search bubble */
+.search-bubble {
+	position: absolute;
+	top: 24px;
+	left: 24px;
+	background: rgba(0,0,0,0.7);
+	color: white;
+	padding: 10px 14px;
+	border-radius: 12px;
+	display:inline-flex;
+	gap:10px;
+	align-items:center;
+	box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+	backdrop-filter: blur(4px);
+}
+.search-bubble .bubble-text{ font-weight:700; font-size:13px }
+
+.splash-center{ text-align:center; color:white }
+.splash-logo{
+	width:160px;
+	height:160px;
+	opacity:0.92;
+	filter: drop-shadow(0 12px 30px rgba(0,0,0,0.12));
+	animation: logoPop 700ms cubic-bezier(0.17,0.67,0.35,1) forwards;
+}
+.splash-title{
+	margin-top:24px;
+	font-size:42px;
+	font-weight:800;
+	color: rgba(255,255,255,0.95);
+	letter-spacing:1px;
+}
+
+/* fade out when switching screens */
+body.splash-hidden .splash-full {
+	opacity: 0;
+	transform: scale(0.98);
+	transition: opacity 420ms ease, transform 420ms ease;
+	pointer-events:none;
+}
+
+/* small screens: center with some padding */
+@media (max-width:420px){
+	.search-bubble{ top:14px; left:14px; padding:8px 12px }
+	.splash-logo{ width:120px; height:120px }
+	.splash-title{ font-size:36px }
+}
+@keyframes logoPop {
+	0% {
+		transform: scale(0.6) rotate(-6deg);
+		opacity: 0;
+	}
+	60% {
+		transform: scale(1.05) rotate(3deg);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1) rotate(0);
+	}
+}
+@keyframes titleFade {
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+/* main content area for full-page layout */
+.app-root {
+	min-height: 100vh;
+	width: 100%;
+}
+
+.content-area {
+	position: relative;
+	min-height: 100vh;
+	width: 100%;
+	padding-top: 0;
+	overflow: auto;
+	background: #fff6f2;
+}
+
+/* animate splash out only (keep device frame visible) */
+body.splash-hidden .splash-card-container {
+	opacity: 0;
+	transform: scale(0.98);
+	transition:
+		opacity 420ms ease,
+		transform 420ms ease;
+	/* ensure the hidden splash doesn't block input to newly-rendered screens */
+	pointer-events: none;
+}
+
+/* backdrop - subtle bluish surrounding like the design */
+.splash-bg {
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: radial-gradient(circle at 50% 10%, #eef2fb 0%, #f1f4f8 45%, #eef1f6 100%);
+}
