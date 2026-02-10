@@ -27,9 +27,10 @@ export async function getByCode(code) {
 	return res.json();
 }
 
-export async function searchRemote(q = "", pageSize = 20) {
+export async function searchRemote(q = "", page = 1, pageSize = 20) {
 	const url = new URL("http://localhost:4000/api/products/remote/search");
 	url.searchParams.set("q", q);
+	url.searchParams.set("page", page);
 	url.searchParams.set("pageSize", pageSize);
 	const res = await fetch(url);
 	if (!res.ok) throw new Error("remote_search_error");

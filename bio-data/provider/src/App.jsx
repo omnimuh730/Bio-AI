@@ -37,8 +37,9 @@ const App = () => {
 	React.useEffect(() => {
 		async function load() {
 			try {
-				const { products } = await listProducts("", 1, 200);
-				setState((s) => ({ ...s, products }));
+				const data = await listProducts("", 1, 20);
+				setState((s) => ({ ...s, products: data.products }));
+				setTotalProducts(data.total ?? data.products.length);
 			} catch (err) {
 				console.warn("Failed to load backend products", err);
 			}
@@ -49,8 +50,11 @@ const App = () => {
 	// Expose helper to reload local products (used by row sync button)
 	window.reloadProducts = async () => {
 		try {
-			const { products } = await listProducts("", 1, 200);
-			setState((s) => ({ ...s, products }));
+			const q = state.searchQuery.trim();
+			const backendQ = q === "$all" ? "" : q;
+			const data = await listProducts(backendQ, currentPage, pageSize);
+			setState((s) => ({ ...s, products: data.products }));
+			setTotalProducts(data.total ?? data.products.length);
 		} catch (err) {
 			console.warn("reloadProducts failed", err);
 		}
@@ -81,36 +85,84 @@ const App = () => {
 	const [importBarcode, setImportBarcode] = useState("");
 	const [isImporting, setIsImporting] = useState(false);
 	const [isSearching, setIsSearching] = useState(false);
+	const [isSyncingAll, setIsSyncingAll] = useState(false);
+
+	// Pagination state
+	const [pageSize, setPageSize] = useState(20);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [totalProducts, setTotalProducts] = useState(0);
+
+	// Fetch a page of products from backend (local + remote for searches)
+	async function fetchPage(q, page, size) {
+		const query = (q || "").trim();
+		const backendQ = query === "$all" ? "" : query;
+
+		// For text searches (not $all / empty), fetch both local and remote
+		if (backendQ) {
+			const [localRes, remoteRes] = await Promise.allSettled([
+				listProducts(backendQ, page, size),
+				searchRemote(backendQ, page, size),
+			]);
+			let local = [];
+			let localTotal = 0;
+			let remote = [];
+			let remoteTotal = 0;
+			if (localRes.status === "fulfilled") {
+				local = localRes.value.products || [];
+				localTotal = localRes.value.total ?? local.length;
+			}
+			if (remoteRes.status === "fulfilled") {
+				remote = (remoteRes.value.products || []).filter(
+					(r) => !local.some((l) => l.code === r.code),
+				);
+				remoteTotal = remoteRes.value.total ?? 0;
+			}
+			const combined = [...local, ...remote];
+			setState((s) => ({ ...s, products: combined }));
+			setTotalProducts(localTotal + remoteTotal);
+		} else {
+			// $all or empty — local only
+			const data = await listProducts("", page, size);
+			setState((s) => ({ ...s, products: data.products }));
+			setTotalProducts(data.total ?? data.products.length);
+		}
+	}
+
+	// Re-fetch when page or pageSize changes (server-side pagination)
+	const skipNextPageEffect = React.useRef(false);
+	React.useEffect(() => {
+		if (skipNextPageEffect.current) {
+			skipNextPageEffect.current = false;
+			return;
+		}
+		const q = state.searchQuery.trim();
+		fetchPage(q, currentPage, pageSize).catch((err) =>
+			console.warn("Page fetch failed", err),
+		);
+	}, [currentPage, pageSize]);
 
 	// performSearch: query local backend and remote, update product list
 	async function performSearch(q) {
 		const query = (q || "").trim();
-		if (!query) {
-			// reload full local set
+		// "$all" shows everything from local DB (paginated)
+		if (query === "$all" || !query) {
+			setIsSearching(true);
 			try {
-				const { products } = await listProducts("", 1, 200);
-				setState((s) => ({ ...s, products }));
+				skipNextPageEffect.current = true;
+				setCurrentPage(1);
+				await fetchPage(query, 1, pageSize);
 			} catch (err) {
-				console.warn("Failed to reload products", err);
+				console.warn("Failed to load products", err);
+			} finally {
+				setIsSearching(false);
 			}
 			return;
 		}
 		setIsSearching(true);
 		try {
-			const [localRes, remoteRes] = await Promise.allSettled([
-				listProducts(query, 1, 50),
-				searchRemote(query, 20),
-			]);
-			let local = [];
-			let remote = [];
-			if (localRes.status === "fulfilled")
-				local = localRes.value.products || [];
-			if (remoteRes.status === "fulfilled")
-				remote = (remoteRes.value.products || []).filter(
-					(r) => !local.some((l) => l.code === r.code),
-				);
-			const combined = [...local, ...remote];
-			setState((s) => ({ ...s, products: combined }));
+			skipNextPageEffect.current = true;
+			setCurrentPage(1);
+			await fetchPage(query, 1, pageSize);
 		} catch (err) {
 			console.warn("Search failed", err);
 		} finally {
@@ -118,15 +170,50 @@ const App = () => {
 		}
 	}
 
+	// Sync all selected remote products
+	async function handleSyncAll() {
+		const selectedRemote = state.products.filter(
+			(p) => p.remote && state.selectedProductIds.has(p.id),
+		);
+		if (selectedRemote.length === 0) {
+			alert("No remote products selected to sync.");
+			return;
+		}
+		setIsSyncingAll(true);
+		let synced = 0;
+		let failed = 0;
+		for (const p of selectedRemote) {
+			try {
+				const res = await fetch(
+					"http://localhost:4000/api/products/import",
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ barcode: p.code }),
+					},
+				);
+				if (!res.ok) throw new Error("import_failed");
+				synced++;
+			} catch {
+				failed++;
+			}
+		}
+		setIsSyncingAll(false);
+		alert(
+			`Synced ${synced} product(s)${failed ? `, ${failed} failed` : ""}`,
+		);
+		setState((s) => ({ ...s, selectedProductIds: new Set() }));
+		if (window.reloadProducts) await window.reloadProducts();
+	}
+
 	const filteredProducts = useMemo(() => {
+		const q = state.searchQuery.trim();
+		const skipTextFilter = q === "$all" || q === "";
 		let result = state.products.filter((p) => {
 			const matchesSearch =
-				p.product_name
-					.toLowerCase()
-					.includes(state.searchQuery.toLowerCase()) ||
-				p.brands
-					.toLowerCase()
-					.includes(state.searchQuery.toLowerCase());
+				skipTextFilter ||
+				p.product_name.toLowerCase().includes(q.toLowerCase()) ||
+				p.brands.toLowerCase().includes(q.toLowerCase());
 			const matchesNutri =
 				state.filterNutriScore === "ALL" ||
 				p.nutriscore_grade === state.filterNutriScore;
@@ -373,6 +460,7 @@ const App = () => {
 						{state.activeTab === "inventory" && (
 							<div className="space-y-6 h-full flex flex-col">
 								{state.searchQuery &&
+									state.searchQuery.trim() !== "$all" &&
 									filteredProducts.length === 0 && (
 										<div className="bg-white rounded-xl p-6 border border-slate-100 text-center mb-4">
 											<p className="text-slate-500 mb-3">
@@ -499,6 +587,16 @@ const App = () => {
 													: "asc",
 										}))
 									}
+									pageSize={pageSize}
+									onPageSizeChange={(size) => {
+										setPageSize(size);
+										setCurrentPage(1);
+									}}
+									currentPage={currentPage}
+									onPageChange={setCurrentPage}
+									totalProducts={totalProducts}
+									onSyncAll={handleSyncAll}
+									isSyncingAll={isSyncingAll}
 								/>
 							</div>
 						)}

@@ -1,4 +1,7 @@
+import React, { useMemo } from "react";
 import NutriScoreBadge from "./NutriScoreBadge";
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const DataTableView = ({
 	products,
@@ -9,11 +12,29 @@ const DataTableView = ({
 	sortField,
 	sortOrder,
 	onSort,
+	pageSize = 20,
+	onPageSizeChange,
+	currentPage = 1,
+	onPageChange,
+	totalProducts = 0,
+	onSyncAll,
+	isSyncingAll = false,
 }) => {
+	// Server-side pagination: products is already the current page
+	const total = totalProducts || products.length;
+	const totalPages = Math.max(1, Math.ceil(total / pageSize));
+	const safePage = Math.min(currentPage, totalPages);
+	const pagedProducts = products; // already paginated by server
+
 	const allSelected =
-		products.length > 0 && selectedIds.size === products.length;
+		pagedProducts.length > 0 &&
+		pagedProducts.every((p) => selectedIds.has(p.id));
 	const isIndeterminate =
-		selectedIds.size > 0 && selectedIds.size < products.length;
+		!allSelected && pagedProducts.some((p) => selectedIds.has(p.id));
+
+	const selectedRemoteCount = products.filter(
+		(p) => p.remote && selectedIds.has(p.id),
+	).length;
 
 	const renderSortIcon = (field) => {
 		if (sortField !== field)
@@ -40,8 +61,71 @@ const DataTableView = ({
 		}
 	};
 
+	// Build an array of page numbers to show (with ellipsis)
+	const pageNumbers = useMemo(() => {
+		const pages = [];
+		if (totalPages <= 7) {
+			for (let i = 1; i <= totalPages; i++) pages.push(i);
+		} else {
+			pages.push(1);
+			if (safePage > 3) pages.push("...");
+			for (
+				let i = Math.max(2, safePage - 1);
+				i <= Math.min(totalPages - 1, safePage + 1);
+				i++
+			)
+				pages.push(i);
+			if (safePage < totalPages - 2) pages.push("...");
+			pages.push(totalPages);
+		}
+		return pages;
+	}, [totalPages, safePage]);
+
 	return (
 		<div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
+			{/* Selection action bar */}
+			{selectedIds.size > 0 && (
+				<div className="flex items-center justify-between px-5 py-3 bg-indigo-50 border-b border-indigo-100">
+					<div className="flex items-center space-x-3">
+						<span className="text-sm font-bold text-indigo-700">
+							{selectedIds.size} selected
+						</span>
+						{selectedIds.size < products.length && (
+							<button
+								className="text-xs font-bold text-indigo-600 underline hover:text-indigo-800"
+								onClick={() => onSelectAll(true)}
+							>
+								Select all {products.length}
+							</button>
+						)}
+						<button
+							className="text-xs font-bold text-slate-500 hover:text-slate-700"
+							onClick={() => onSelectAll(false)}
+						>
+							Clear selection
+						</button>
+					</div>
+					{selectedRemoteCount > 0 && (
+						<button
+							className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+							onClick={onSyncAll}
+							disabled={isSyncingAll}
+						>
+							<i
+								className={`fas fa-cloud-arrow-down ${
+									isSyncingAll ? "animate-spin" : ""
+								}`}
+							></i>
+							<span>
+								{isSyncingAll
+									? "Syncing..."
+									: `Sync All (${selectedRemoteCount})`}
+							</span>
+						</button>
+					)}
+				</div>
+			)}
+
 			<div className="overflow-auto flex-1">
 				<table className="w-full text-left border-collapse relative">
 					<thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
@@ -56,9 +140,21 @@ const DataTableView = ({
 											input.indeterminate =
 												isIndeterminate;
 									}}
-									onChange={(e) =>
-										onSelectAll(e.target.checked)
-									}
+									onChange={(e) => {
+										// Toggle selection for current page only
+										if (e.target.checked) {
+											const pageIds = pagedProducts.map(
+												(p) => p.id,
+											);
+											const next = new Set(selectedIds);
+											pageIds.forEach((id) =>
+												next.add(id),
+											);
+											onSelectAll(true);
+										} else {
+											onSelectAll(false);
+										}
+									}}
 								/>
 							</th>
 							<th
@@ -94,7 +190,7 @@ const DataTableView = ({
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-slate-100 bg-white">
-						{products.map((product) => (
+						{pagedProducts.map((product) => (
 							<tr
 								key={product.id}
 								className={`hover:bg-indigo-50/30 transition-colors group ${selectedIds.has(product.id) ? "bg-indigo-50/50" : ""}`}
@@ -249,6 +345,77 @@ const DataTableView = ({
 						))}
 					</tbody>
 				</table>
+			</div>
+
+			{/* Pagination footer */}
+			<div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+				{/* Page size selector */}
+				<div className="flex items-center space-x-2">
+					<span className="text-xs font-bold text-slate-500">
+						Show
+					</span>
+					<select
+						className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+						value={pageSize}
+						onChange={(e) =>
+							onPageSizeChange?.(Number(e.target.value))
+						}
+					>
+						{PAGE_SIZE_OPTIONS.map((s) => (
+							<option key={s} value={s}>
+								{s}
+							</option>
+						))}
+					</select>
+					<span className="text-xs text-slate-400">
+						of {total.toLocaleString()} items
+					</span>
+				</div>
+
+				{/* Page navigation */}
+				<div className="flex items-center space-x-1">
+					<button
+						className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+						disabled={safePage <= 1}
+						onClick={() => onPageChange?.(safePage - 1)}
+					>
+						<i className="fas fa-chevron-left"></i>
+					</button>
+					{pageNumbers.map((p, i) =>
+						p === "..." ? (
+							<span
+								key={`ellipsis-${i}`}
+								className="px-2 text-xs text-slate-400"
+							>
+								...
+							</span>
+						) : (
+							<button
+								key={p}
+								className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+									p === safePage
+										? "bg-indigo-600 text-white shadow-sm"
+										: "text-slate-500 hover:bg-slate-100"
+								}`}
+								onClick={() => onPageChange?.(p)}
+							>
+								{p}
+							</button>
+						),
+					)}
+					<button
+						className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+						disabled={safePage >= totalPages}
+						onClick={() => onPageChange?.(safePage + 1)}
+					>
+						<i className="fas fa-chevron-right"></i>
+					</button>
+				</div>
+
+				{/* Page info */}
+				<span className="text-xs text-slate-400 font-medium">
+					Page {safePage} of {totalPages}
+				</span>
 			</div>
 		</div>
 	);

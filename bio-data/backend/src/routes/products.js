@@ -7,22 +7,23 @@ const { fetchProductByBarcode } = require("../utils/openfood");
 router.get("/remote/search", async (req, res) => {
 	try {
 		const q = (req.query.q || "").trim();
-		if (!q) return res.json({ products: [] });
+		if (!q) return res.json({ total: 0, products: [] });
 		const axios = require("axios");
 		const base =
 			process.env.OPENFOOD_BASE || "https://world.openfoodfacts.org";
-		const url = `${base}/cgi/search.pl`;
+		const url = `${base}/api/v2/search`;
+		const page = parseInt(req.query.page || "1", 10);
+		const pageSize = parseInt(req.query.pageSize || "20", 10);
 		const resp = await axios.get(url, {
 			params: {
 				search_terms: q,
-				page_size: req.query.pageSize || 20,
-				json: 1,
+				page: page,
+				page_size: pageSize,
+				fields: "code,product_name,brands,categories,image_small_url,image_url,nutriments,_tags,nutriscore_grade,nova_group",
 			},
-			headers: {
-				"User-Agent": "BioAI-DataProvider/1.0 (bio-data backend)",
-			},
-			timeout: 15000,
+			timeout: 30000,
 		});
+		const total = resp.data.count || 0;
 		const products = (resp.data.products || []).map((p) => ({
 			code: p.code,
 			product_name: p.product_name || p.brands || "",
@@ -34,7 +35,7 @@ router.get("/remote/search", async (req, res) => {
 			remote: true,
 			id: `remote:${p.code}`,
 		}));
-		res.json({ products });
+		res.json({ total, page, pageSize, products });
 	} catch (err) {
 		console.error("remote search error", err?.message || err);
 		res.status(500).json({ error: "remote_search_failed" });
