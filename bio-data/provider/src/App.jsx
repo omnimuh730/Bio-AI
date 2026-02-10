@@ -43,7 +43,7 @@ const App = () => {
 	const [isImporting, setIsImporting] = useState(false);
 
 	const handleImport = async () => {
-		if (!importBarcode) return alert("Enter a barcode to import");
+		if (!importBarcode) return console.log("Enter a barcode to import");
 		try {
 			setIsImporting(true);
 			const res = await importByBarcode(importBarcode);
@@ -55,7 +55,7 @@ const App = () => {
 			setImportBarcode("");
 		} catch (err) {
 			console.error(err);
-			alert(
+			console.log(
 				"Import failed: " + (err.message || JSON.stringify(err)),
 			);
 		} finally {
@@ -117,7 +117,9 @@ const App = () => {
 								filteredProducts={filteredProducts}
 								selectedProductIds={state.selectedProductIds}
 								onSelect={(id, sel) => {
-									const next = new Set(state.selectedProductIds);
+									const next = new Set(
+										state.selectedProductIds,
+									);
 									sel ? next.add(id) : next.delete(id);
 									setState((s) => ({
 										...s,
@@ -128,12 +130,19 @@ const App = () => {
 									setState((s) => ({
 										...s,
 										selectedProductIds: sel
-											? new Set(filteredProducts.map((p) => p.id))
+											? new Set(
+													filteredProducts.map(
+														(p) => p.id,
+													),
+												)
 											: new Set(),
 									}))
 								}
 								onViewProduct={(p) =>
-									setState((s) => ({ ...s, selectedProduct: p }))
+									setState((s) => ({
+										...s,
+										selectedProduct: p,
+									}))
 								}
 								sortField={state.sortField}
 								sortOrder={state.sortOrder}
@@ -142,7 +151,8 @@ const App = () => {
 										...s,
 										sortField: f,
 										sortOrder:
-											s.sortField === f && s.sortOrder === "asc"
+											s.sortField === f &&
+											s.sortOrder === "asc"
 												? "desc"
 												: "asc",
 									}))
@@ -170,7 +180,10 @@ const App = () => {
 							<QualityDashboard
 								products={state.products}
 								onReviewProduct={(p) =>
-									setState((s) => ({ ...s, selectedProduct: p }))
+									setState((s) => ({
+										...s,
+										selectedProduct: p,
+									}))
 								}
 							/>
 						)}

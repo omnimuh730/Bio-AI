@@ -196,7 +196,7 @@ export const useInventoryData = () => {
 			(p) => p.remote && state.selectedProductIds.has(p.id),
 		);
 		if (selectedRemote.length === 0) {
-			alert("No remote products selected to sync.");
+			console.log("No remote products selected to sync.");
 			return;
 		}
 		setIsSyncingAll(true);
@@ -253,7 +253,7 @@ export const useInventoryData = () => {
 		}
 		setIsSyncingAll(false);
 		setSyncProgress((prev) => ({ ...prev, active: false }));
-		alert(
+		console.log(
 			`Synced ${synced} product(s)${failed ? `, ${failed} failed` : ""}`,
 		);
 		setState((s) => ({ ...s, selectedProductIds: new Set() }));
@@ -265,7 +265,7 @@ export const useInventoryData = () => {
 			(p) => !p.remote && state.selectedProductIds.has(p.id),
 		);
 		if (selectedLocal.length === 0) {
-			alert("No local products selected to embed.");
+			console.log("No local products selected to embed.");
 			return;
 		}
 
@@ -280,7 +280,7 @@ export const useInventoryData = () => {
 		);
 		const skipped = selectedLocal.length - embeddable.length;
 		if (embeddable.length === 0) {
-			alert(
+			console.log(
 				`No selected products need embeddings.${skipped > 0 ? ` ${skipped} already embedded.` : ``}`,
 			);
 			return;
@@ -324,18 +324,18 @@ export const useInventoryData = () => {
 				}
 			}
 			if (skipped > 0) {
-				alert(
+				console.log(
 					`${skipped} product(s) were already embedded and were skipped.`,
 				);
 			}
-			alert(
+			console.log(
 				`Created embeddings for ${done} product(s)${
 					failed ? `, ${failed} failed` : ""
 				}`,
 			);
 		} catch (err) {
 			console.warn("Embedding generation failed", err);
-			alert("Embedding generation failed.");
+			console.log("Embedding generation failed.");
 		} finally {
 			setIsCreatingEmbeddings(false);
 			setEmbeddingProgress((prev) => ({ ...prev, active: false }));

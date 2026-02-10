@@ -41,7 +41,6 @@ export default function RecommendedFoods({ onBack }) {
 	// Refs
 	const touchStartX = useRef(0);
 	const touchStartY = useRef(0);
-	const containerRef = useRef(null);
 	const tabsRef = useRef(null);
 
 	// --- Scroll Tab into View ---
@@ -366,7 +365,7 @@ function FoodCard({ item, onClick }) {
 					className="card-fab"
 					onClick={(e) => {
 						e.stopPropagation();
-						alert("Quick Add!");
+						console.log("Quick Add!");
 					}}
 				>
 					<FiPlus />
@@ -442,7 +441,7 @@ function FoodModal({ item, onClose }) {
 					<button
 						className="modal-cta"
 						onClick={() => {
-							alert("Added!");
+							console.log("Added!");
 							onClose();
 						}}
 					>

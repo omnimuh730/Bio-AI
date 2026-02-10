@@ -429,18 +429,14 @@ const DataTableView = ({
 																throw new Error(
 																	"import_failed",
 																);
-															const json =
-																await res.json();
+															await res.json();
 															if (
 																window.reloadProducts
 															)
 																await window.reloadProducts();
-															alert(
-																`Synced ${json.product.product_name}`,
-															);
 														} catch (err) {
 															console.error(err);
-															alert(
+															console.log(
 																"Sync failed: " +
 																	(err.message ||
 																		err),
