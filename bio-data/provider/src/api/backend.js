@@ -43,11 +43,13 @@ export async function searchRemote(q = "", page = 1, pageSize = 20) {
 	return res.json();
 }
 
-export async function generateEmbeddings(ids = []) {
+export async function generateEmbeddings(ids = [], options = {}) {
+	const body = { ids };
+	if (options.force) body.force = true;
 	const res = await fetch("http://localhost:4000/api/embeddings/generate", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ids }),
+		body: JSON.stringify(body),
 	});
 	if (!res.ok) {
 		const error = await res.json().catch(() => ({}));

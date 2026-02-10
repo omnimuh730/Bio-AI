@@ -41,8 +41,14 @@ const DataTableView = ({
 		(p) => p.remote && selectedIds.has(p.id),
 	).length;
 
-	const selectedLocalCount = products.filter(
-		(p) => !p.remote && selectedIds.has(p.id),
+	const selectedEmbeddableCount = products.filter(
+		(p) =>
+			!p.remote &&
+			selectedIds.has(p.id) &&
+			!(
+				p.embeddings?.updated_at ||
+				(p.embeddings?.name_desc && p.embeddings.name_desc.length > 0)
+			),
 	).length;
 
 	const renderSortIcon = (field) => {
@@ -133,11 +139,14 @@ const DataTableView = ({
 						</button>
 					</div>
 					<div className="flex items-center space-x-2">
-						{selectedLocalCount > 0 && (
+						{selectedEmbeddableCount > 0 && (
 							<button
 								className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
 								onClick={onCreateEmbeddings}
-								disabled={isCreatingEmbeddings}
+								disabled={
+									isCreatingEmbeddings ||
+									selectedEmbeddableCount === 0
+								}
 							>
 								<i
 									className={`fas fa-brain ${
@@ -149,7 +158,7 @@ const DataTableView = ({
 								<span>
 									{isCreatingEmbeddings
 										? "Embedding..."
-										: `Create Embeddings (${selectedLocalCount})`}
+										: `Create Embeddings (${selectedEmbeddableCount})`}
 								</span>
 							</button>
 						)}

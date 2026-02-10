@@ -10,16 +10,39 @@ const EMBEDDING_SERVER_URL =
 router.post("/generate", async (req, res) => {
 	try {
 		const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+		const force = req.body?.force === true || req.query?.force === "true";
 		if (ids.length === 0) {
 			return res.status(400).json({ error: "missing_ids" });
 		}
 
+		// Fetch products
 		const products = await Product.find({ _id: { $in: ids } }).lean();
 		if (products.length === 0) {
-			return res.json({ count: 0, updated: 0 });
+			return res.json({ count: 0, updated: 0, skipped: 0 });
 		}
 
-		const payload = products.map((p) => ({
+		// If not forced, skip products that already have embeddings
+		let productsToProcess = products;
+		let skipped = 0;
+		if (!force) {
+			const filtered = products.filter((p) => {
+				const hasEmbedding = !!(
+					p.embeddings &&
+					(p.embeddings.updated_at ||
+						(p.embeddings.name_desc &&
+							p.embeddings.name_desc.length > 0))
+				);
+				if (hasEmbedding) skipped++;
+				return !hasEmbedding;
+			});
+			productsToProcess = filtered;
+		}
+
+		if (productsToProcess.length === 0) {
+			return res.json({ count: 0, updated: 0, skipped });
+		}
+
+		const payload = productsToProcess.map((p) => ({
 			id: p._id.toString(),
 			product_name: p.product_name || "",
 			categories: p.categories || [],
@@ -62,7 +85,7 @@ router.post("/generate", async (req, res) => {
 
 		const result = await Product.bulkWrite(ops, { ordered: false });
 		const updated = result.modifiedCount || 0;
-		return res.json({ count: embeddings.length, updated, model });
+		return res.json({ count: embeddings.length, updated, model, skipped });
 	} catch (err) {
 		console.error("embedding generate error", err?.message || err);
 		return res.status(500).json({ error: "embedding_generate_failed" });

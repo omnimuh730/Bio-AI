@@ -71,7 +71,11 @@ export const useInventoryData = () => {
 				setIsPageLoading(true);
 				const q = state.searchQuery.trim();
 				const backendQ = q === "$all" ? "" : q;
-				const data = await listProducts(backendQ, currentPage, pageSize);
+				const data = await listProducts(
+					backendQ,
+					currentPage,
+					pageSize,
+				);
 				setState((s) => ({ ...s, products: data.products }));
 				setTotalProducts(data.total ?? data.products.length);
 			} catch (err) {
@@ -141,32 +145,35 @@ export const useInventoryData = () => {
 		);
 	}, [currentPage, pageSize, state.includeRemote, fetchPage]);
 
-	const performSearch = useCallback(async (q) => {
-		const query = (q || "").trim();
-		if (query === "$all" || !query) {
+	const performSearch = useCallback(
+		async (q) => {
+			const query = (q || "").trim();
+			if (query === "$all" || !query) {
+				setIsSearching(true);
+				try {
+					skipNextPageEffect.current = true;
+					setCurrentPage(1);
+					await fetchPage(query, 1, pageSize, state.includeRemote);
+				} catch (err) {
+					console.warn("Failed to load products", err);
+				} finally {
+					setIsSearching(false);
+				}
+				return;
+			}
 			setIsSearching(true);
 			try {
 				skipNextPageEffect.current = true;
 				setCurrentPage(1);
 				await fetchPage(query, 1, pageSize, state.includeRemote);
 			} catch (err) {
-				console.warn("Failed to load products", err);
+				console.warn("Search failed", err);
 			} finally {
 				setIsSearching(false);
 			}
-			return;
-		}
-		setIsSearching(true);
-		try {
-			skipNextPageEffect.current = true;
-			setCurrentPage(1);
-			await fetchPage(query, 1, pageSize, state.includeRemote);
-		} catch (err) {
-			console.warn("Search failed", err);
-		} finally {
-			setIsSearching(false);
-		}
-	}, [fetchPage, pageSize, state.includeRemote]);
+		},
+		[fetchPage, pageSize, state.includeRemote],
+	);
 
 	useEffect(() => {
 		const q = state.searchQuery.trim();
@@ -261,19 +268,38 @@ export const useInventoryData = () => {
 			alert("No local products selected to embed.");
 			return;
 		}
+
+		// Only include products that don't already have embeddings
+		const embeddable = selectedLocal.filter(
+			(p) =>
+				!(
+					p.embeddings?.updated_at ||
+					(p.embeddings?.name_desc &&
+						p.embeddings.name_desc.length > 0)
+				),
+		);
+		const skipped = selectedLocal.length - embeddable.length;
+		if (embeddable.length === 0) {
+			alert(
+				`No selected products need embeddings.${skipped > 0 ? ` ${skipped} already embedded.` : ``}`,
+			);
+			return;
+		}
+
 		setIsCreatingEmbeddings(true);
 		setEmbeddingProgress({
 			active: true,
-			total: selectedLocal.length,
+			total: embeddable.length,
 			done: 0,
 			failed: 0,
 		});
 		try {
 			let done = 0;
 			let failed = 0;
-			for (const p of selectedLocal) {
+			for (const p of embeddable) {
 				try {
-					await generateEmbeddings([p.id]);
+					// call backend with force=false so existing embeddings are skipped server-side as well
+					await generateEmbeddings([p.id], { force: false });
 					const refreshed = await getById(p.id);
 					setState((s) => {
 						const idx = s.products.findIndex(
@@ -296,6 +322,11 @@ export const useInventoryData = () => {
 						failed: prev.failed + 1,
 					}));
 				}
+			}
+			if (skipped > 0) {
+				alert(
+					`${skipped} product(s) were already embedded and were skipped.`,
+				);
 			}
 			alert(
 				`Created embeddings for ${done} product(s)${
@@ -357,9 +388,9 @@ export const useInventoryData = () => {
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
-		a.download = `foodflow_export_${new Date()
-			.toISOString()
-			.split("T")[0]}.json`;
+		a.download = `foodflow_export_${
+			new Date().toISOString().split("T")[0]
+		}.json`;
 		a.click();
 	};
 
