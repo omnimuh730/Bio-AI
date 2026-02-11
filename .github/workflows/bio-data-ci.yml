@@ -26,6 +26,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       provider: ${{ steps.filter.outputs.provider }}
       embedding: ${{ steps.filter.outputs.embedding }}
+      run: ${{ steps.decide.outputs.run }}
     steps:
     - uses: actions/checkout@v4
     - name: Check changed paths
@@ -39,12 +40,18 @@ jobs:
             - 'bio-data/provider/**'
           embedding:
             - 'bio-data/embedding_server/**'
+    - name: Decide whether to run
+      id: decide
+      run: |
+        run=false
+        if [ "${{ steps.filter.outputs.backend }}" = "true" ] || [ "${{ steps.filter.outputs.provider }}" = "true" ] || [ "${{ steps.filter.outputs.embedding }}" = "true" ] || [[ "${{ github.head_ref }}" == feat/data/* ]] || [[ "${{ github.ref }}" == refs/heads/feat/data/* ]]; then run=true; fi
+        echo "run=$run" >> $GITHUB_OUTPUT
 
   backend:
-    name: Backend (Node.js) ✅
+    name: Backend (Node.js)-BioData 📚
     needs: detect
     runs-on: ubuntu-latest
-    if: needs.detect.outputs.backend == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/')
+    if: needs.detect.outputs.run == 'true' && (needs.detect.outputs.backend == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/'))
     steps:
     - uses: actions/checkout@v4
     - name: Cache node modules / npm
@@ -74,10 +81,10 @@ jobs:
         if node -e "console.log(Boolean(require('./package.json').scripts && require('./package.json').scripts.test))" | grep -q true; then npm test; else echo "no test script"; fi
 
   provider:
-    name: Provider (Frontend) ✅
+    name: Provider (Frontend)-BioData 📚
     needs: detect
     runs-on: ubuntu-latest
-    if: needs.detect.outputs.provider == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/')
+    if: needs.detect.outputs.run == 'true' && (needs.detect.outputs.provider == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/'))
     steps:
     - uses: actions/checkout@v4
     - name: Cache node modules / yarn
@@ -105,10 +112,10 @@ jobs:
       run: yarn build --silent || echo "no build script"
 
   embedding_server:
-    name: Embedding Server (Python) ✅
+    name: Embedding Server (Python)-BioData 📚
     needs: detect
     runs-on: ubuntu-latest
-    if: needs.detect.outputs.embedding == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/')
+    if: needs.detect.outputs.run == 'true' && (needs.detect.outputs.embedding == 'true' || startsWith(github.head_ref, 'feat/data/') || startsWith(github.ref, 'refs/heads/feat/data/'))
     steps:
     - uses: actions/checkout@v4
     - name: Cache pip
@@ -153,7 +160,7 @@ jobs:
     name: Summary (optional notification)
     runs-on: ubuntu-latest
     needs: [ detect, backend, provider, embedding_server ]
-    if: always()
+    if: needs.detect.outputs.run == 'true'
     steps:
     - name: Print summary
       run: |
@@ -165,7 +172,7 @@ jobs:
     name: PR Comment
     runs-on: ubuntu-latest
     needs: [ detect, backend, provider, embedding_server, summary ]
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && needs.detect.outputs.run == 'true'
     steps:
     - name: Create PR summary comment
       uses: actions/github-script@v6
