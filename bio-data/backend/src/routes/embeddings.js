@@ -7,6 +7,20 @@ const router = express.Router();
 const EMBEDDING_SERVER_URL =
 	process.env.EMBEDDING_SERVER_URL || "http://localhost:7001";
 
+const dot = (a, b) => {
+	let sum = 0;
+	for (let i = 0; i < a.length; i += 1) sum += a[i] * b[i];
+	return sum;
+};
+
+const norm = (a) => Math.sqrt(dot(a, a));
+
+const cosineSimilarity = (a, b) => {
+	if (!a || !b || a.length !== b.length || a.length === 0) return 0;
+	const denom = norm(a) * norm(b);
+	return denom === 0 ? 0 : dot(a, b) / denom;
+};
+
 router.post("/generate", async (req, res) => {
 	try {
 		const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
@@ -66,6 +80,9 @@ router.post("/generate", async (req, res) => {
 		}
 
 		const now = new Date();
+		for (const entry of embeddings) {
+			console.log(`embedding_complete id=${entry.id}`);
+		}
 		const ops = embeddings.map((entry) => ({
 			updateOne: {
 				filter: { _id: entry.id },
@@ -95,6 +112,56 @@ router.post("/generate", async (req, res) => {
 	} catch (err) {
 		console.error("embedding generate error", err?.message || err);
 		return res.status(500).json({ error: "embedding_generate_failed" });
+	}
+});
+
+router.get("/search", async (req, res) => {
+	try {
+		const q = (req.query.q || "").trim();
+		if (!q) return res.status(400).json({ error: "missing_query" });
+		const field = req.query.field || "name_desc";
+		const limit = Math.min(parseInt(req.query.limit || "20", 10), 100);
+		const maxCandidates = Math.min(
+			parseInt(req.query.maxCandidates || "500", 10),
+			5000,
+		);
+
+		const embedResp = await axios.post(
+			`${EMBEDDING_SERVER_URL}/embeddings/encode`,
+			{ text: q },
+			{ timeout: 60000 },
+		);
+		const queryVector = embedResp.data?.vector || [];
+		const encodeMs = embedResp.data?.encode_ms ?? null;
+		if (queryVector.length === 0) {
+			return res.status(502).json({ error: "embedding_failed" });
+		}
+
+		const fieldPath = `embeddings.${field}`;
+		const candidates = await Product.find(
+			{ [fieldPath]: { $exists: true, $ne: [] } },
+			null,
+			{ limit: maxCandidates },
+		).lean();
+
+		const scored = candidates
+			.map((p) => {
+				const vector = p.embeddings?.[field] || [];
+				const score = cosineSimilarity(queryVector, vector);
+				return {
+					...p,
+					id: p._id,
+					score,
+					embedding_score: score,
+				};
+			})
+			.sort((a, b) => b.score - a.score);
+
+		const products = scored.slice(0, limit);
+		return res.json({ total: scored.length, products, encodeMs });
+	} catch (err) {
+		console.error("embedding search error", err?.message || err);
+		return res.status(500).json({ error: "embedding_search_failed" });
 	}
 });
 

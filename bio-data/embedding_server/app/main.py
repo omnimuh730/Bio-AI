@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
@@ -6,6 +7,8 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
 app = FastAPI(title="Bio Data Embedding Server")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("embedding_server")
 
 MODEL_NAME = os.getenv("EMBEDDING_MODEL", "intfloat/e5-large-v2")
 MODEL_PREFIX = os.getenv("EMBEDDING_PREFIX", "passage: ")
@@ -36,6 +39,16 @@ class GenerateResponse(BaseModel):
 	model: str
 	count: int
 	embeddings: List[EmbeddingOut]
+
+
+class EncodeRequest(BaseModel):
+	text: str
+
+
+class EncodeResponse(BaseModel):
+	model: str
+	vector: List[float]
+	encode_ms: int
 
 
 @app.on_event("startup")
@@ -151,5 +164,34 @@ async def generate_embeddings(payload: GenerateRequest) -> GenerateResponse:
 					},
 				)
 			)
+			logger.info("embedding_complete id=%s chunk_index=%s", product.id, idx)
 
 	return GenerateResponse(model=MODEL_NAME, count=len(out), embeddings=out)
+
+
+@app.post("/embeddings/encode", response_model=EncodeResponse)
+async def encode_embedding(payload: EncodeRequest) -> EncodeResponse:
+	if model is None:
+		raise HTTPException(status_code=503, detail="model_not_loaded")
+	text = (payload.text or "").strip()
+	if not text:
+		raise HTTPException(status_code=400, detail="missing_text")
+
+	import time
+	import asyncio
+	from functools import partial
+
+	loop = asyncio.get_running_loop()
+	encode_fn = lambda texts: model.encode(
+		texts, normalize_embeddings=True, batch_size=BATCH_SIZE
+	)
+	input_text = f"{MODEL_PREFIX}{text}".strip()
+	start = time.perf_counter()
+	vector = await loop.run_in_executor(None, partial(encode_fn, [input_text]))
+	encode_ms = int((time.perf_counter() - start) * 1000)
+	logger.info("encode_complete ms=%s", encode_ms)
+	return EncodeResponse(
+		model=MODEL_NAME,
+		vector=[float(v) for v in vector[0]],
+		encode_ms=encode_ms,
+	)

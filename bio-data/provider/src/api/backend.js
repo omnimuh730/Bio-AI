@@ -57,3 +57,18 @@ export async function generateEmbeddings(ids = [], options = {}) {
 	}
 	return res.json();
 }
+
+export async function searchEmbeddings(query, options = {}) {
+	const url = new URL("http://localhost:4000/api/embeddings/search");
+	url.searchParams.set("q", query);
+	if (options.limit) url.searchParams.set("limit", options.limit);
+	if (options.field) url.searchParams.set("field", options.field);
+	if (options.maxCandidates)
+		url.searchParams.set("maxCandidates", options.maxCandidates);
+	const res = await fetch(url);
+	if (!res.ok) {
+		const error = await res.json().catch(() => ({}));
+		throw new Error(error.error || "embedding_search_error");
+	}
+	return res.json();
+}

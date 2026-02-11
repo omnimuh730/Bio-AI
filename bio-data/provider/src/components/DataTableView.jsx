@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import NutriScoreBadge from "./NutriScoreBadge";
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200, 500];
 
 const DataTableView = ({
 	products,
@@ -24,6 +24,7 @@ const DataTableView = ({
 	isLoading = false,
 	syncProgress,
 	embeddingProgress,
+	activityLog = [],
 }) => {
 	// Server-side pagination: products is already the current page
 	const total = totalProducts || products.length;
@@ -118,80 +119,99 @@ const DataTableView = ({
 		<div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
 			{/* Selection action bar */}
 			{selectedIds.size > 0 && (
-				<div className="flex items-center justify-between px-5 py-3 bg-indigo-50 border-b border-indigo-100">
-					<div className="flex items-center space-x-3">
-						<span className="text-sm font-bold text-indigo-700">
-							{selectedIds.size} selected
-						</span>
-						{selectedIds.size < products.length && (
-							<button
-								className="text-xs font-bold text-indigo-600 underline hover:text-indigo-800"
-								onClick={() => onSelectAll(true)}
-							>
-								Select all {products.length}
-							</button>
-						)}
-						<button
-							className="text-xs font-bold text-slate-500 hover:text-slate-700"
-							onClick={() => onSelectAll(false)}
-						>
-							Clear selection
-						</button>
-					</div>
-					<div className="flex items-center space-x-2">
-						{selectedEmbeddableCount > 0 && (
-							<button
-								className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
-								onClick={onCreateEmbeddings}
-								disabled={
-									isCreatingEmbeddings ||
-									selectedEmbeddableCount === 0
-								}
-							>
-								<i
-									className={`fas fa-brain ${
-										isCreatingEmbeddings
-											? "animate-spin"
-											: ""
-									}`}
-								></i>
-								<span>
-									{isCreatingEmbeddings
-										? "Embedding..."
-										: `Create Embeddings (${selectedEmbeddableCount})`}
-								</span>
-							</button>
-						)}
-						{selectedRemoteCount > 0 && (
-							<button
-								className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
-								onClick={onSyncAll}
-								disabled={isSyncingAll}
-							>
-								<i
-									className={`fas fa-cloud-arrow-down ${
-										isSyncingAll ? "animate-spin" : ""
-									}`}
-								></i>
-								<span>
-									{isSyncingAll
-										? "Syncing..."
-										: `Sync All (${selectedRemoteCount})`}
-								</span>
-							</button>
-						)}
-						{embeddingProgress?.active && (
-							<span className="text-xs font-bold text-emerald-700">
-								Embedded {embeddingProgress.done}/
-								{embeddingProgress.total}
+				<div className="px-5 py-3 bg-indigo-50 border-b border-indigo-100">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center space-x-3">
+							<span className="text-sm font-bold text-indigo-700">
+								{selectedIds.size} selected
 							</span>
-						)}
-						{syncProgress?.active && (
-							<span className="text-xs font-bold text-indigo-700">
-								Synced {syncProgress.done}/{syncProgress.total}
-							</span>
-						)}
+							{selectedIds.size < products.length && (
+								<button
+									className="text-xs font-bold text-indigo-600 underline hover:text-indigo-800"
+									onClick={() => onSelectAll(true)}
+								>
+									Select all {products.length}
+								</button>
+							)}
+							<button
+								className="text-xs font-bold text-slate-500 hover:text-slate-700"
+								onClick={() => onSelectAll(false)}
+							>
+								Clear selection
+							</button>
+						</div>
+						<div className="flex items-center space-x-2">
+							{selectedEmbeddableCount > 0 && (
+								<button
+									className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+									onClick={onCreateEmbeddings}
+									disabled={
+										isCreatingEmbeddings ||
+										selectedEmbeddableCount === 0
+									}
+								>
+									<i
+										className={`fas fa-brain ${
+											isCreatingEmbeddings
+												? "animate-spin"
+												: ""
+										}`}
+									></i>
+									<span>
+										{isCreatingEmbeddings
+											? "Embedding..."
+											: `Create Embeddings (${selectedEmbeddableCount})`}
+									</span>
+								</button>
+							)}
+							{selectedRemoteCount > 0 && (
+								<button
+									className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+									onClick={onSyncAll}
+									disabled={isSyncingAll}
+								>
+									<i
+										className={`fas fa-cloud-arrow-down ${
+											isSyncingAll ? "animate-spin" : ""
+										}`}
+									></i>
+									<span>
+										{isSyncingAll
+											? "Syncing..."
+											: `Sync All (${selectedRemoteCount})`}
+									</span>
+								</button>
+							)}
+							{embeddingProgress?.active && (
+								<span className="text-xs font-bold text-emerald-700">
+									Embedded {embeddingProgress.done}/
+									{embeddingProgress.total}
+								</span>
+							)}
+							{syncProgress?.active && (
+								<span className="text-xs font-bold text-indigo-700">
+									Synced {syncProgress.done}/
+									{syncProgress.total}
+								</span>
+							)}
+						</div>
 					</div>
+					{activityLog.length > 0 && (
+						<div className="mt-3 max-h-28 overflow-auto text-xs text-slate-600 space-y-1">
+							{activityLog.slice(0, 6).map((entry) => (
+								<div key={entry.id}>
+									<span className="text-slate-400">
+										[
+										{new Date(
+											entry.ts,
+										).toLocaleTimeString()}
+										]
+									</span>{" "}
+									{entry.message}
+								</div>
+							))}
+						</div>
+					)}
 				</div>
 			)}
 
@@ -379,6 +399,14 @@ const DataTableView = ({
 																.updated_at,
 														).toLocaleDateString()
 													: null;
+												const similarity =
+													typeof product.embedding_score ===
+													"number"
+														? product.embedding_score
+														: typeof product.score ===
+															  "number"
+															? product.score
+															: null;
 												return (
 													<div className="flex flex-col gap-1">
 														<span
@@ -390,9 +418,18 @@ const DataTableView = ({
 															{model ||
 																"No model"}
 															{updatedAt
-																? ` • ${updatedAt}`
+																? ` | ${updatedAt}`
 																: ""}
 														</div>
+														{similarity !==
+															null && (
+															<div className="text-[10px] text-slate-500">
+																Similarity{" "}
+																{similarity.toFixed(
+																	3,
+																)}
+															</div>
+														)}
 													</div>
 												);
 											})()}

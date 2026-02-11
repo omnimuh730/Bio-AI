@@ -29,6 +29,12 @@ const InventoryPanel = ({
 	isLoading,
 	syncProgress,
 	embeddingProgress,
+	activityLog,
+	embeddingQuery,
+	onEmbeddingQueryChange,
+	onEmbeddingSearch,
+	isEmbeddingSearching,
+	embeddingSearchMeta,
 	isSearching,
 }) => {
 	const showEmptyState =
@@ -70,6 +76,50 @@ const InventoryPanel = ({
 						}}
 						onChange={(e) => onSearchQueryChange(e.target.value)}
 					/>
+				</div>
+				<div className="flex flex-col gap-1 min-w-[260px]">
+					<div className="flex items-center gap-2">
+						<input
+							type="text"
+							placeholder="Rank by embedding (e.g. burger)"
+							className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-bold placeholder:text-slate-300"
+							value={embeddingQuery}
+							onKeyDown={async (e) => {
+								if (e.key === "Enter") {
+									e.preventDefault();
+									await onEmbeddingSearch(embeddingQuery);
+								}
+							}}
+							onChange={(e) =>
+								onEmbeddingQueryChange(e.target.value)
+							}
+						/>
+						<button
+							className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+							onClick={() => onEmbeddingSearch(embeddingQuery)}
+							disabled={
+								isEmbeddingSearching ||
+								!embeddingQuery.trim()
+							}
+						>
+							{isEmbeddingSearching ? "Ranking..." : "Rank"}
+						</button>
+					</div>
+					{embeddingSearchMeta?.query && (
+						<div className="text-[11px] text-slate-500">
+							<span>
+								Embedding time:{" "}
+								{embeddingSearchMeta.encodeMs ?? "n/a"} ms
+							</span>
+							{embeddingSearchMeta.topScore !== null && (
+								<span>
+									{" "}
+									| Top similarity:{" "}
+									{embeddingSearchMeta.topScore.toFixed(3)}
+								</span>
+							)}
+						</div>
+					)}
 				</div>
 				<div className="flex items-center space-x-2">
 					<label className="flex items-center text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-xl">
@@ -131,6 +181,7 @@ const InventoryPanel = ({
 				isLoading={isLoading}
 				syncProgress={syncProgress}
 				embeddingProgress={embeddingProgress}
+				activityLog={activityLog}
 			/>
 		</div>
 	);

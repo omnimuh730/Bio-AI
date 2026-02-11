@@ -129,6 +129,7 @@ router.post("/import", async (req, res) => {
 		// normalize returned object
 		saved = saved.toObject ? saved.toObject() : saved;
 		saved.id = saved._id;
+		console.log(`import_complete barcode=${barcode} id=${saved.id}`);
 		res.json({ product: saved });
 	} catch (err) {
 		console.error(err);

@@ -21,8 +21,14 @@ const App = () => {
 		isSyncingAll,
 		isCreatingEmbeddings,
 		isPageLoading,
+		isEmbeddingSearching,
 		syncProgress,
 		embeddingProgress,
+		activityLog,
+		embeddingQuery,
+		setEmbeddingQuery,
+		performEmbeddingSearch,
+		embeddingSearchMeta,
 		pageSize,
 		setPageSize,
 		currentPage,
@@ -161,9 +167,19 @@ const App = () => {
 								isSyncingAll={isSyncingAll}
 								onCreateEmbeddings={handleCreateEmbeddings}
 								isCreatingEmbeddings={isCreatingEmbeddings}
-								isLoading={isSearching || isPageLoading}
+								isLoading={
+									isSearching ||
+									isPageLoading ||
+									isEmbeddingSearching
+								}
 								syncProgress={syncProgress}
 								embeddingProgress={embeddingProgress}
+								activityLog={activityLog}
+								embeddingQuery={embeddingQuery}
+								onEmbeddingQueryChange={setEmbeddingQuery}
+								onEmbeddingSearch={performEmbeddingSearch}
+								isEmbeddingSearching={isEmbeddingSearching}
+								embeddingSearchMeta={embeddingSearchMeta}
 								isSearching={isSearching}
 							/>
 						)}

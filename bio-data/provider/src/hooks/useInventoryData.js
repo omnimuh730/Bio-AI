@@ -5,6 +5,7 @@ import {
 	importByBarcode,
 	listProducts,
 	searchRemote,
+	searchEmbeddings,
 } from "../api/backend";
 import { chunkArray } from "../utils/array";
 import { mapWithConcurrency } from "../utils/asyncPool";
@@ -53,6 +54,7 @@ export const useInventoryData = () => {
 	const [isSyncingAll, setIsSyncingAll] = useState(false);
 	const [isCreatingEmbeddings, setIsCreatingEmbeddings] = useState(false);
 	const [isPageLoading, setIsPageLoading] = useState(false);
+	const [isEmbeddingSearching, setIsEmbeddingSearching] = useState(false);
 
 	const [syncProgress, setSyncProgress] = useState({
 		active: false,
@@ -66,13 +68,25 @@ export const useInventoryData = () => {
 		done: 0,
 		failed: 0,
 	});
+	const [activityLog, setActivityLog] = useState([]);
 
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalProducts, setTotalProducts] = useState(0);
+	const [embeddingQuery, setEmbeddingQuery] = useState("");
+	const [embeddingSearchMeta, setEmbeddingSearchMeta] = useState(null);
 
 	const skipNextPageEffect = useRef(false);
 	const searchQueryRef = useRef(state.searchQuery);
+
+	const appendLog = useCallback((message) => {
+		const entry = {
+			id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+			ts: new Date().toISOString(),
+			message,
+		};
+		setActivityLog((prev) => [entry, ...prev].slice(0, 200));
+	}, []);
 
 	useEffect(() => {
 		async function load() {
@@ -216,6 +230,57 @@ export const useInventoryData = () => {
 		};
 	}, [state.searchQuery, state.includeRemote, performSearch]);
 
+	const performEmbeddingSearch = useCallback(
+		async (q) => {
+			const query = (q || "").trim();
+			if (!query) return;
+			setIsEmbeddingSearching(true);
+			try {
+				skipNextPageEffect.current = true;
+				setCurrentPage(1);
+				const data = await searchEmbeddings(query, {
+					limit: pageSize,
+					field: "name_desc",
+				});
+				const results = (data.products || []).map((p) => ({
+					...p,
+					embedding_score:
+						typeof p.embedding_score === "number"
+							? p.embedding_score
+							: p.score,
+				}));
+				setState((s) => ({
+					...s,
+					products: results,
+					sortField: "embedding_score",
+					sortOrder: "desc",
+				}));
+				setTotalProducts(results.length);
+				const topScore =
+					results.length > 0 ? results[0].embedding_score : null;
+				setEmbeddingSearchMeta({
+					query,
+					encodeMs: data.encodeMs ?? null,
+					total: data.total ?? results.length,
+					topScore,
+				});
+				const timing =
+					data.encodeMs !== null && data.encodeMs !== undefined
+						? ` in ${data.encodeMs} ms`
+						: "";
+				const top =
+					topScore !== null ? ` (top ${topScore.toFixed(3)})` : "";
+				appendLog(`Embedding ranked for "${query}"${timing}${top}`);
+			} catch (err) {
+				appendLog(`Embedding search failed for "${query}"`);
+				console.warn("Embedding search failed", err);
+			} finally {
+				setIsEmbeddingSearching(false);
+			}
+		},
+		[appendLog, pageSize],
+	);
+
 	async function handleSyncAll() {
 		const selectedRemote = state.products.filter(
 			(p) => p.remote && state.selectedProductIds.has(p.id),
@@ -249,6 +314,13 @@ export const useInventoryData = () => {
 							),
 						}));
 					}
+					appendLog(
+						`Synced ${product.code}${
+							res?.product?.product_name
+								? ` — ${res.product.product_name}`
+								: ""
+						}`,
+					);
 					synced += 1;
 					setSyncProgress((prev) => ({
 						...prev,
@@ -257,6 +329,7 @@ export const useInventoryData = () => {
 					return res;
 				} catch (err) {
 					failed += 1;
+					appendLog(`Sync failed ${product.code}`);
 					setSyncProgress((prev) => ({
 						...prev,
 						failed: prev.failed + 1,
@@ -307,9 +380,12 @@ export const useInventoryData = () => {
 			const ids = embeddable.map((p) => p.id);
 			const batches = chunkArray(ids, EMBEDDING_BATCH_SIZE);
 
-			const applyEmbeddingUpdates = (resp) => {
+			const applyEmbeddingUpdates = (resp, batchIds) => {
 				const updated = resp?.updatedProducts || [];
 				if (updated.length > 0) {
+					const updatedIds = new Set(
+						updated.map((item) => String(item.id)),
+					);
 					setState((s) => {
 						const next = [...s.products];
 						for (const u of updated) {
@@ -325,10 +401,20 @@ export const useInventoryData = () => {
 						}
 						return { ...s, products: next };
 					});
+					for (const id of batchIds) {
+						if (updatedIds.has(String(id))) {
+							appendLog(`Embedded ${id}`);
+						} else {
+							appendLog(`Embedding skipped ${id}`);
+						}
+					}
 					return;
 				}
 
 				if (!resp?.embeddings) return;
+				for (const e of resp.embeddings) {
+					appendLog(`Embedded ${e.id}`);
+				}
 				setState((s) => {
 					const next = [...s.products];
 					for (const e of resp.embeddings) {
@@ -357,9 +443,12 @@ export const useInventoryData = () => {
 						...prev,
 						done: prev.done + count,
 					}));
-					applyEmbeddingUpdates(resp);
+					applyEmbeddingUpdates(resp, batchIds);
 				} catch (err) {
 					failed += batchIds.length;
+					for (const id of batchIds) {
+						appendLog(`Embedding failed ${id}`);
+					}
 					setEmbeddingProgress((prev) => ({
 						...prev,
 						failed: prev.failed + batchIds.length,
@@ -410,7 +499,10 @@ export const useInventoryData = () => {
 		result.sort((a, b) => {
 			let valA;
 			let valB;
-			if (
+			if (state.sortField === "embedding_score") {
+				valA = a.embedding_score ?? a.score ?? 0;
+				valB = b.embedding_score ?? b.score ?? 0;
+			} else if (
 				state.sortField === "energy_100g" ||
 				state.sortField === "proteins_100g"
 			) {
@@ -462,8 +554,14 @@ export const useInventoryData = () => {
 		isSyncingAll,
 		isCreatingEmbeddings,
 		isPageLoading,
+		isEmbeddingSearching,
 		syncProgress,
 		embeddingProgress,
+		embeddingQuery,
+		setEmbeddingQuery,
+		performEmbeddingSearch,
+		embeddingSearchMeta,
+		activityLog,
 		pageSize,
 		setPageSize,
 		currentPage,
