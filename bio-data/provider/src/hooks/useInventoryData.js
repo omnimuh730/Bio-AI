@@ -46,7 +46,7 @@ export const useInventoryData = () => {
 		viewMode: "table",
 		sortField: "last_modified",
 		sortOrder: "desc",
-		includeRemote: true,
+		includeRemote: false,
 		managementSubTab: null,
 	});
 
