@@ -1,0 +1,82 @@
+{
+	"_id": "user_abc123",
+	"createdAt": "2026-02-01T10:00:00Z",
+	"updatedAt": "2026-02-09T13:45:00Z",
+
+	"activityPattern": {
+		"dailyMainPosture": "mostly_sitting",
+
+		"dailyStepsEstimate": "low",
+		"exerciseFrequency": "1-2_times_week",
+		"typicalDailyEnergyLevel": "medium"
+	},
+	"goals": {
+		"weightDirection": "lose",
+		"desiredWeightChangeKg": 10,
+		"desiredTimelineMonths": 4,
+		"calculatedDailyDeficitKcal": -550,
+		"macroPreference": "balanced",
+		"customMacroRatio": {
+			"protein": 0.3,
+			"carbs": 0.4,
+			"fat": 0.3
+		},
+		"toleranceRangePercent": 15
+	},
+	"restrictions": {
+		"allergies": ["nuts", "shellfish"],
+		"avoidIngredients": ["cilantro", "raw_onion"],
+		"avoidCategories": ["deep_fried"]
+	},
+	"preferences": {
+		"likedFoods": [
+			{
+				"foodId": "openfacts_abc123",
+				"score": 0.92
+			},
+			{
+				"foodId": "usda_45678",
+				"score": 0.85
+			}
+		],
+		"dislikedFoods": [
+			{
+				"foodId": "...",
+				"score": -0.7
+			}
+		],
+		"mealTimePreference": ["breakfast_heavy", "light_dinner"]
+	},
+	"history": {
+		"recentMeals": [
+			{
+				"date": "2026-02-08",
+				"mealType": "lunch",
+				"foodIds": ["abc123", "def456"],
+				"estimatedCalories": 680
+			}
+		],
+		"feedbacks": [
+			{
+				"foodId": "xyz789",
+				"liked": true,
+				"reasonCategory": "nutrition_match",
+				"reasonText": "I liked it because it was high in protein.",
+				"timestamp": "2026-02-08T14:30:00Z"
+			},
+			{
+				"liked": false,
+				"reasonCategory": "ingredient_dislike",
+				"reasonText": "The onion taste was too strong."
+			}
+		]
+	},
+	"profileEmbedding": [],
+	"lastEmbeddingUpdate": "2026-02-09T13:45:00Z",
+	"settings": {
+		"recommendationDiversity": 0.65,
+		"dailySuggestionLimit": 12,
+		"toleranceOverride": true,
+		"allowSlightOverCalories": 80
+	}
+}
