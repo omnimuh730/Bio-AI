@@ -264,7 +264,13 @@ const DataTableView = ({
 							<th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
 								Nutri Grade
 							</th>
-							<th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">
+							<th
+								className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+								onClick={() => onSort("embedding_score")}
+							>
+								Similarity {renderSortIcon("embedding_score")}
+							</th>
+							<th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
 								Embeddings
 							</th>
 							<th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">

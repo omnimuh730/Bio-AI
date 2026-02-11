@@ -105,10 +105,22 @@ router.post("/generate", async (req, res) => {
 
 		// Return the updated product docs (embeddings only) so callers can refresh state
 		const updatedIds = embeddings.map((e) => e.id);
-		const updatedProducts = await Product.find({ _id: { $in: updatedIds } }, { embeddings: 1 }).lean();
-		const updatedProductsFormatted = updatedProducts.map((p) => ({ ...p, id: p._id }));
+		const updatedProducts = await Product.find(
+			{ _id: { $in: updatedIds } },
+			{ embeddings: 1 },
+		).lean();
+		const updatedProductsFormatted = updatedProducts.map((p) => ({
+			...p,
+			id: p._id,
+		}));
 
-		return res.json({ count: embeddings.length, updated, model, skipped, updatedProducts: updatedProductsFormatted });
+		return res.json({
+			count: embeddings.length,
+			updated,
+			model,
+			skipped,
+			updatedProducts: updatedProductsFormatted,
+		});
 	} catch (err) {
 		console.error("embedding generate error", err?.message || err);
 		return res.status(500).json({ error: "embedding_generate_failed" });
@@ -144,10 +156,14 @@ router.get("/search", async (req, res) => {
 			{ limit: maxCandidates },
 		).lean();
 
+		const startMs = Date.now();
+
 		const scored = candidates
 			.map((p) => {
 				const vector = p.embeddings?.[field] || [];
 				const score = cosineSimilarity(queryVector, vector);
+				// Log each similarity calculation
+				console.log(`similarity id=${p._id} score=${score.toFixed(6)}`);
 				return {
 					...p,
 					id: p._id,
@@ -158,7 +174,11 @@ router.get("/search", async (req, res) => {
 			.sort((a, b) => b.score - a.score);
 
 		const products = scored.slice(0, limit);
-		return res.json({ total: scored.length, products, encodeMs });
+		const rankMs = Date.now() - startMs;
+		console.log(
+			`ranking_complete total_ms=${rankMs} candidates=${scored.length} returned=${products.length}`,
+		);
+		return res.json({ total: scored.length, products, encodeMs, rankMs });
 	} catch (err) {
 		console.error("embedding search error", err?.message || err);
 		return res.status(500).json({ error: "embedding_search_failed" });

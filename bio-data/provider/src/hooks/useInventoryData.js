@@ -152,9 +152,19 @@ export const useInventoryData = () => {
 							page,
 							size,
 						);
-						remote = (remoteRes.products || []).filter(
-							(r) => !local.some((l) => l.code === r.code),
-						);
+						// Preserve original remote objects but add small UI-friendly metadata
+						const raw = remoteRes.products || [];
+						remote = raw
+							.map((p) => ({
+								...p,
+								remote: true,
+								id: `remote:${p.code}`,
+								image_url:
+									p.image_small_url || p.image_url || null,
+							}))
+							.filter(
+								(r) => !local.some((l) => l.code === r.code),
+							);
 						remoteTotal = remoteRes.total ?? 0;
 					} catch (err) {
 						console.warn("Remote search failed", err);
@@ -238,10 +248,12 @@ export const useInventoryData = () => {
 			try {
 				skipNextPageEffect.current = true;
 				setCurrentPage(1);
+				const startMs = Date.now();
 				const data = await searchEmbeddings(query, {
 					limit: pageSize,
 					field: "name_desc",
 				});
+				const totalMs = Date.now() - startMs;
 				const results = (data.products || []).map((p) => ({
 					...p,
 					embedding_score:
@@ -261,16 +273,25 @@ export const useInventoryData = () => {
 				setEmbeddingSearchMeta({
 					query,
 					encodeMs: data.encodeMs ?? null,
+					rankMs: data.rankMs ?? null,
+					totalMs,
 					total: data.total ?? results.length,
 					topScore,
 				});
-				const timing =
+				const totalTimingStr = `${(totalMs / 1000).toFixed(1)}s`;
+				const encodeStr =
 					data.encodeMs !== null && data.encodeMs !== undefined
-						? ` in ${data.encodeMs} ms`
-						: "";
+						? `${data.encodeMs} ms`
+						: "n/a";
+				const rankStr =
+					data.rankMs !== null && data.rankMs !== undefined
+						? `${data.rankMs} ms`
+						: "n/a";
 				const top =
 					topScore !== null ? ` (top ${topScore.toFixed(3)})` : "";
-				appendLog(`Embedding ranked for "${query}"${timing}${top}`);
+				appendLog(
+					`Embedding ranked for "${query}" in ${totalTimingStr} (encode ${encodeStr} | rank ${rankStr})${top}`,
+				);
 			} catch (err) {
 				appendLog(`Embedding search failed for "${query}"`);
 				console.warn("Embedding search failed", err);

@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
 
-const NutrimentsSchema = new mongoose.Schema({}, { strict: false });
-
 const ProductSchema = new mongoose.Schema(
 	{
 		code: { type: String, index: true, unique: true, required: true },
@@ -26,7 +24,9 @@ const ProductSchema = new mongoose.Schema(
 			updated_at: Date,
 		},
 	},
-	{ timestamps: true },
+	{ timestamps: true, strict: false },
 );
+
+module.exports = mongoose.model("Product", ProductSchema);
 
 module.exports = mongoose.model("Product", ProductSchema);

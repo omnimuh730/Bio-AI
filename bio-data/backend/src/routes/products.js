@@ -24,17 +24,8 @@ router.get("/remote/search", async (req, res) => {
 			timeout: 60000,
 		});
 		const total = resp.data.count || 0;
-		const products = (resp.data.products || []).map((p) => ({
-			code: p.code,
-			product_name: p.product_name || p.brands || "",
-			brands: p.brands || "",
-			categories: p.categories || [],
-			image_url: p.image_small_url || p.image_url || null,
-			nutriments: p.nutriments || {},
-			tags: p._tags || [],
-			remote: true,
-			id: `remote:${p.code}`,
-		}));
+		const products = resp.data.products || [];
+		console.log(products);
 		res.json({ total, page, pageSize, products });
 	} catch (err) {
 		console.error("remote search error", err?.message || err);
@@ -105,18 +96,16 @@ router.post("/import", async (req, res) => {
 		const remote = await fetchProductByBarcode(barcode);
 		if (!remote)
 			return res.status(404).json({ error: "product_not_found_remote" });
+		// Remove id fields from remote to avoid conflicting with Mongoose's auto-generated ObjectId
+		const remoteData = { ...remote };
+		delete remoteData._id;
+		delete remoteData.id;
 		const doc = {
-			code: remote.code,
-			product_name: remote.product_name || remote.brands || "",
-			brands: remote.brands || "",
-			categories: remote.categories_tags || remote.categories || [],
-			nutriscore_grade: remote.nutriscore_grade || null,
-			nova_group: remote.nova_group || null,
-			image_url: remote.image_small_url || remote.image_url || null,
-			ingredients_text: remote.ingredients_text || "",
-			nutriments: remote.nutriments || {},
+			...remoteData,
+			// keep a raw copy for provenance and fast lookups
+			remote_data: remote,
+			// normalize last_modified to a single field used elsewhere
 			last_modified: remote.last_modified_t || Date.now(),
-			tags: remote._tags || [],
 		};
 		const existing = await Product.findOne({ code: doc.code });
 		let saved;
