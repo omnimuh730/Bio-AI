@@ -4,7 +4,7 @@ import { FiCopy } from "react-icons/fi";
 export default function QuickLog() {
 	const handleCopy = () => {
 		navigator.clipboard?.writeText("Oatmeal and berries — 320 kcal");
-		alert("Copied to clipboard");
+		console.log("Copied to clipboard");
 	};
 
 	return (
